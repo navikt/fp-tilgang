@@ -1,0 +1,32 @@
+# Husk å opprette fp-cache-tilngang secreten i kubernetes først.
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: fpcache
+  namespace: teamforeldrepenger
+  labels:
+    team: teamforeldrepenger
+  annotations:
+    "nais.io/run-as-group": "0"
+    "nais.io/read-only-file-system": "false"
+spec:
+  image: bitnami/redis:7.2
+  port: 6379
+  replicas:
+    min: 1
+    max: 1
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  service:
+    port: 6379
+    protocol: redis
+  envFrom:
+    - secret: fp-cache-tilgang
+  accessPolicy:
+    inbound:
+      rules:
+        - application: fptilgang

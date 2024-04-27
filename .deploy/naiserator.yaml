@@ -1,0 +1,54 @@
+kind: Application
+apiVersion: nais.io/v1alpha1
+metadata:
+  name: fptilgang
+  namespace: teamforeldrepenger
+  labels:
+    team: teamforeldrepenger
+spec:
+  image: {{image}}
+  port: 8080
+  liveness:
+    path: /fptilgang/internal/health/isAlive
+    initialDelay: 10
+    periodSeconds: 10
+    failureThreshold: 20
+    timeout: 3
+  readiness:
+    path: /fptilgang/internal/health/isReady
+    initialDelay: 10
+    periodSeconds: 10
+    failureThreshold: 20
+    timeout: 3
+  preStopHook:
+    http:
+      path: /fptilgang/internal/health/preStop
+  prometheus:
+    enabled: true
+    path: /fptilgang/internal/metrics/prometheus
+  replicas:
+    min: {{minReplicas}}
+    max: {{maxReplicas}}
+    scalingStrategy:
+      cpu:
+        thresholdPercentage: 80
+  resources:
+    limits:
+      cpu: "{{limits.cpu}}"
+      memory: "{{limits.mem}}"
+    requests:
+      cpu: "{{requests.cpu}}"
+      memory: "{{requests.mem}}"
+  secureLogs:
+    enabled: true
+  azure:
+    application:
+      enabled: true
+      claims:
+        extra:
+          - "NAVident"
+          - "azp_name"
+  accessPolicy:
+    inbound:
+      rules:
+        - application: fpsak

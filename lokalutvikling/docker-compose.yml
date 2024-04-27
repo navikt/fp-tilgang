@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+  vtp-tilgang:
+    image: europe-north1-docker.pkg.dev/nais-management-233d/teamforeldrepenger/navikt/vtp:latest
+    environment:
+      TZ: Europe/Oslo
+    env_file:
+      - "vtp.env"
+    volumes:
+      - "~/.modig:/app/.modig"
+    ports:
+      - "8060:8060"
+      - "8063:8063"
+      - "8636:8636"
+      - "9093:9093"
+      - "9092:9092"
+      - "8389:8389"
+    container_name: vtp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8060/rest/isReady"]
+      interval: 30s
+      timeout: 5s

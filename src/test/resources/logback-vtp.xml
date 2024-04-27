@@ -1,0 +1,4 @@
+<included>
+    <logger name="no.nav.foreldrepenger.tilganger" level="DEBUG" />
+    <logger name="no.nav" level="DEBUG" />
+</included>

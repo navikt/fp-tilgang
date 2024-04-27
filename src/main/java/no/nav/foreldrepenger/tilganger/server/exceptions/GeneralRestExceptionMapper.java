@@ -1,0 +1,70 @@
+package no.nav.foreldrepenger.tilganger.server.exceptions;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
+import no.nav.vedtak.exception.ManglerTilgangException;
+import no.nav.vedtak.log.mdc.MDCOperations;
+import no.nav.vedtak.log.util.LoggerUtils;
+
+@Provider
+public class GeneralRestExceptionMapper implements ExceptionMapper<Throwable> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(GeneralRestExceptionMapper.class);
+
+    @Override
+    public Response toResponse(Throwable cause) {
+        loggTilApplikasjonslogg(cause);
+        if (cause instanceof ManglerTilgangException mte) {
+            return ikkeTilgang(mte);
+        } else {
+            return serverError(cause);
+        }
+    }
+    private static Response serverError(Throwable feil) {
+        String feilmelding = getVLExceptionFeilmelding(feil);
+        return Response.serverError().entity(new FeilDto(feilmelding, FeilType.GENERELL_FEIL)).type(MediaType.APPLICATION_JSON).build();
+    }
+
+    private static Response ikkeTilgang(ManglerTilgangException feil) {
+        return Response.status(Response.Status.FORBIDDEN)
+            .entity(new FeilDto(feil.getMessage(), FeilType.MANGLER_TILGANG_FEIL))
+            .type(MediaType.APPLICATION_JSON)
+            .build();
+    }
+
+    private static String getVLExceptionFeilmelding(Throwable feil) {
+        var callId = MDCOperations.getCallId();
+        String feilbeskrivelse = getExceptionMelding(feil);
+        return "Det oppstod en serverfeil: " + avsluttMedPunktum(feilbeskrivelse) + ". Meld til support med referanse-id: " + callId;
+    }
+
+    private static String avsluttMedPunktum(String tekst) {
+        return tekst + (tekst.endsWith(".") ? " " : ". ");
+    }
+
+    private static void loggTilApplikasjonslogg(Throwable cause) {
+        var feil = getExceptionMelding(cause);
+        if (cause instanceof ManglerTilgangException) {
+            LOG.info(feil, cause);
+        } else {
+            if (LOG.isWarnEnabled()) {
+                LOG.warn(String.format("Fikk uventet feil: %s", feil), cause);
+            }
+        }
+        MDC.remove("prosess");
+    }
+
+    private static String getExceptionMelding(Throwable feil) {
+        return getTextForField(feil.getMessage());
+    }
+
+    private static String getTextForField(String input) {
+        return input != null ? LoggerUtils.removeLineBreaks(input) : "";
+    }
+}
