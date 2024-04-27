@@ -34,6 +34,7 @@ jobs:
     name: Deploy dev
     permissions:
       id-token: write
+      contents: read
     if: github.ref_name == 'master'
     needs: [build-app]
     uses: navikt/fp-gha-workflows/.github/workflows/deploy.yml@main
@@ -47,6 +48,7 @@ jobs:
 #    name: Deploy prod
 #    permissions:
 #      id-token: write
+#      contents: read
 #    if: github.ref_name == 'master'
 #    needs: [build-app]
 #    uses: navikt/fp-gha-workflows/.github/workflows/deploy.yml@main
