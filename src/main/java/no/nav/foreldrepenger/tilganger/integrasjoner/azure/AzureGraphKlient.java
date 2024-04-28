@@ -24,6 +24,11 @@ class AzureGraphKlient implements AzureGraph {
 
     private static final Environment ENV = Environment.current();
 
+    private static final String AZURE_HTTP_PROXY = "azure.http.proxy"; // settes ikke av naiserator
+
+    private static final String PROXY_KEY = "proxy.url"; // FP-oppsett lite brukt
+    private static final String DEFAULT_PROXY_URL = "http://webproxy.nais:8088";
+
     protected static final String USERS_PATH = "/users";
 
     private final RestClient restKlient;
@@ -35,12 +40,23 @@ class AzureGraphKlient implements AzureGraph {
         this(RestClient.client());
     }
 
+//    AzureGraphKlient() {
+//        this(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).proxy(Optional.ofNullable(ENV.isFss() ? URI.create(ENV.getProperty(AZURE_HTTP_PROXY, getDefaultProxy())) : null)
+//            .map(p -> new InetSocketAddress(p.getHost(), p.getPort()))
+//            .map(ProxySelector::of)
+//            .orElse(HttpClient.Builder.NO_PROXY)).build());
+//    }
+
     AzureGraphKlient(RestClient client) {
         this.restConfig = RestConfig.forClient(this.getClass());
         this.endpoint = URI.create(this.restConfig.endpoint().toString());
         this.userEndpoint =  UriBuilder.fromUri(this.endpoint).path(USERS_PATH).build();
         this.restKlient = client;
 	}
+
+    private static String getDefaultProxy() {
+        return ENV.getProperty(PROXY_KEY, DEFAULT_PROXY_URL);
+    }
 
     @Override
 	public Optional<User> user(String ident) {
