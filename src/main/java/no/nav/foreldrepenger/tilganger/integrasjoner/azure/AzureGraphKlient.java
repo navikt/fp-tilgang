@@ -80,7 +80,7 @@ class AzureGraphKlient implements AzureGraph {
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint)
             .queryParam("$select", "id,onPremisesSamAccountName,displayName,mail")
             .queryParam("$filter", getFilter(userId))
-            .queryParam("count", true)
+            .queryParam("$count", true)
             .build(), restConfig);
         request.header("ConsistencyLevel", "eventual");
 
@@ -112,7 +112,7 @@ class AzureGraphKlient implements AzureGraph {
 
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(user.id().toString()).path("memberOf")
             .queryParam("$select", "id,onPremisesSamAccountName,displayName")
-            .queryParam("count", true)
+            .queryParam("$count", true)
             .build(), restConfig);
         request.header("ConsistencyLevel", "eventual");
 
