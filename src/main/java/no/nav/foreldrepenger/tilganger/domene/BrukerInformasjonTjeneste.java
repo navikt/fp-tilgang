@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +21,8 @@ import no.nav.foreldrepenger.tilganger.integrasjoner.azure.GroupsResponse;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.User;
 import no.nav.vedtak.exception.TekniskException;
 
-@Dependent
+@ApplicationScoped
 public class BrukerInformasjonTjeneste {
-    private static final Logger LOG = LoggerFactory.getLogger(BrukerInformasjonTjeneste.class);
     private static final Environment ENV = Environment.current();
 
     private AzureGraph azureGraph;
@@ -62,6 +63,15 @@ public class BrukerInformasjonTjeneste {
         this.gruppenavnKode6 = UUID.fromString(gruppenavnKode6);
         this.gruppenavnKode7 = UUID.fromString(gruppenavnKode7);
         this.gruppenavnDrifter = UUID.fromString(gruppenavnDrifter);
+    }
+
+    /**
+     * Henter informasjon for bruker logget inn i kontekst.
+     */
+    public BrukerInformasjon hentBrukerinformasjon() {
+        var user = azureGraph.me();
+        var grupper = azureGraph.memberOf();
+        return mapBrukerInformasjon(user, grupper);
     }
 
     public BrukerInformasjon hentBrukerinformasjon(String ident) {

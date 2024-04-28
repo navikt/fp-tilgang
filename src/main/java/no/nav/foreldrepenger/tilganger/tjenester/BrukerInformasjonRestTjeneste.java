@@ -31,6 +31,13 @@ public class BrukerInformasjonRestTjeneste {
 
     @GET
     @Produces(APPLICATION_JSON)
+    @Path("/fraKontekst")
+    public Response meUser() {
+        return Response.ok(brukerInformasjonTjeneste.hentBrukerinformasjon()).build();
+    }
+
+    @GET
+    @Produces(APPLICATION_JSON)
     @Path("/informasjon")
     public Response finnUser(@NotNull @QueryParam("ident") String ident) {
         return Response.ok(brukerInformasjonTjeneste.hentBrukerinformasjon(ident)).build();

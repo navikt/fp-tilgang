@@ -28,36 +28,54 @@ class AzureGraphKlient implements AzureGraph {
 
     private static final Environment ENV = Environment.current();
 
-    private static final String AZURE_HTTP_PROXY = "azure.http.proxy"; // settes ikke av naiserator
-
-    private static final String PROXY_KEY = "proxy.url"; // FP-oppsett lite brukt
-    private static final String DEFAULT_PROXY_URL = "http://webproxy.nais:8088";
-
     protected static final String USERS_PATH = "/users";
+    protected static final String ME_PATH = "/me";
+    protected static final String MEMBER_OF_PATH = "/memberOf";
+    protected static final String USER_SELECT = "id,onPremisesSamAccountName,displayName,mail";
+    protected static final String $_SELECT = "$select";
+    protected static final String CONSISTENCY_LEVEL = "ConsistencyLevel";
+    protected static final String EVENTUAL = "eventual";
+    protected static final String $_FILTER = "$filter";
+    protected static final String GROUPS_SELECT = "id,onPremisesSamAccountName,displayName";
 
     private final RestClient restKlient;
     private final RestConfig restConfig;
+    private final URI meEndpoint;
     private final URI userEndpoint;
 
     AzureGraphKlient() {
         this(RestClient.client());
     }
 
-//    AzureGraphKlient() {
-//        this(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).proxy(Optional.ofNullable(ENV.isFss() ? URI.create(ENV.getProperty(AZURE_HTTP_PROXY, getDefaultProxy())) : null)
-//            .map(p -> new InetSocketAddress(p.getHost(), p.getPort()))
-//            .map(ProxySelector::of)
-//            .orElse(HttpClient.Builder.NO_PROXY)).build());
-//    }
-
     AzureGraphKlient(RestClient client) {
         this.restKlient = client;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.userEndpoint = UriBuilder.fromUri(this.restConfig.endpoint().toString()).path(USERS_PATH).build();
+        this.meEndpoint = UriBuilder.fromUri(this.restConfig.endpoint().toString()).path(ME_PATH).build();
+
+        if (!this.restConfig.tokenConfig().isAzureAD()) {
+            throw new IllegalStateException("Kan kun kalles med en OBO Azure kontekst.");
+        }
 	}
 
-    private static String getDefaultProxy() {
-        return ENV.getProperty(PROXY_KEY, DEFAULT_PROXY_URL);
+    @Override
+    public User me() {
+        var request = RestRequest.newGET(UriBuilder.fromUri(meEndpoint)
+            .queryParam($_SELECT, USER_SELECT)
+            .build(), restConfig);
+        request.header(CONSISTENCY_LEVEL, EVENTUAL);
+
+        return restKlient.send(request, User.class);
+    }
+
+    @Override
+    public List<GroupsResponse.Group> memberOf() {
+        var request = RestRequest.newGET(UriBuilder.fromUri(meEndpoint).path(MEMBER_OF_PATH)
+            .queryParam($_SELECT, GROUPS_SELECT)
+            .build(), restConfig);
+        request.header(CONSISTENCY_LEVEL, EVENTUAL);
+
+        return restKlient.send(request, GroupsResponse.class).value();
     }
 
     @Override
@@ -78,11 +96,10 @@ class AzureGraphKlient implements AzureGraph {
 
     private Optional<User> findUserInfo(String userId) {
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint)
-            .queryParam("$select", "id,onPremisesSamAccountName,displayName,mail")
-            .queryParam("$filter", getFilter(userId))
-            .queryParam("$count", true)
+            .queryParam($_SELECT, USER_SELECT)
+            .queryParam($_FILTER, getFilter(userId))
             .build(), restConfig);
-        request.header("ConsistencyLevel", "eventual");
+        request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
         try {
             User user = restKlient.send(request, User.class);
@@ -109,12 +126,12 @@ class AzureGraphKlient implements AzureGraph {
 		if (user == null || user.id() == null) {
 			return List.of();
 		}
-
-        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(user.id().toString()).path("memberOf")
-            .queryParam("$select", "id,onPremisesSamAccountName,displayName")
-            .queryParam("$count", true)
+        // Bruker til å liste alle grupper for en bruker, men det er mulig å liste alle brukere av en gruppe med
+        // /v1.0/groups/<group-oid>/members?$count=true
+        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(user.id().toString()).path(MEMBER_OF_PATH)
+            .queryParam($_SELECT, GROUPS_SELECT)
             .build(), restConfig);
-        request.header("ConsistencyLevel", "eventual");
+        request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
         try {
 			var grupper = restKlient.send(request, GroupsResponse.class);
