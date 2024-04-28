@@ -18,7 +18,11 @@ import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 
 @Dependent
-@RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "ms.graph.url", endpointDefault = "https://graph.microsoft.com/v1.0", scopesProperty = "ms.graph.scopes", scopesDefault = "https://graph.microsoft.com/.default")
+@RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE,
+    endpointProperty = "ms.graph.url",
+    endpointDefault = "https://graph.microsoft.com/v1.0",
+    scopesProperty = "ms.graph.scopes",
+    scopesDefault = "https://graph.microsoft.com/.default")
 class AzureGraphKlient implements AzureGraph {
     private static final Logger LOG = LoggerFactory.getLogger(AzureGraphKlient.class);
 
@@ -33,7 +37,6 @@ class AzureGraphKlient implements AzureGraph {
 
     private final RestClient restKlient;
     private final RestConfig restConfig;
-    private final URI endpoint;
     private final URI userEndpoint;
 
     AzureGraphKlient() {
@@ -48,10 +51,9 @@ class AzureGraphKlient implements AzureGraph {
 //    }
 
     AzureGraphKlient(RestClient client) {
-        this.restConfig = RestConfig.forClient(this.getClass());
-        this.endpoint = URI.create(this.restConfig.endpoint().toString());
-        this.userEndpoint =  UriBuilder.fromUri(this.endpoint).path(USERS_PATH).build();
         this.restKlient = client;
+        this.restConfig = RestConfig.forClient(this.getClass());
+        this.userEndpoint = UriBuilder.fromUri(this.restConfig.endpoint().toString()).path(USERS_PATH).build();
 	}
 
     private static String getDefaultProxy() {
