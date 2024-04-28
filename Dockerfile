@@ -13,6 +13,7 @@ COPY target/app.jar .
 
 ENV TZ=Europe/Oslo
 ENV JAVA_OPTS="-Djava.security.egd=file:/dev/urandom \
-    -Dlogback.configurationFile=conf/logback.xml"
+    -Dlogback.configurationFile=conf/logback.xml \
+    -Xdebug -Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=n"
 
 CMD ["app.jar"]
