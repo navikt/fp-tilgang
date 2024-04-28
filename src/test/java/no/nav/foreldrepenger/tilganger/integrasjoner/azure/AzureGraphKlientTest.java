@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,9 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
+import no.nav.vedtak.sikkerhet.kontekst.IdentType;
+import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
+import no.nav.vedtak.sikkerhet.kontekst.RequestKontekst;
 
 class AzureGraphKlientTest {
 
@@ -27,6 +31,7 @@ class AzureGraphKlientTest {
 
     @BeforeEach
     void setUp() {
+        KontekstHolder.setKontekst(RequestKontekst.forRequest("uid", "kompakt", IdentType.InternBruker, null, Set.of()));
         mockRestClient = mock(RestClient.class);
         azureGraphKlient = new AzureGraphKlient(mockRestClient);
 

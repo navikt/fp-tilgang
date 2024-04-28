@@ -52,10 +52,6 @@ class AzureGraphKlient implements AzureGraph {
         this.restConfig = RestConfig.forClient(this.getClass());
         this.userEndpoint = UriBuilder.fromUri(this.restConfig.endpoint().toString()).path(USERS_PATH).build();
         this.meEndpoint = UriBuilder.fromUri(this.restConfig.endpoint().toString()).path(ME_PATH).build();
-
-        if (!this.restConfig.tokenConfig().isAzureAD()) {
-            throw new IllegalStateException("Kan kun kalles med en OBO Azure kontekst.");
-        }
 	}
 
     @Override
