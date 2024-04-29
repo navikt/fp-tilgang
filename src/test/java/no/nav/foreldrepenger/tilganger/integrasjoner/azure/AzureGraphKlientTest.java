@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +39,11 @@ class AzureGraphKlientTest {
         // Set up validator using Jakarta Validation API
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    @AfterEach
+    void tearDown() {
+        KontekstHolder.fjernKontekst();
     }
 
     @Test

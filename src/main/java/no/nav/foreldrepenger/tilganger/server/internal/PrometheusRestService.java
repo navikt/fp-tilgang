@@ -14,7 +14,6 @@ import jakarta.ws.rs.Produces;
 public class PrometheusRestService {
 
     @GET
-    //@Operation(hidden = true)
     @Path("/prometheus")
     public String prometheus() {
         return REGISTRY.scrape();

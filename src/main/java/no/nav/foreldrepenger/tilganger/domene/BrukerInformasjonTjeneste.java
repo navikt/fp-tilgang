@@ -8,11 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.foreldrepenger.konfig.KonfigVerdi;
@@ -95,7 +90,7 @@ public class BrukerInformasjonTjeneste {
 
     private BrukerInformasjon getBrukerInformasjon(Optional<User> user) {
         var grupper = user.map(u -> azureGraph.groups(u)).orElseThrow();
-        return mapBrukerInformasjon(user.get(), grupper);
+        return mapBrukerInformasjon(user.orElseThrow(), grupper);
     }
 
     private BrukerInformasjon mapBrukerInformasjon(User user, List<GroupsResponse.Group> grupper) {

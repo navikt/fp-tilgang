@@ -38,7 +38,7 @@ public class AuthorizationAbacFilter implements ContainerRequestFilter {
             LOG.debug("{} er whitelistet.", method.getName());
             return;
         }
-        if (!KontekstHolder.harKontekst() || !KontekstHolder.getKontekst().getIdentType().equals(IdentType.InternBruker)) {
+        if (!KontekstHolder.harKontekst() || !IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
             throw new ManglerTilgangException("MANGLER-TILGANG", "Kun gyldige bruker kall er tillatt.");
         }
     }
