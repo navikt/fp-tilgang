@@ -22,15 +22,15 @@ public class BrukerInformasjonTjeneste {
 
     private AzureGraph azureGraph;
 
-    private UUID gruppenavnSaksbehandler;
-    private UUID gruppenavnVeileder;
-    private UUID gruppenavnBeslutter;
-    private UUID gruppenavnOverstyrer;
-    private UUID gruppenavnOppgavestyrer;
-    private UUID gruppenavnEgenAnsatt;
-    private UUID gruppenavnKode6;
-    private UUID gruppenavnKode7;
-    private UUID gruppenavnDrifter;
+    private UUID oidSaksbehandler;
+    private UUID oidVeileder;
+    private UUID oidBeslutter;
+    private UUID oidOverstyrer;
+    private UUID oidOppgavestyrer;
+    private UUID oidEgenAnsatt;
+    private UUID oidKode6;
+    private UUID oidKode7;
+    private UUID oidDrifter;
 
     public BrukerInformasjonTjeneste() {
         // CDI
@@ -38,26 +38,26 @@ public class BrukerInformasjonTjeneste {
 
     @Inject
     public BrukerInformasjonTjeneste(AzureGraph azureGraph,
-                                     @KonfigVerdi(value = "bruker.gruppenavn.saksbehandler") String gruppenavnSaksbehandler,
-                                     @KonfigVerdi(value = "bruker.gruppenavn.veileder") String gruppenavnVeileder,
-                                     @KonfigVerdi(value = "bruker.gruppenavn.beslutter") String gruppenavnBeslutter,
-                                     @KonfigVerdi(value = "bruker.gruppenavn.overstyrer") String gruppenavnOverstyrer,
-                                     @KonfigVerdi(value = "bruker.gruppenavn.oppgavestyrer") String gruppenavnOppgavestyrer,
-                                     @KonfigVerdi(value = "bruker.gruppenavn.egenansatt") String gruppenavnEgenAnsatt,
-                                     @KonfigVerdi(value = "bruker.gruppenavn.kode6") String gruppenavnKode6,
-                                     @KonfigVerdi(value = "bruker.gruppenavn.kode7") String gruppenavnKode7,
-                                     @KonfigVerdi(value = "bruker.gruppenavn.drifter") String gruppenavnDrifter
+                                     @KonfigVerdi(value = "gruppe.oid.saksbehandler") String saksbehandler,
+                                     @KonfigVerdi(value = "gruppe.oid.veileder") String veileder,
+                                     @KonfigVerdi(value = "gruppe.oid.beslutter") String beslutter,
+                                     @KonfigVerdi(value = "gruppe.oid.overstyrer") String overstyrer,
+                                     @KonfigVerdi(value = "gruppe.oid.oppgavestyrer") String oppgavestyrer,
+                                     @KonfigVerdi(value = "gruppe.oid.egenansatt") String egenAnsatt,
+                                     @KonfigVerdi(value = "gruppe.oid.kode6") String kode6,
+                                     @KonfigVerdi(value = "gruppe.oid.kode7") String kode7,
+                                     @KonfigVerdi(value = "gruppe.oid.drifter") String drifter
     ) {
         this.azureGraph = azureGraph;
-        this.gruppenavnSaksbehandler = UUID.fromString(gruppenavnSaksbehandler);
-        this.gruppenavnVeileder = UUID.fromString(gruppenavnVeileder);
-        this.gruppenavnBeslutter = UUID.fromString(gruppenavnBeslutter);
-        this.gruppenavnOverstyrer = UUID.fromString(gruppenavnOverstyrer);
-        this.gruppenavnOppgavestyrer = UUID.fromString(gruppenavnOppgavestyrer);
-        this.gruppenavnEgenAnsatt = UUID.fromString(gruppenavnEgenAnsatt);
-        this.gruppenavnKode6 = UUID.fromString(gruppenavnKode6);
-        this.gruppenavnKode7 = UUID.fromString(gruppenavnKode7);
-        this.gruppenavnDrifter = UUID.fromString(gruppenavnDrifter);
+        this.oidSaksbehandler = UUID.fromString(saksbehandler);
+        this.oidVeileder = UUID.fromString(veileder);
+        this.oidBeslutter = UUID.fromString(beslutter);
+        this.oidOverstyrer = UUID.fromString(overstyrer);
+        this.oidOppgavestyrer = UUID.fromString(oppgavestyrer);
+        this.oidEgenAnsatt = UUID.fromString(egenAnsatt);
+        this.oidKode6 = UUID.fromString(kode6);
+        this.oidKode7 = UUID.fromString(kode7);
+        this.oidDrifter = UUID.fromString(drifter);
     }
 
     /**
@@ -94,17 +94,17 @@ public class BrukerInformasjonTjeneste {
     }
 
     private BrukerInformasjon mapBrukerInformasjon(User user, List<GroupsResponse.Group> grupper) {
-        List<UUID> filtrerGrupper = grupper.stream().map(GroupsResponse.Group::id).toList();
+        List<UUID> oidGrupper = grupper.stream().map(GroupsResponse.Group::id).toList();
         return new BrukerInformasjon.Builder(user.onPremisesSamAccountName(), user.displayName())
-            .kanSaksbehandle(filtrerGrupper.contains(gruppenavnSaksbehandler))
-            .kanVeilede(filtrerGrupper.contains(gruppenavnVeileder))
-            .kanBeslutte(filtrerGrupper.contains(gruppenavnBeslutter))
-            .kanOverstyre(filtrerGrupper.contains(gruppenavnOverstyrer))
-            .kanOppgavestyre(filtrerGrupper.contains(gruppenavnOppgavestyrer))
-            .kanBehandleKodeEgenAnsatt(filtrerGrupper.contains(gruppenavnEgenAnsatt))
-            .kanBehandleKode6(filtrerGrupper.contains(gruppenavnKode6))
-            .kanBehandleKode7(filtrerGrupper.contains(gruppenavnKode7))
-            .kanDrifte(filtrerGrupper.contains(gruppenavnDrifter))
+            .kanSaksbehandle(oidGrupper.contains(oidSaksbehandler))
+            .kanVeilede(oidGrupper.contains(oidVeileder))
+            .kanBeslutte(oidGrupper.contains(oidBeslutter))
+            .kanOverstyre(oidGrupper.contains(oidOverstyrer))
+            .kanOppgavestyre(oidGrupper.contains(oidOppgavestyrer))
+            .kanBehandleKodeEgenAnsatt(oidGrupper.contains(oidEgenAnsatt))
+            .kanBehandleKode6(oidGrupper.contains(oidKode6))
+            .kanBehandleKode7(oidGrupper.contains(oidKode7))
+            .kanDrifte(oidGrupper.contains(oidDrifter))
             .build();
     }
 }
