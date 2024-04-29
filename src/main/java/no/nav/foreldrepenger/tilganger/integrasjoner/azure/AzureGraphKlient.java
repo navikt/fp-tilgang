@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import jakarta.enterprise.context.Dependent;
 import jakarta.ws.rs.core.UriBuilder;
 import no.nav.foreldrepenger.konfig.Environment;
-import no.nav.vedtak.felles.integrasjon.rest.RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.ProxyRestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
@@ -38,16 +38,16 @@ class AzureGraphKlient implements AzureGraph {
     protected static final String $_FILTER = "$filter";
     protected static final String GROUPS_SELECT = "id,onPremisesSamAccountName,displayName";
 
-    private final RestClient restKlient;
+    private final ProxyRestClient restKlient;
     private final RestConfig restConfig;
     private final URI meEndpoint;
     private final URI userEndpoint;
 
     AzureGraphKlient() {
-        this(RestClient.client());
+        this(ProxyRestClient.client());
     }
 
-    AzureGraphKlient(RestClient client) {
+    AzureGraphKlient(ProxyRestClient client) {
         this.restKlient = client;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.userEndpoint = UriBuilder.fromUri(this.restConfig.endpoint().toString()).path(USERS_PATH).build();

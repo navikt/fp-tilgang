@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-import no.nav.vedtak.felles.integrasjon.rest.RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.ProxyRestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
@@ -28,12 +28,12 @@ class AzureGraphKlientTest {
     private Validator validator;
 
     // Mock RestClient to simulate REST calls
-    private RestClient mockRestClient;
+    private ProxyRestClient mockRestClient;
 
     @BeforeEach
     void setUp() {
         KontekstHolder.setKontekst(RequestKontekst.forRequest("uid", "kompakt", IdentType.InternBruker, null, Set.of()));
-        mockRestClient = mock(RestClient.class);
+        mockRestClient = mock(ProxyRestClient.class);
         azureGraphKlient = new AzureGraphKlient(mockRestClient);
 
         // Set up validator using Jakarta Validation API
