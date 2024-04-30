@@ -4,7 +4,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.util.UUID;
 
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.GET;
@@ -14,7 +14,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 import no.nav.foreldrepenger.tilganger.domene.BrukerInformasjonTjeneste;
 
-@RequestScoped
+@ApplicationScoped
 @Path("/bruker")
 public class BrukerInformasjonRestTjeneste {
 

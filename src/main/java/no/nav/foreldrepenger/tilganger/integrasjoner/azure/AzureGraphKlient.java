@@ -32,10 +32,10 @@ class AzureGraphKlient implements AzureGraph {
     protected static final String ME_PATH = "/me";
     protected static final String MEMBER_OF_PATH = "/memberOf";
     protected static final String USER_SELECT = "id,onPremisesSamAccountName,displayName,mail";
-    protected static final String $_SELECT = "$select";
+    protected static final String $SELECT = "$select";
     protected static final String CONSISTENCY_LEVEL = "ConsistencyLevel";
     protected static final String EVENTUAL = "eventual";
-    protected static final String $_FILTER = "$filter";
+    protected static final String $FILTER = "$filter";
     protected static final String GROUPS_SELECT = "id,onPremisesSamAccountName,displayName";
 
     private final ProxyRestClient restKlient;
@@ -57,7 +57,7 @@ class AzureGraphKlient implements AzureGraph {
     @Override
     public User me() {
         var request = RestRequest.newGET(UriBuilder.fromUri(meEndpoint)
-            .queryParam($_SELECT, USER_SELECT)
+            .queryParam($SELECT, USER_SELECT)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
@@ -67,7 +67,7 @@ class AzureGraphKlient implements AzureGraph {
     @Override
     public List<GroupsResponse.Group> memberOf() {
         var request = RestRequest.newGET(UriBuilder.fromUri(meEndpoint).path(MEMBER_OF_PATH)
-            .queryParam($_SELECT, GROUPS_SELECT)
+            .queryParam($SELECT, GROUPS_SELECT)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
@@ -92,8 +92,8 @@ class AzureGraphKlient implements AzureGraph {
 
     private Optional<User> findUserInfo(String userId) {
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint)
-            .queryParam($_SELECT, USER_SELECT)
-            .queryParam($_FILTER, getFilter(userId))
+            .queryParam($SELECT, USER_SELECT)
+            .queryParam($FILTER, getFilter(userId))
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
@@ -125,7 +125,7 @@ class AzureGraphKlient implements AzureGraph {
         // Bruker til å liste alle grupper for en bruker, men det er mulig å liste alle brukere av en gruppe med
         // /v1.0/groups/<group-oid>/members?$count=true
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(user.id().toString()).path(MEMBER_OF_PATH)
-            .queryParam($_SELECT, GROUPS_SELECT)
+            .queryParam($SELECT, GROUPS_SELECT)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 

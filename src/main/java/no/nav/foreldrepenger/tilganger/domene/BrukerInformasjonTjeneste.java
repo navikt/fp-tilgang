@@ -6,8 +6,9 @@ import static no.nav.foreldrepenger.tilganger.integrasjoner.azure.AzureGraph.NAV
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.foreldrepenger.konfig.KonfigVerdi;
@@ -15,8 +16,10 @@ import no.nav.foreldrepenger.tilganger.integrasjoner.azure.AzureGraph;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.GroupsResponse;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.User;
 import no.nav.vedtak.exception.TekniskException;
+import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
+import no.nav.vedtak.util.LRUCache;
 
-@ApplicationScoped
+@Dependent
 public class BrukerInformasjonTjeneste {
     private static final Environment ENV = Environment.current();
 
@@ -31,6 +34,8 @@ public class BrukerInformasjonTjeneste {
     private UUID oidKode6;
     private UUID oidKode7;
     private UUID oidDrifter;
+
+    private LRUCache<String, BrukerInformasjon> tilgangerCache;
 
     public BrukerInformasjonTjeneste() {
         // CDI
@@ -58,15 +63,23 @@ public class BrukerInformasjonTjeneste {
         this.oidKode6 = UUID.fromString(kode6);
         this.oidKode7 = UUID.fromString(kode7);
         this.oidDrifter = UUID.fromString(drifter);
+        this.tilgangerCache = new LRUCache<>(1500, TimeUnit.MILLISECONDS.convert(60, TimeUnit.MINUTES));
     }
 
     /**
      * Henter informasjon for bruker logget inn i kontekst.
      */
     public BrukerInformasjon hentBrukerinformasjon() {
+        var cacheKey = KontekstHolder.getKontekst().getUid();
+
+        var tilgangerFraCache = getCachedTilgang(cacheKey);
+        if (tilgangerFraCache != null) {
+            return tilgangerFraCache;
+        }
+
         var user = azureGraph.me();
         var grupper = azureGraph.memberOf();
-        return mapBrukerInformasjon(user, grupper);
+        return putTilgangToCache(cacheKey, mapBrukerInformasjon(user, grupper));
     }
 
     public BrukerInformasjon hentBrukerinformasjon(String ident) {
@@ -106,5 +119,18 @@ public class BrukerInformasjonTjeneste {
             .kanBehandleKode7(oidGrupper.contains(oidKode7))
             .kanDrifte(oidGrupper.contains(oidDrifter))
             .build();
+    }
+
+    private BrukerInformasjon getCachedTilgang(String uid) {
+        return tilgangerCache.get(cacheKey(uid));
+    }
+
+    private BrukerInformasjon putTilgangToCache(String uid, BrukerInformasjon brukerInformasjon) {
+        tilgangerCache.put(cacheKey(uid), brukerInformasjon);
+        return brukerInformasjon;
+    }
+
+    private String cacheKey(String uid) {
+        return uid;
     }
 }
