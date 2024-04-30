@@ -23,6 +23,7 @@ public class ApiConfig extends Application {
         return Set.of(
             AuthorizationAbacFilter.class,
             AuthenticationFilter.class,
+            TimingFilter.class,
             BrukerInformasjonRestTjeneste.class,
             GeneralRestExceptionMapper.class,
             JacksonJsonConfig.class);
