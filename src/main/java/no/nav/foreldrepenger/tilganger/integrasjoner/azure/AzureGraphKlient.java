@@ -91,10 +91,31 @@ class AzureGraphKlient implements AzureGraph {
         return findUserInfo(id.toString());
     }
 
+    private Optional<User> getUserInfo(UUID uid) {
+        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(uid.toString())
+            .queryParam($SELECT, USER_SELECT)
+            .build(), restConfig);
+        request.header(CONSISTENCY_LEVEL, EVENTUAL);
+
+        try {
+            User user = restKlient.send(request, User.class);
+            if (user == null) {
+                LOG.info("MS: finner ikke bruker med id={}", uid);
+                return Optional.empty();
+            }
+
+            LOG.info("MS: fant bruker {}", user);
+            return Optional.of(user);
+        } catch (Exception e) {
+            LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+
     private Optional<User> findUserInfo(String userId) {
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint)
             .queryParam($SELECT, USER_SELECT)
-            //.queryParam($FILTER, getFilter(userId))
+            .queryParam($FILTER, getFilter(userId))
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
@@ -107,7 +128,7 @@ class AzureGraphKlient implements AzureGraph {
 
             var first = users.value().getFirst();
             if (users.value().size() > 1) {
-                LOG.info("MS: finner flere brukere med id={} velger første", userId);
+                LOG.info("MS: finner flere brukere med id={} velger første: {}", userId, first);
                 return Optional.of(first);
             }
 
