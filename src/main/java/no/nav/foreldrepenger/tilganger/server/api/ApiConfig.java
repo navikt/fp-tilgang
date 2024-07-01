@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import no.nav.foreldrepenger.tilganger.server.exceptions.GeneralRestExceptionMapper;
-import no.nav.foreldrepenger.tilganger.tjenester.BrukerInformasjonRestTjeneste;
+import no.nav.foreldrepenger.tilganger.tjenester.BrukerProfilRestTjeneste;
 
 import org.glassfish.jersey.server.ServerProperties;
 
@@ -24,7 +24,7 @@ public class ApiConfig extends Application {
             AuthorizationAbacFilter.class,
             AuthenticationFilter.class,
             TimingFilter.class,
-            BrukerInformasjonRestTjeneste.class,
+            BrukerProfilRestTjeneste.class,
             GeneralRestExceptionMapper.class,
             JacksonJsonConfig.class);
     }

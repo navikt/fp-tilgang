@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.tilganger.server.api;
 
 import java.lang.reflect.Method;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,7 @@ public class AuthorizationAbacFilter implements ContainerRequestFilter {
             LOG.debug("{} er whitelistet.", method.getName());
             return;
         }
-        if (!KontekstHolder.harKontekst() || !IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
+        if (!KontekstHolder.harKontekst() || Set.of(IdentType.InternBruker, IdentType.Systemressurs).stream().noneMatch(it -> it.equals(KontekstHolder.getKontekst().getIdentType()))) {
             throw new ManglerTilgangException("MANGLER-TILGANG", "Kun gyldige bruker kall er tillatt.");
         }
     }

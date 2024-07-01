@@ -20,7 +20,7 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 import no.nav.vedtak.util.LRUCache;
 
 @Dependent
-public class BrukerInformasjonTjeneste {
+public class BrukerProfilTjeneste {
     private static final Environment ENV = Environment.current();
 
     private AzureGraph azureGraph;
@@ -35,23 +35,23 @@ public class BrukerInformasjonTjeneste {
     private UUID oidKode7;
     private UUID oidDrifter;
 
-    private LRUCache<String, BrukerInformasjon> tilgangerCache;
+    private LRUCache<String, BrukerProfil> tilgangerCache;
 
-    public BrukerInformasjonTjeneste() {
+    public BrukerProfilTjeneste() {
         // CDI
     }
 
     @Inject
-    public BrukerInformasjonTjeneste(AzureGraph azureGraph,
-                                     @KonfigVerdi(value = "gruppe.oid.saksbehandler") String saksbehandler,
-                                     @KonfigVerdi(value = "gruppe.oid.veileder") String veileder,
-                                     @KonfigVerdi(value = "gruppe.oid.beslutter") String beslutter,
-                                     @KonfigVerdi(value = "gruppe.oid.overstyrer") String overstyrer,
-                                     @KonfigVerdi(value = "gruppe.oid.oppgavestyrer") String oppgavestyrer,
-                                     @KonfigVerdi(value = "gruppe.oid.egenansatt") String egenAnsatt,
-                                     @KonfigVerdi(value = "gruppe.oid.kode6") String kode6,
-                                     @KonfigVerdi(value = "gruppe.oid.kode7") String kode7,
-                                     @KonfigVerdi(value = "gruppe.oid.drifter") String drifter
+    public BrukerProfilTjeneste(AzureGraph azureGraph,
+                                @KonfigVerdi(value = "gruppe.oid.saksbehandler") String saksbehandler,
+                                @KonfigVerdi(value = "gruppe.oid.veileder") String veileder,
+                                @KonfigVerdi(value = "gruppe.oid.beslutter") String beslutter,
+                                @KonfigVerdi(value = "gruppe.oid.overstyrer") String overstyrer,
+                                @KonfigVerdi(value = "gruppe.oid.oppgavestyrer") String oppgavestyrer,
+                                @KonfigVerdi(value = "gruppe.oid.egenansatt") String egenAnsatt,
+                                @KonfigVerdi(value = "gruppe.oid.kode6") String kode6,
+                                @KonfigVerdi(value = "gruppe.oid.kode7") String kode7,
+                                @KonfigVerdi(value = "gruppe.oid.drifter") String drifter
     ) {
         this.azureGraph = azureGraph;
         this.oidSaksbehandler = UUID.fromString(saksbehandler);
@@ -69,20 +69,20 @@ public class BrukerInformasjonTjeneste {
     /**
      * Henter informasjon for bruker logget inn i kontekst.
      */
-    public BrukerInformasjon hentBrukerinformasjon() {
+    public BrukerProfil hentBrukerProfil() {
         var cacheKey = KontekstHolder.getKontekst().getUid();
 
-        var tilgangerFraCache = getCachedTilgang(cacheKey);
-        if (tilgangerFraCache != null) {
-            return tilgangerFraCache;
+        var profilFraCache = getCachedProfil(cacheKey);
+        if (profilFraCache != null) {
+            return profilFraCache;
         }
 
         var user = azureGraph.me();
         var grupper = azureGraph.memberOf();
-        return putTilgangToCache(cacheKey, mapBrukerInformasjon(user, grupper));
+        return putTilgangToCache(cacheKey, mapBrukerProfil(user, grupper));
     }
 
-    public BrukerInformasjon hentBrukerinformasjon(String ident) {
+    public BrukerProfil hentBrukerProfil(String ident) {
         if (ident == null || ident.isEmpty()) {
             throw new TekniskException("F-354885", "Kan ikke slå opp brukernavn uten å ha ident");
         }
@@ -90,25 +90,25 @@ public class BrukerInformasjonTjeneste {
             throw new TekniskException("F-281934", String.format("Mulig injection forsøk. Søkte med ugyldig ident '%s'", ident));
         }
         var user = azureGraph.user(ident);
-        return getBrukerInformasjon(user);
+        return getBrukerProfil(user);
     }
 
-    public BrukerInformasjon hentBrukerinformasjon(UUID oid) {
+    public BrukerProfil hentBrukerProfil(UUID oid) {
         if (oid == null) {
             throw new TekniskException("F-364885", "Kan ikke slå opp brukernavn uten å ha oid");
         }
         var user = azureGraph.user(oid);
-        return getBrukerInformasjon(user);
+        return getBrukerProfil(user);
     }
 
-    private BrukerInformasjon getBrukerInformasjon(Optional<User> user) {
+    private BrukerProfil getBrukerProfil(Optional<User> user) {
         var grupper = user.map(u -> azureGraph.groups(u)).orElseThrow();
-        return mapBrukerInformasjon(user.orElseThrow(), grupper);
+        return mapBrukerProfil(user.orElseThrow(), grupper);
     }
 
-    private BrukerInformasjon mapBrukerInformasjon(User user, List<GroupsResponse.Group> grupper) {
+    private BrukerProfil mapBrukerProfil(User user, List<GroupsResponse.Group> grupper) {
         List<UUID> oidGrupper = grupper.stream().map(GroupsResponse.Group::id).toList();
-        return new BrukerInformasjon.Builder(user.onPremisesSamAccountName(), user.displayName())
+        return new BrukerProfil.Builder(user.onPremisesSamAccountName(), user.displayName(), user.mail())
             .kanSaksbehandle(oidGrupper.contains(oidSaksbehandler))
             .kanVeilede(oidGrupper.contains(oidVeileder))
             .kanBeslutte(oidGrupper.contains(oidBeslutter))
@@ -121,13 +121,13 @@ public class BrukerInformasjonTjeneste {
             .build();
     }
 
-    private BrukerInformasjon getCachedTilgang(String uid) {
+    private BrukerProfil getCachedProfil(String uid) {
         return tilgangerCache.get(cacheKey(uid));
     }
 
-    private BrukerInformasjon putTilgangToCache(String uid, BrukerInformasjon brukerInformasjon) {
-        tilgangerCache.put(cacheKey(uid), brukerInformasjon);
-        return brukerInformasjon;
+    private BrukerProfil putTilgangToCache(String uid, BrukerProfil brukerProfil) {
+        tilgangerCache.put(cacheKey(uid), brukerProfil);
+        return brukerProfil;
     }
 
     private String cacheKey(String uid) {

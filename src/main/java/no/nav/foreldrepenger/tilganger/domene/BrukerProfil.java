@@ -2,28 +2,29 @@ package no.nav.foreldrepenger.tilganger.domene;
 
 import java.time.LocalDateTime;
 
-public record BrukerInformasjon(String brukernavn,
-                                String navn,
-                                boolean kanSaksbehandle,
-                                boolean kanVeilede,
-                                boolean kanBeslutte,
-                                boolean kanOverstyre,
-                                boolean kanOppgavestyre,
-                                boolean kanBehandleKodeEgenAnsatt,
-                                boolean kanBehandleKode6,
-                                boolean kanBehandleKode7,
-                                boolean kanDrifte,
-                                LocalDateTime funksjonellTid) {
+public record BrukerProfil(String brukernavn,
+                           String navn,
+                           String epost,
+                           boolean kanSaksbehandle,
+                           boolean kanVeilede,
+                           boolean kanBeslutte,
+                           boolean kanOverstyre,
+                           boolean kanOppgavestyre,
+                           boolean kanBehandleKodeEgenAnsatt,
+                           boolean kanBehandleKode6,
+                           boolean kanBehandleKode7,
+                           boolean kanDrifte,
+                           LocalDateTime funksjonellTid) {
 
-    private BrukerInformasjon(Builder builder) {
-            this(builder.brukernavn, builder.navn, builder.kanSaksbehandle, builder.kanVeilede, builder.kanBeslutte, builder.kanOverstyre,
+    private BrukerProfil(Builder builder) {
+            this(builder.brukernavn, builder.navn, builder.epost, builder.kanSaksbehandle, builder.kanVeilede, builder.kanBeslutte, builder.kanOverstyre,
                 builder.kanOppgavestyre, builder.kanBehandleKodeEgenAnsatt, builder.kanBehandleKode6, builder.kanBehandleKode7, builder.kanDrifte,
                 LocalDateTime.now());
         }
 
         @Override
         public String toString() {
-            return "InnloggetNavAnsattDto{" +
+            return "BrukerProfil{" +
                 "kanSaksbehandle=" + kanSaksbehandle +
                 ", kanVeilede=" + kanVeilede +
                 ", kanBeslutte=" + kanBeslutte +
@@ -36,6 +37,7 @@ public record BrukerInformasjon(String brukernavn,
         public static class Builder {
             private final String brukernavn;
             private final String navn;
+            private final String epost;
             private boolean kanSaksbehandle;
             private boolean kanVeilede;
             private boolean kanBeslutte;
@@ -46,9 +48,10 @@ public record BrukerInformasjon(String brukernavn,
             private boolean kanBehandleKode7;
             private boolean kanDrifte;
 
-            public Builder(String brukernavn, String navn) {
+            public Builder(String brukernavn, String navn, String epost) {
                 this.brukernavn = brukernavn;
                 this.navn = navn;
+                this.epost = epost;
             }
 
             public Builder kanSaksbehandle(boolean kanSaksbehandle) {
@@ -96,8 +99,8 @@ public record BrukerInformasjon(String brukernavn,
                 return this;
             }
 
-            public BrukerInformasjon build() {
-                return new BrukerInformasjon(this);
+            public BrukerProfil build() {
+                return new BrukerProfil(this);
             }
         }
 
