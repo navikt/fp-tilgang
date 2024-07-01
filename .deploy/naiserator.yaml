@@ -8,6 +8,10 @@ metadata:
 spec:
   image: {{image}}
   port: 8080
+  {{#if devOnly}}
+  ingresses:
+    - "https://fptilgang.dev.intern.nav.no"
+  {{/if}}
   liveness:
     path: /fptilgang/internal/health/isAlive
     initialDelay: 10
