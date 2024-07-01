@@ -158,6 +158,7 @@ class AzureGraphKlient implements AzureGraph {
         // /v1.0/groups/<group-oid>/members?$count=true
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(user.id().toString()).path(MEMBER_OF_PATH)
             .queryParam($SELECT, GROUPS_SELECT)
+            .queryParam("$count", true)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
