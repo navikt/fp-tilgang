@@ -22,10 +22,15 @@ import no.nav.foreldrepenger.tilganger.domene.BrukerProfilTjeneste;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @ApplicationScoped
 @Consumes(APPLICATION_JSON)
 @Path("/bruker")
 public class BrukerProfilRestTjeneste {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BrukerProfilRestTjeneste.class);
 
     private BrukerProfilTjeneste brukerProfilTjeneste;
 
@@ -66,6 +71,7 @@ public class BrukerProfilRestTjeneste {
         try {
             entity = mapTilDto(brukerProfilTjeneste.hentBrukerProfil(request.ident()));
         } catch (Exception e) {
+            LOG.info("PROFIL: Feilet med: {}", e.getMessage());
             return Response.serverError().build();
         }
         return Response.ok(entity).build();
@@ -79,6 +85,7 @@ public class BrukerProfilRestTjeneste {
         try {
             entity = mapTilDto(brukerProfilTjeneste.hentBrukerProfil(request.oid()));
         } catch (Exception e) {
+            LOG.info("PROFIL: Feilet med: {}", e.getMessage());
             return Response.serverError().build();
         }
         return Response.ok(entity).build();
