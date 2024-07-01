@@ -93,7 +93,7 @@ class AzureGraphKlient implements AzureGraph {
     private Optional<User> findUserInfo(String userId) {
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint)
             .queryParam($SELECT, USER_SELECT)
-            .queryParam($FILTER, getFilter(userId))
+            //.queryParam($FILTER, getFilter(userId))
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
