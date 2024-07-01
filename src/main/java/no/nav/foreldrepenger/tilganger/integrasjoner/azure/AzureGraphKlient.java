@@ -146,7 +146,7 @@ class AzureGraphKlient implements AzureGraph {
         if (UUID_PATTERN.matcher(userId).matches()) {
             return "id eq '" + userId + "'";
         }
-        return "mailNickname eq '" + userId + "'";
+        return "onPremisesSamAccountName eq '" + userId + "'";
     }
 
     @Override
