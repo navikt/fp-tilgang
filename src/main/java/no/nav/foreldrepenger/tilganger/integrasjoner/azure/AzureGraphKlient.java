@@ -99,13 +99,20 @@ class AzureGraphKlient implements AzureGraph {
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
         try {
-            User user = restKlient.send(request, User.class);
-            if (user == null) {
+            UsersResponse users = restKlient.send(request, UsersResponse.class);
+            if (users == null || users.value() == null || users.value().isEmpty()) {
                 LOG.info("MS: finner ikke bruker med id={}", userId);
                 return Optional.empty();
             }
-            LOG.info("MS: fant bruker {}", user);
-            return Optional.of(user);
+
+            var first = users.value().getFirst();
+            if (users.value().size() > 1) {
+                LOG.info("MS: finner flere brukere med id={} velger første", userId);
+                return Optional.of(first);
+            }
+
+            LOG.info("MS: fant bruker {}", first);
+            return Optional.of(first);
         } catch (Exception e) {
             LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
             return Optional.empty();
