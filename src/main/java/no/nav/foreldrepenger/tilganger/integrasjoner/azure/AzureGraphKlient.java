@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.tilganger.integrasjoner.azure;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -114,8 +115,9 @@ class AzureGraphKlient implements AzureGraph {
 
     private Optional<User> findUserInfo(String userId) {
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint)
-            .queryParam($SELECT, "id")
+            .queryParam($SELECT, USER_SELECT)
             .queryParam($FILTER, getFilter(userId))
+            .queryParam("$count", true)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
@@ -144,7 +146,7 @@ class AzureGraphKlient implements AzureGraph {
         if (UUID_PATTERN.matcher(userId).matches()) {
             return "id eq '" + userId + "'";
         }
-        return "onPremisesSamAccountName eq '" + userId + "'";
+        return "mailNickname eq '" + userId + "'";
     }
 
     @Override
@@ -166,7 +168,7 @@ class AzureGraphKlient implements AzureGraph {
                 return List.of();
             }
 
-            LOG.info("MS Graph: grupper={}", grupper.value().stream().map(GroupsResponse.Group::onPremisesSamAccountName).collect(Collectors.joining(", ")));
+            LOG.info("MS Graph: grupper={}", grupper.value().stream().map(Objects::toString).collect(Collectors.joining(", ")));
             return grupper.value();
 		} catch (Exception e) {
             LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
