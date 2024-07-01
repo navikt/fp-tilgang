@@ -88,7 +88,7 @@ class AzureGraphKlient implements AzureGraph {
         if (id == null) {
             return Optional.empty();
         }
-        return findUserInfo(id.toString());
+        return getUserInfo(id);
     }
 
     private Optional<User> getUserInfo(UUID uid) {
@@ -166,7 +166,7 @@ class AzureGraphKlient implements AzureGraph {
                 return List.of();
             }
 
-            LOG.info("MS Graph: grupper={}", grupper.value().stream().map(GroupsResponse.Group::displayName).collect(Collectors.joining(", ")));
+            LOG.info("MS Graph: grupper={}", grupper.value().stream().map(GroupsResponse.Group::id).map(UUID::toString).collect(Collectors.joining(", ")));
             return grupper.value();
 		} catch (Exception e) {
             LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
