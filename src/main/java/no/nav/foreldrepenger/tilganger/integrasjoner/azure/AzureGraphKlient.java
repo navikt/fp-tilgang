@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +104,7 @@ class AzureGraphKlient implements AzureGraph {
                 LOG.info("MS: finner ikke bruker med id={}", userId);
                 return Optional.empty();
             }
+            LOG.info("MS: fant bruker {}", user);
             return Optional.of(user);
         } catch (Exception e) {
             LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
@@ -135,6 +137,8 @@ class AzureGraphKlient implements AzureGraph {
                 LOG.info("MS Graph: finner ikke grupper for bruker={}", user.id());
                 return List.of();
             }
+
+            LOG.info("MS Graph: grupper={}", grupper.value().stream().map(GroupsResponse.Group::displayName).collect(Collectors.joining(", ")));
             return grupper.value();
 		} catch (Exception e) {
             LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
