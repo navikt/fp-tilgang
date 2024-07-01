@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -50,10 +51,11 @@ class AzureGraphKlientTest {
     void testUserReturnsUserInfo() {
         // Prepare test data
         String userId = "123456";
-        User expectedUser = new User(UUID.randomUUID(), "sam", "odata", "display", "mail");
+        var expectedUser = new User(UUID.randomUUID(), "sam", "odata", "display", "mail");
+        UsersResponse response = new UsersResponse(List.of(expectedUser));
 
         // Mock REST call behavior
-        when(mockRestClient.send(any(RestRequest.class), any(Class.class))).thenReturn(expectedUser);
+        when(mockRestClient.send(any(RestRequest.class), any(Class.class))).thenReturn(response);
 
         // Invoke the method under test
         Optional<User> result = azureGraphKlient.user(userId);
@@ -87,10 +89,11 @@ class AzureGraphKlientTest {
     void testUserReturnsUserInfo2() {
         // Prepare test data
         UUID userId = UUID.randomUUID();
-        User expectedUser = new User(userId, "samAccountName", "odataType", "displayName", "mail@example.com");
+        var expectedUser = new User(userId, "samAccountName", "odataType", "displayName", "mail@example.com");
+        UsersResponse response = new UsersResponse(List.of(expectedUser));
 
         // Mock REST call behavior
-        when(mockRestClient.send(any(RestRequest.class), any(Class.class))).thenReturn(expectedUser);
+        when(mockRestClient.send(any(RestRequest.class), any(Class.class))).thenReturn(response);
 
         // Invoke the method under test
         Optional<User> result = azureGraphKlient.user(userId.toString());
