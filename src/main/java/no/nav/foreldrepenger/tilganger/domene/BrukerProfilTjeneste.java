@@ -90,10 +90,6 @@ public class BrukerProfilTjeneste {
             throw new TekniskException("F-281934", String.format("Mulig injection forsøk. Søkte med ugyldig ident '%s'", ident));
         }
         var user = azureGraph.user(ident);
-
-        if (user.isEmpty()) {
-            return null;
-        }
         return getBrukerProfil(user);
     }
 

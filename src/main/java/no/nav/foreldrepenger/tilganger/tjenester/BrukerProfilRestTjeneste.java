@@ -62,14 +62,26 @@ public class BrukerProfilRestTjeneste {
     @Produces(APPLICATION_JSON)
     @Path("/profil")
     public Response finnUser(@NotNull @Valid ProfilIdentRequest request) {
-        return Response.ok(mapTilDto(brukerProfilTjeneste.hentBrukerProfil(request.ident()))).build();
+        BrukerProfilResponseDto entity;
+        try {
+            entity = mapTilDto(brukerProfilTjeneste.hentBrukerProfil(request.ident()));
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
+        return Response.ok(entity).build();
     }
 
     @POST
     @Produces(APPLICATION_JSON)
     @Path("/profil/v2")
     public Response finnUserV2(@NotNull @Valid ProfilUuidRequest request) {
-        return Response.ok(mapTilDto(brukerProfilTjeneste.hentBrukerProfil(request.oid()))).build();
+        BrukerProfilResponseDto entity;
+        try {
+            entity = mapTilDto(brukerProfilTjeneste.hentBrukerProfil(request.oid()));
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
+        return Response.ok(entity).build();
     }
 
     private static void validerTilgang() {
