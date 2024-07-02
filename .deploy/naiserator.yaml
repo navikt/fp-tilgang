@@ -56,6 +56,8 @@ spec:
           {{#each groups as |group|}}
           - id: "{{group}}"
           {{/each}}
+  envFrom:
+    - secret: fp-cache-tilgang
   accessPolicy:
     inbound:
       rules:

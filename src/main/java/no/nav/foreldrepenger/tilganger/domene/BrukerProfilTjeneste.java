@@ -15,12 +15,18 @@ import no.nav.foreldrepenger.konfig.KonfigVerdi;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.AzureGraph;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.GroupsResponse;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.User;
+import no.nav.foreldrepenger.tilganger.integrasjoner.cache.Cache;
 import no.nav.vedtak.exception.TekniskException;
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 import no.nav.vedtak.util.LRUCache;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Dependent
 public class BrukerProfilTjeneste {
+    private static final Logger LOG = LoggerFactory.getLogger(BrukerProfilTjeneste.class);
     private static final Environment ENV = Environment.current();
 
     private AzureGraph azureGraph;
@@ -36,6 +42,7 @@ public class BrukerProfilTjeneste {
     private UUID oidDrifter;
 
     private LRUCache<String, BrukerProfil> tilgangerCache;
+    private Cache cache;
 
     public BrukerProfilTjeneste() {
         // CDI
@@ -43,6 +50,7 @@ public class BrukerProfilTjeneste {
 
     @Inject
     public BrukerProfilTjeneste(AzureGraph azureGraph,
+                                Cache cache,
                                 @KonfigVerdi(value = "gruppe.oid.saksbehandler") String saksbehandler,
                                 @KonfigVerdi(value = "gruppe.oid.veileder") String veileder,
                                 @KonfigVerdi(value = "gruppe.oid.beslutter") String beslutter,
@@ -54,6 +62,7 @@ public class BrukerProfilTjeneste {
                                 @KonfigVerdi(value = "gruppe.oid.drifter") String drifter
     ) {
         this.azureGraph = azureGraph;
+        this.cache = cache;
         this.oidSaksbehandler = UUID.fromString(saksbehandler);
         this.oidVeileder = UUID.fromString(veileder);
         this.oidBeslutter = UUID.fromString(beslutter);
@@ -98,7 +107,19 @@ public class BrukerProfilTjeneste {
         if (oid == null) {
             throw new TekniskException("F-364885", "Kan ikke slå opp brukernavn uten å ha uid");
         }
-        var user = azureGraph.user(oid);
+        var cacheKey = oid.toString();
+
+        var user = cache.read(cacheKey).map(cacheHit -> DefaultJsonMapper.fromJson(cacheHit, User.class));
+        if (user.isEmpty()) {
+            LOG.debug("Finner ikke user i cache {}", oid);
+            user = azureGraph.user(oid);
+            if (user.isPresent()) {
+                cache.store(cacheKey, DefaultJsonMapper.toJson(user));
+            }
+        } else {
+            LOG.debug("Fant user i cache for {}", oid);
+        }
+
         return getBrukerProfil(user);
     }
 
