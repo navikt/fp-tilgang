@@ -19,7 +19,6 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import no.nav.foreldrepenger.tilganger.domene.BrukerProfil;
 import no.nav.foreldrepenger.tilganger.domene.BrukerProfilTjeneste;
-import no.nav.vedtak.sikkerhet.jaxrs.UtenAutentisering;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
@@ -60,7 +59,6 @@ public class BrukerProfilRestTjeneste {
     @POST
     @Produces(APPLICATION_JSON)
     @Path("/profil/uid")
-    @UtenAutentisering
     public BrukerProfilResponseDto finnUserV2(@NotNull @Valid BrukerProfilRestTjeneste.ProfilUidRequest request) {
         return mapTilProfilDto(brukerProfilTjeneste.hentProfil(request.uid()));
     }
