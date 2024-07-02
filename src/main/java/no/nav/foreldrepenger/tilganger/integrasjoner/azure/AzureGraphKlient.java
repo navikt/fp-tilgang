@@ -107,7 +107,7 @@ class AzureGraphKlient implements AzureGraph {
             LOG.debug("MS: fant bruker med id={}", uid);
             return Optional.of(user);
         } catch (Exception e) {
-            LOG.info("MS: Teknisk feil. Message={}", e.getMessage(), e);
+            LOG.info("MS: Teknisk feil. Message={}", e.getMessage());
             return Optional.empty();
         }
     }
@@ -136,7 +136,7 @@ class AzureGraphKlient implements AzureGraph {
             LOG.debug("MS: fant bruker med id={}", first.id());
             return Optional.of(first);
         } catch (Exception e) {
-            LOG.info("MS: Teknisk feil. Message={}", e.getMessage(), e);
+            LOG.info("MS: Teknisk feil. Message={}", e.getMessage());
             return Optional.empty();
         }
     }
@@ -165,7 +165,7 @@ class AzureGraphKlient implements AzureGraph {
             }
             return grupper.value();
 		} catch (Exception e) {
-            LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
+            LOG.info("MS: Teknisk feil. Message={}", e.getMessage());
 			return List.of();
 		}
 	}
