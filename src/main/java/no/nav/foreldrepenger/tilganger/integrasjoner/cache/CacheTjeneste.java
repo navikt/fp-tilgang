@@ -3,12 +3,11 @@ package no.nav.foreldrepenger.tilganger.integrasjoner.cache;
 import java.time.Duration;
 import java.util.Optional;
 
-import jakarta.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import no.nav.foreldrepenger.konfig.Environment;
 import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.HostAndPort;
@@ -29,8 +28,8 @@ public class CacheTjeneste implements Cache {
         var host = ENV.getRequiredProperty("redis.host");
         var port = ENV.getRequiredProperty("redis.port", Integer.class);
         var config = DefaultJedisClientConfig.builder()
-            .ssl(true)
-            .password(ENV.getRequiredProperty("REDIS_PASSWORD"))
+            //.ssl(true)
+            .password(ENV.getRequiredProperty("redis.password"))
             .build();
         var poolConfig = new JedisPoolConfig();
         poolConfig.setMinIdle(1);
@@ -39,7 +38,10 @@ public class CacheTjeneste implements Cache {
         poolConfig.setTestWhileIdle(true);
 
         LOG.debug("Creating JedisPool with pool config.");
-        jedisPool = new JedisPool(poolConfig, new HostAndPort(host, port), config);
+        var hostAndPort = new HostAndPort(host, port);
+        jedisPool = new JedisPool(poolConfig, hostAndPort, config);
+        LOG.info("JEDIS pool closed: {}", jedisPool.isClosed());
+       // var jedis = new Jedis(hostAndPort, config);
     }
 
     @Override

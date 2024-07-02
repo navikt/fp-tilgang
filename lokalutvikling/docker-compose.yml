@@ -1,9 +1,11 @@
 version: '3.7'
 services:
   vtp-tilgang:
-    image: europe-north1-docker.pkg.dev/nais-management-233d/teamforeldrepenger/navikt/vtp:latest
+    image: vtp:lokal
     environment:
       TZ: Europe/Oslo
+      NO_NAV_MODIG_SECURITY_APPCERT_KEYSTORE: /app/.modig/keystore.jks
+      JAVAX_NET_SSL_TRUSTSTORE: /app/.modig/truststore.jks
     env_file:
       - "vtp.env"
     volumes:
