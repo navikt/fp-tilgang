@@ -96,7 +96,7 @@ public class BrukerProfilTjeneste {
 
     public BrukerProfil hentProfil(UUID oid) {
         if (oid == null) {
-            throw new TekniskException("F-364885", "Kan ikke slå opp brukernavn uten å ha oid");
+            throw new TekniskException("F-364885", "Kan ikke slå opp brukernavn uten å ha uid");
         }
         var user = azureGraph.user(oid);
         return getBrukerProfil(user);

@@ -147,7 +147,7 @@ class AzureGraphKlient implements AzureGraph {
 			return List.of();
 		}
         // Bruker til å liste alle grupper for en bruker, men det er mulig å liste alle brukere av en gruppe med
-        // /v1.0/groups/<group-oid>/members?$count=true
+        // /v1.0/groups/<group-uid>/members?$count=true
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(user.id().toString()).path(MEMBER_OF_PATH)
             .queryParam($SELECT, GROUPS_SELECT)
             .queryParam("$count", true)

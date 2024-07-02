@@ -22,15 +22,10 @@ import no.nav.foreldrepenger.tilganger.domene.BrukerProfilTjeneste;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @ApplicationScoped
 @Consumes(APPLICATION_JSON)
 @Path("/bruker")
 public class BrukerProfilRestTjeneste {
-
-    private static final Logger LOG = LoggerFactory.getLogger(BrukerProfilRestTjeneste.class);
 
     private BrukerProfilTjeneste brukerProfilTjeneste;
 
@@ -43,62 +38,32 @@ public class BrukerProfilRestTjeneste {
         this.brukerProfilTjeneste = tjeneste;
     }
 
-    /**
-     * @deprecated bruk meUserV2
-     */
-    @GET
-    @Produces(APPLICATION_JSON)
-    @Path("/fraKontekst")
-    @Deprecated(forRemoval = true)
-    public Response meUser() {
-        validerTilgang();
-        return Response.ok(mapTilUtvidetProfilDto(brukerProfilTjeneste.hentProfil())).build();
-    }
-
     @GET
     @Produces(APPLICATION_JSON)
     @Path("/informasjon")
-    public Response meUserV2() {
-        validerTilgang();
-        return Response.ok(mapTilUtvidetProfilDto(brukerProfilTjeneste.hentProfil())).build();
+    public BrukerProfilUtvidetResponseDto brukerProfilUtvidet() {
+        Objects.requireNonNull(KontekstHolder.getKontekst());
+        if (!IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
+            throw new WebApplicationException("Trenger en gyldig OBO token.", Response.Status.FORBIDDEN);
+        }
+        return mapTilUtvidetProfilDto(brukerProfilTjeneste.hentProfil());
     }
 
     @POST
     @Produces(APPLICATION_JSON)
     @Path("/profil")
-    public Response finnUser(@NotNull @Valid ProfilIdentRequest request) {
-        BrukerProfilResponseDto entity;
-        try {
-            entity = mapTilProfilDto(brukerProfilTjeneste.hentProfil(request.ident()));
-        } catch (Exception e) {
-            LOG.info("PROFIL: Feilet med: {}", e.getMessage());
-            return Response.serverError().build();
-        }
-        return Response.ok(entity).build();
+    public BrukerProfilResponseDto finnUser(@NotNull @Valid BrukerProfilRestTjeneste.ProfilIdentRequest request) {
+        return mapTilProfilDto(brukerProfilTjeneste.hentProfil(request.ident()));
     }
 
     @POST
     @Produces(APPLICATION_JSON)
-    @Path("/profil/v2")
-    public Response finnUserV2(@NotNull @Valid ProfilUuidRequest request) {
-        BrukerProfilResponseDto entity;
-        try {
-            entity = mapTilProfilDto(brukerProfilTjeneste.hentProfil(request.oid()));
-        } catch (Exception e) {
-            LOG.info("PROFIL: Feilet med: {}", e.getMessage());
-            return Response.serverError().build();
-        }
-        return Response.ok(entity).build();
+    @Path("/profil/uid")
+    public BrukerProfilResponseDto finnUserV2(@NotNull @Valid BrukerProfilRestTjeneste.ProfilUidRequest request) {
+        return mapTilProfilDto(brukerProfilTjeneste.hentProfil(request.uid()));
     }
 
-    private static void validerTilgang() {
-        Objects.requireNonNull(KontekstHolder.getKontekst());
-        if (!IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
-            throw new WebApplicationException("Trenger en gyldig OBO token.", Response.Status.FORBIDDEN);
-        }
-    }
-
-    public record ProfilUuidRequest(@NotNull UUID oid) {}
+    public record ProfilUidRequest(@NotNull UUID uid) {}
 
     public record ProfilIdentRequest(@NotNull String ident) {}
 
