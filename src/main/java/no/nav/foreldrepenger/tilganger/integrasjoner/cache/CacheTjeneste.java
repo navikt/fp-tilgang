@@ -3,6 +3,8 @@ package no.nav.foreldrepenger.tilganger.integrasjoner.cache;
 import java.time.Duration;
 import java.util.Optional;
 
+import jakarta.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,17 +24,14 @@ public class CacheTjeneste implements Cache {
 
     private JedisPool jedisPool;
 
+    @Inject
     public CacheTjeneste() {
         var host = ENV.getRequiredProperty("redis.host");
         var port = ENV.getRequiredProperty("redis.port", Integer.class);
         var config = DefaultJedisClientConfig.builder()
-            .user("default")
+            .ssl(true)
             .password(ENV.getRequiredProperty("REDIS_PASSWORD"))
-            .hostnameVerifier((hostname, session) -> {
-                var evaluering = hostname.equals(host);
-                LOG.info("Evaluating hostname {} for {}", hostname, evaluering);
-                return evaluering;
-            }).build();
+            .build();
         var poolConfig = new JedisPoolConfig();
         poolConfig.setMinIdle(1);
         poolConfig.setMaxWait(Duration.ofSeconds(3));
@@ -44,7 +43,7 @@ public class CacheTjeneste implements Cache {
 
     @Override
     public void store(String key, String value) {
-        try (var jedis = jedisPool.getResource()) {
+        try (var jedis = getJedisPool().getResource()) {
             LOG.debug("Storing key {} with value {}", key, value);
             jedis.set(key, value, SetParams.setParams().ex(Duration.ofMinutes(60).getSeconds()));
         }
@@ -52,7 +51,7 @@ public class CacheTjeneste implements Cache {
 
     @Override
     public Optional<String> read(String key) {
-        try (var jedis = jedisPool.getResource()) {
+        try (var jedis = getJedisPool().getResource()) {
             if (jedis.exists(key)) {
                 LOG.debug("Reading key {} from pool", key);
                 return Optional.of(jedis.get(key));
@@ -62,4 +61,7 @@ public class CacheTjeneste implements Cache {
         }
     }
 
+    public JedisPool getJedisPool() {
+        return jedisPool;
+    }
 }
