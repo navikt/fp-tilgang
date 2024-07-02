@@ -66,6 +66,3 @@ spec:
           namespace: aura
           cluster: dev-gcp
         {{/if}}
-  redis:
-    - instance: brukerprofil
-      access: readwrite
