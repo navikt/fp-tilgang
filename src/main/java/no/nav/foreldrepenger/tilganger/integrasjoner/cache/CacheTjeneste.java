@@ -38,6 +38,7 @@ public class CacheTjeneste implements Cache {
         poolConfig.setTestOnBorrow(true);
         poolConfig.setTestWhileIdle(true);
 
+        LOG.debug("Creating JedisPool with pool config.");
         jedisPool = new JedisPool(poolConfig, new HostAndPort(host, port), config);
     }
 
