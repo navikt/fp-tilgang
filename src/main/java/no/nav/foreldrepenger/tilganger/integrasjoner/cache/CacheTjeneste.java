@@ -26,6 +26,7 @@ public class CacheTjeneste implements Cache {
         var host = ENV.getRequiredProperty("redis.host");
         var port = ENV.getRequiredProperty("redis.port", Integer.class);
         var config = DefaultJedisClientConfig.builder()
+            .user("default")
             .password(ENV.getRequiredProperty("REDIS_PASSWORD"))
             .hostnameVerifier((hostname, session) -> {
                 var evaluering = hostname.equals(host);
