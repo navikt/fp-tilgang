@@ -104,11 +104,10 @@ class AzureGraphKlient implements AzureGraph {
                 LOG.info("MS: finner ikke bruker med id={}", uid);
                 return Optional.empty();
             }
-
-            LOG.info("MS: fant bruker {}", user);
+            LOG.debug("MS: fant bruker med id={}", uid);
             return Optional.of(user);
         } catch (Exception e) {
-            LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
+            LOG.info("MS: Teknisk feil. Message={}", e.getMessage(), e);
             return Optional.empty();
         }
     }
@@ -130,14 +129,14 @@ class AzureGraphKlient implements AzureGraph {
 
             var first = users.value().getFirst();
             if (users.value().size() > 1) {
-                LOG.info("MS: finner flere brukere med id={} velger første: {}", userId, first);
+                LOG.info("MS: finner flere brukere med id={}", userId);
                 return Optional.of(first);
             }
 
-            LOG.info("MS: fant bruker {}", first);
+            LOG.debug("MS: fant bruker med id={}", first.id());
             return Optional.of(first);
         } catch (Exception e) {
-            LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
+            LOG.info("MS: Teknisk feil. Message={}", e.getMessage(), e);
             return Optional.empty();
         }
     }
@@ -158,11 +157,12 @@ class AzureGraphKlient implements AzureGraph {
         try {
 			var grupper = restKlient.send(request, GroupsResponse.class);
             if (grupper == null || grupper.value() == null || grupper.value().isEmpty()) {
-                LOG.info("MS Graph: finner ikke grupper for bruker={}", user.id());
+                LOG.info("MS: finner ikke grupper for bruker={}", user.id());
                 return List.of();
             }
-
-            LOG.info("MS Graph: grupper={}", grupper.value().stream().map(Objects::toString).collect(Collectors.joining(", ")));
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("MS: Grupper={}", grupper.value().stream().map(Objects::toString).collect(Collectors.joining(", ")));
+            }
             return grupper.value();
 		} catch (Exception e) {
             LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
