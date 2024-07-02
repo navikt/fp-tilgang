@@ -52,7 +52,7 @@ public class BrukerProfilRestTjeneste {
     @Deprecated(forRemoval = true)
     public Response meUser() {
         validerTilgang();
-        return Response.ok(mapTilUtvidetDto(brukerProfilTjeneste.hentBrukerProfil())).build();
+        return Response.ok(mapTilUtvidetProfilDto(brukerProfilTjeneste.hentProfil())).build();
     }
 
     @GET
@@ -60,7 +60,7 @@ public class BrukerProfilRestTjeneste {
     @Path("/informasjon")
     public Response meUserV2() {
         validerTilgang();
-        return Response.ok(mapTilUtvidetDto(brukerProfilTjeneste.hentBrukerProfil())).build();
+        return Response.ok(mapTilUtvidetProfilDto(brukerProfilTjeneste.hentProfil())).build();
     }
 
     @POST
@@ -69,7 +69,7 @@ public class BrukerProfilRestTjeneste {
     public Response finnUser(@NotNull @Valid ProfilIdentRequest request) {
         BrukerProfilResponseDto entity;
         try {
-            entity = mapTilDto(brukerProfilTjeneste.hentBrukerProfil(request.ident()));
+            entity = mapTilProfilDto(brukerProfilTjeneste.hentProfil(request.ident()));
         } catch (Exception e) {
             LOG.info("PROFIL: Feilet med: {}", e.getMessage());
             return Response.serverError().build();
@@ -83,7 +83,7 @@ public class BrukerProfilRestTjeneste {
     public Response finnUserV2(@NotNull @Valid ProfilUuidRequest request) {
         BrukerProfilResponseDto entity;
         try {
-            entity = mapTilDto(brukerProfilTjeneste.hentBrukerProfil(request.oid()));
+            entity = mapTilProfilDto(brukerProfilTjeneste.hentProfil(request.oid()));
         } catch (Exception e) {
             LOG.info("PROFIL: Feilet med: {}", e.getMessage());
             return Response.serverError().build();
@@ -102,7 +102,7 @@ public class BrukerProfilRestTjeneste {
 
     public record ProfilIdentRequest(@NotNull String ident) {}
 
-    public record BrukerProfilResponseDto(@NotNull String ident, @NotNull String navn, String epostAdresse) {}
+    public record BrukerProfilResponseDto(@NotNull String ident, @NotNull String navn, String epost) {}
 
     public record BrukerProfilUtvidetResponseDto(@NotNull String brukernavn,
                                                  @NotNull String navn,
@@ -114,11 +114,11 @@ public class BrukerProfilRestTjeneste {
                                                  boolean kanBehandleKode6,
                                                  LocalDateTime funksjonellTid) {}
 
-    private BrukerProfilResponseDto mapTilDto(BrukerProfil brukerProfil) {
+    private BrukerProfilResponseDto mapTilProfilDto(BrukerProfil brukerProfil) {
         return new BrukerProfilResponseDto(brukerProfil.brukernavn(), brukerProfil.navn(), brukerProfil.epost());
     }
 
-    private BrukerProfilUtvidetResponseDto mapTilUtvidetDto(BrukerProfil brukerProfil) {
+    private BrukerProfilUtvidetResponseDto mapTilUtvidetProfilDto(BrukerProfil brukerProfil) {
         return new BrukerProfilUtvidetResponseDto(
             brukerProfil.brukernavn(),
             brukerProfil.navn(),

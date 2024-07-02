@@ -68,8 +68,9 @@ public class BrukerProfilTjeneste {
 
     /**
      * Henter informasjon for bruker logget inn i kontekst.
+     * Trenger en gyldig OBO azure token.
      */
-    public BrukerProfil hentBrukerProfil() {
+    public BrukerProfil hentProfil() {
         var cacheKey = KontekstHolder.getKontekst().getUid();
 
         var profilFraCache = getCachedProfil(cacheKey);
@@ -82,7 +83,7 @@ public class BrukerProfilTjeneste {
         return putTilgangToCache(cacheKey, mapBrukerProfil(user, grupper));
     }
 
-    public BrukerProfil hentBrukerProfil(String ident) {
+    public BrukerProfil hentProfil(String ident) {
         if (ident == null || ident.isEmpty()) {
             throw new TekniskException("F-354885", "Kan ikke slå opp brukernavn uten å ha ident");
         }
@@ -93,7 +94,7 @@ public class BrukerProfilTjeneste {
         return getBrukerProfil(user);
     }
 
-    public BrukerProfil hentBrukerProfil(UUID oid) {
+    public BrukerProfil hentProfil(UUID oid) {
         if (oid == null) {
             throw new TekniskException("F-364885", "Kan ikke slå opp brukernavn uten å ha oid");
         }

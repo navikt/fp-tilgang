@@ -116,7 +116,7 @@ class AzureGraphKlient implements AzureGraph {
     private Optional<User> findUserInfo(String userId) {
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint)
             .queryParam($SELECT, USER_SELECT)
-            .queryParam($FILTER, getFilter(userId))
+            .queryParam($FILTER, "onPremisesSamAccountName eq '" + userId + "'")
             .queryParam("$count", true)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
@@ -140,13 +140,6 @@ class AzureGraphKlient implements AzureGraph {
             LOG.info("MS Graph: Teknisk feil. Message={}", e.getMessage(), e);
             return Optional.empty();
         }
-    }
-
-    private static String getFilter(String userId) {
-        if (UUID_PATTERN.matcher(userId).matches()) {
-            return "id eq '" + userId + "'";
-        }
-        return "onPremisesSamAccountName eq '" + userId + "'";
     }
 
     @Override
