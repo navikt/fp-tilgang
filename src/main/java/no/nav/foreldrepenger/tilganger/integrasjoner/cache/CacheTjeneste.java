@@ -23,11 +23,10 @@ public class CacheTjeneste implements Cache {
     private JedisPool jedisPool;
 
     public CacheTjeneste() {
-        var host = ENV.getProperty("REDIS_HOST","localhost");
-        var port = ENV.getProperty("REDIS_PORT", Integer.class, 6379);
+        var host = ENV.getProperty("redis.host");
+        var port = ENV.getProperty("redis.port", Integer.class);
         var config = DefaultJedisClientConfig.builder()
             .password(ENV.getProperty("REDIS_PASSWORD"))
-            .ssl(!ENV.isLocal())
             .hostnameVerifier((hostname, session) -> {
                 var evaluering = hostname.equals(host);
                 LOG.info("Evaluating hostname {} for {}", hostname, evaluering);
