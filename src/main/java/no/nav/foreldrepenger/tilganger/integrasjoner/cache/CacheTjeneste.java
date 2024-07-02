@@ -29,7 +29,7 @@ public class CacheTjeneste implements Cache {
         var port = ENV.getRequiredProperty("redis.port", Integer.class);
         var config = DefaultJedisClientConfig.builder()
             //.ssl(true)
-            .password(ENV.getRequiredProperty("redis.password"))
+            .password(ENV.getProperty("redis.password"))
             .build();
         var poolConfig = new JedisPoolConfig();
         poolConfig.setMinIdle(1);
