@@ -114,6 +114,7 @@ public class BrukerProfilTjeneste {
             LOG.debug("Finner ikke user i cache {}", oid);
             user = azureGraph.user(oid);
             if (user.isPresent()) {
+                LOG.debug("Lagrer i cache {}", oid);
                 cache.store(cacheKey, DefaultJsonMapper.toJson(user));
             }
         } else {
