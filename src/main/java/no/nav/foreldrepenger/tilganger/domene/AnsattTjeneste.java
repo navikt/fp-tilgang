@@ -55,18 +55,18 @@ public class AnsattTjeneste {
     }
 
     public Optional<Ansatt> hentAnsatt(String ident) {
-        LOG.info("Henter antatt: {}", ident);
+        LOG.debug("Henter antatt: {}", ident);
         return hentAnsatt(ident, () -> azureGraph.finnUser(ident));
     }
 
     public Optional<Ansatt> hentAnsatt(UUID uid) {
-        LOG.info("Henter antatt: {}", uid);
+        LOG.debug("Henter antatt: {}", uid);
         return hentAnsatt(uid.toString(), () -> azureGraph.finnUser(uid));
     }
 
     public Set<UUID> hentGrupper(Ansatt ansatt) {
         var identifikator = ansatt.uid().toString();
-        LOG.info("Henter ansatt grupper: {}", identifikator);
+        LOG.debug("Henter ansatt grupper: {}", identifikator);
         return hentGrupper(identifikator, () -> azureGraph.hentGrupper(ansatt.uid()));
     }
 
@@ -89,7 +89,7 @@ public class AnsattTjeneste {
     }
 
     private Set<UUID> hentGrupper(String identifikator, Supplier<Set<Group>> grupperSupplier) {
-        LOG.info("Henter grupper for: {}", identifikator);
+        LOG.debug("Henter grupper for: {}", identifikator);
         var grupper = grupperCache.read(identifikator);
         if (grupper.isEmpty()) {
             LOG.debug("Finner ikke grupper i cache for {}", identifikator);
