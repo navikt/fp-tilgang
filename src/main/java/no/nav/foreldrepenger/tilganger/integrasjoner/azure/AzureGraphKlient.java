@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.tilganger.integrasjoner.azure;
 
 import java.net.URI;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -162,7 +163,8 @@ class AzureGraphKlient implements AzureGraph {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("MS: Grupper={}", grupper.value().stream().map(Objects::toString).collect(Collectors.joining(", ")));
             }
-            return grupper.value();
+            LOG.info("MS: Finner {} grupper.", grupper.value().size());
+            return new HashSet<>(grupper.value());
 		} catch (Exception e) {
             LOG.info("MS: Teknisk feil. Message={}", e.getMessage());
 			return Set.of();
@@ -170,5 +172,5 @@ class AzureGraphKlient implements AzureGraph {
 	}
 
     record UsersResponse(@NotNull List<User> value) {}
-    record GroupsResponse(@NotNull Set<Group> value) {}
+    record GroupsResponse(@NotNull List<Group> value) {}
 }
