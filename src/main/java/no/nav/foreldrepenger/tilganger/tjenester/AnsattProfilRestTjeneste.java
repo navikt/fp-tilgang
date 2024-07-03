@@ -26,16 +26,16 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 @ApplicationScoped
 @Consumes(APPLICATION_JSON)
 @Path("/bruker")
-public class BrukerProfilRestTjeneste {
+public class AnsattProfilRestTjeneste {
 
     private AnsattProfilTjeneste ansattProfilTjeneste;
 
-    BrukerProfilRestTjeneste() {
+    AnsattProfilRestTjeneste() {
         // CDI proxy
     }
 
     @Inject
-    public BrukerProfilRestTjeneste(AnsattProfilTjeneste tjeneste) {
+    public AnsattProfilRestTjeneste(AnsattProfilTjeneste tjeneste) {
         this.ansattProfilTjeneste = tjeneste;
     }
 
@@ -53,7 +53,7 @@ public class BrukerProfilRestTjeneste {
     @POST
     @Produces(APPLICATION_JSON)
     @Path("/profil")
-    public BrukerProfilResponseDto finnUser(@NotNull @Valid BrukerProfilRestTjeneste.ProfilIdentRequest request) {
+    public BrukerProfilResponseDto finnUser(@NotNull @Valid AnsattProfilRestTjeneste.ProfilIdentRequest request) {
         return mapTilProfilDto(ansattProfilTjeneste.hentProfil(request.ident()));
     }
 
@@ -61,7 +61,7 @@ public class BrukerProfilRestTjeneste {
     @Produces(APPLICATION_JSON)
     @Path("/profil/uid")
     @UtenAutentisering
-    public BrukerProfilResponseDto finnUserV2(@NotNull @Valid BrukerProfilRestTjeneste.ProfilUidRequest request) {
+    public BrukerProfilResponseDto finnUserV2(@NotNull @Valid AnsattProfilRestTjeneste.ProfilUidRequest request) {
         return mapTilProfilDto(ansattProfilTjeneste.hentProfil(request.uid()));
     }
 

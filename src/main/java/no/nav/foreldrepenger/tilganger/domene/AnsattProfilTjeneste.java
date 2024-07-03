@@ -63,7 +63,7 @@ public class AnsattProfilTjeneste {
     public AnsattProfil hentProfil() {
         var ansatt = ansattTjeneste.hentAnsattFraKontekst();
         var grupper = ansattTjeneste.hentGrupperFraKontekst();
-        return mapAnsattProfil(ansatt.get(), grupper);
+        return mapAnsattProfil(ansatt.orElseThrow(), grupper);
     }
 
     public AnsattProfil hentProfil(String ident) {
