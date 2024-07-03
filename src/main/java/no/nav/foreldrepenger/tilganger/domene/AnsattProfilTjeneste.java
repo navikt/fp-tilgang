@@ -3,8 +3,8 @@ package no.nav.foreldrepenger.tilganger.domene;
 
 import static no.nav.foreldrepenger.tilganger.integrasjoner.azure.AzureGraph.NAVIDENT_PATTERN;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import jakarta.enterprise.context.Dependent;
@@ -90,7 +90,7 @@ public class AnsattProfilTjeneste {
         return mapAnsattProfil(ansatt.orElseThrow(), grupper);
     }
 
-    private AnsattProfil mapAnsattProfil(Ansatt ansatt, Set<UUID> grupper) {
+    private AnsattProfil mapAnsattProfil(Ansatt ansatt, List<UUID> grupper) {
         return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.epost())
             .kanSaksbehandle(grupper.contains(oidSaksbehandler))
             .kanVeilede(grupper.contains(oidVeileder))

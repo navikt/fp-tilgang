@@ -1,10 +1,10 @@
 package no.nav.foreldrepenger.tilganger.domene;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ public class AnsattTjeneste {
         return hentAnsatt(uid, () -> Optional.of(azureGraph.me()));
     }
 
-    public Set<UUID> hentGrupperFraKontekst() {
+    public List<UUID> hentGrupperFraKontekst() {
         var uid = KontekstHolder.getKontekst().getUid();
         LOG.debug("Henter grupper fra kontekts: {}", uid);
         return hentGrupper(uid, () -> azureGraph.memberOf());
@@ -61,7 +61,7 @@ public class AnsattTjeneste {
         return hentAnsatt(uid.toString(), () -> azureGraph.finnUser(uid));
     }
 
-    public Set<UUID> hentGrupper(Ansatt ansatt) {
+    public List<UUID> hentGrupper(Ansatt ansatt) {
         var identifikator = ansatt.uid().toString();
         LOG.debug("Henter ansatt grupper: {}", identifikator);
         return hentGrupper(identifikator, () -> azureGraph.hentGrupper(ansatt.uid()));
@@ -85,12 +85,12 @@ public class AnsattTjeneste {
         return ansatt;
     }
 
-    private Set<UUID> hentGrupper(String identifikator, Supplier<Set<Group>> grupperSupplier) {
+    private List<UUID> hentGrupper(String identifikator, Supplier<Set<Group>> grupperSupplier) {
         LOG.debug("Henter grupper for: {}", identifikator);
         var grupper = grupperCache.read(identifikator);
         if (grupper.isEmpty()) {
             LOG.debug("Finner ikke grupper i cache for {}", identifikator);
-            grupper = Optional.of(grupperSupplier.get().stream().map(Group::id).collect(Collectors.toSet()));
+            grupper = Optional.of(grupperSupplier.get().stream().map(Group::id).toList());
             if (!grupper.get().isEmpty()) {
                 LOG.debug("Lagrer grupper i cache for {}", identifikator);
                 grupperCache.store(identifikator, grupper.get());

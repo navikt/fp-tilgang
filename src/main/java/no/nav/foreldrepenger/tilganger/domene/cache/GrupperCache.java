@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.tilganger.domene.cache;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -24,7 +25,7 @@ public class GrupperCache {
     static final int DB_NUMBER = 1;
 
     private final RedisCacheKlient redisCache;
-    private final LRUCache<String, Set<UUID>> lokalCache;
+    private final LRUCache<String, List<UUID>> lokalCache;
 
     @Inject
     public GrupperCache() {
@@ -32,7 +33,7 @@ public class GrupperCache {
         this.lokalCache = new LRUCache<>(1500, CACHE_DURATION);
     }
 
-    public void store(String key, Set<UUID> value) {
+    public void store(String key, List<UUID> value) {
         var cacheKey = hentCacheKey(key);
         try {
             LOG.debug("Redis storing for key '{}'", cacheKey);
@@ -43,11 +44,15 @@ public class GrupperCache {
         }
     }
 
-    public Optional<Set<UUID>> read(String key) {
+    public Optional<List<UUID>> read(String key) {
         var cacheKey = hentCacheKey(key);
         try {
             LOG.debug("Redis reading for key '{}'", cacheKey);
-            return redisCache.read(cacheKey, DB_NUMBER).map(value -> DefaultJsonMapper.fromJson(value, Set.class));
+            var read = redisCache.read(cacheKey, DB_NUMBER);
+            LOG.trace("Redis read for key: {}, value {}", cacheKey, read);
+            var deserialized = read.map(value -> DefaultJsonMapper.listFromJson(value, UUID.class));
+            LOG.trace("Redis read afred deserialization: {}", deserialized);
+            return deserialized;
         } catch (TekniskException tex) {
             LOG.info("Feil ved deserialisering av grupper. Fjerner key fra cache.");
             redisCache.remove(cacheKey, DB_NUMBER);
