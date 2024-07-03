@@ -66,7 +66,7 @@ public class RedisCacheKlient {
             LOG.debug("Storing key {} with value {}", key, value);
             jedis.set(key, value, SetParams.setParams().ex(expiresInSeconds));
         } catch (Exception ignored) {
-            LOG.warn("Redis er ikke tilgjengelig.");
+            LOG.info("Redis er ikke tilgjengelig.");
         }
     }
 
@@ -79,7 +79,7 @@ public class RedisCacheKlient {
             }
             LOG.debug("Finner ikke key {}", key);
         } catch (Exception ignored) {
-            LOG.warn("Redis er ikke tilgjengelig.");
+            LOG.info("Redis er ikke tilgjengelig.");
         }
         return Optional.empty();
     }
