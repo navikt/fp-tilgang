@@ -77,7 +77,7 @@ class AzureGraphKlient implements AzureGraph {
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
-        return restKlient.send(request, GroupsResponse.class).value();
+        return new HashSet<>(restKlient.send(request, GroupsResponse.class).value());
     }
 
     @Override
