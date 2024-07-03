@@ -1,4 +1,4 @@
 <included>
-    <logger name="no.nav.foreldrepenger.tilganger" level="DEBUG" />
-    <logger name="no.nav" level="DEBUG" />
+    <logger name="no.nav.foreldrepenger.tilganger" level="TRACE" />
+    <logger name="no.nav" level="TRACE" />
 </included>

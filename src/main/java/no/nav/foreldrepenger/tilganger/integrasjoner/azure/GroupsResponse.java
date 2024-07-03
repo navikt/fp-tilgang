@@ -1,11 +1,7 @@
 package no.nav.foreldrepenger.tilganger.integrasjoner.azure;
 
+import java.util.Set;
+
 import jakarta.validation.constraints.NotNull;
 
-import java.util.List;
-import java.util.UUID;
-
-public record GroupsResponse(@NotNull List<Group> value) {
-    public record Group(@NotNull UUID id) {
-    }
-}
+record GroupsResponse(@NotNull Set<Group> value) {}

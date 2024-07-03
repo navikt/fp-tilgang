@@ -2,7 +2,7 @@ package no.nav.foreldrepenger.tilganger.domene;
 
 import java.time.LocalDateTime;
 
-public record BrukerProfil(String brukernavn,
+public record AnsattProfil(String brukernavn,
                            String navn,
                            String epost,
                            boolean kanSaksbehandle,
@@ -16,7 +16,7 @@ public record BrukerProfil(String brukernavn,
                            boolean kanDrifte,
                            LocalDateTime funksjonellTid) {
 
-    private BrukerProfil(Builder builder) {
+    private AnsattProfil(Builder builder) {
             this(builder.brukernavn, builder.navn, builder.epost, builder.kanSaksbehandle, builder.kanVeilede, builder.kanBeslutte, builder.kanOverstyre,
                 builder.kanOppgavestyre, builder.kanBehandleKodeEgenAnsatt, builder.kanBehandleKode6, builder.kanBehandleKode7, builder.kanDrifte,
                 LocalDateTime.now());
@@ -99,8 +99,8 @@ public record BrukerProfil(String brukernavn,
                 return this;
             }
 
-            public BrukerProfil build() {
-                return new BrukerProfil(this);
+            public AnsattProfil build() {
+                return new AnsattProfil(this);
             }
         }
 

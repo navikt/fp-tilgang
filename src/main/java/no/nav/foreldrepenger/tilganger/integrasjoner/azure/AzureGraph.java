@@ -1,7 +1,7 @@
 package no.nav.foreldrepenger.tilganger.integrasjoner.azure;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -18,11 +18,11 @@ public interface AzureGraph {
     /**
      * @return grupper til brukeren som er logget inn i konteksten.
      */
-    List<GroupsResponse.Group> memberOf();
+    Set<Group> memberOf();
 
-    Optional<User> user(String ident);
+    Optional<User> finnUser(String ident);
 
-    Optional<User> user(UUID id);
+    Optional<User> finnUser(UUID id);
 
-    List<GroupsResponse.Group> groups(User user);
+    Set<Group> hentGrupper(UUID userUid);
 }

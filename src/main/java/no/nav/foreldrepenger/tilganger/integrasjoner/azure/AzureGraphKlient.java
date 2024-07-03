@@ -1,16 +1,16 @@
 package no.nav.foreldrepenger.tilganger.integrasjoner.azure;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.UriBuilder;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.felles.integrasjon.rest.ProxyRestClient;
@@ -19,7 +19,7 @@ import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 
-@Dependent
+@ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE,
     endpointProperty = "ms.graph.url",
     endpointDefault = "https://graph.microsoft.com/v1.0",
@@ -38,7 +38,7 @@ class AzureGraphKlient implements AzureGraph {
     protected static final String CONSISTENCY_LEVEL = "ConsistencyLevel";
     protected static final String EVENTUAL = "eventual";
     protected static final String $FILTER = "$filter";
-    protected static final String GROUPS_SELECT = "id,onPremisesSamAccountName,displayName";
+    protected static final String GROUPS_SELECT = "id";
 
     private final ProxyRestClient restKlient;
     private final RestConfig restConfig;
@@ -67,7 +67,7 @@ class AzureGraphKlient implements AzureGraph {
     }
 
     @Override
-    public List<GroupsResponse.Group> memberOf() {
+    public Set<Group> memberOf() {
         var request = RestRequest.newGET(UriBuilder.fromUri(meEndpoint).path(MEMBER_OF_PATH)
             .queryParam($SELECT, GROUPS_SELECT)
             .build(), restConfig);
@@ -77,7 +77,7 @@ class AzureGraphKlient implements AzureGraph {
     }
 
     @Override
-	public Optional<User> user(String ident) {
+	public Optional<User> finnUser(String ident) {
 		if (!ENV.isLocal() && !NAVIDENT_PATTERN.matcher(ident).matches()) {
 			return Optional.empty();
 		}
@@ -85,15 +85,11 @@ class AzureGraphKlient implements AzureGraph {
 	}
 
     @Override
-    public Optional<User> user(UUID id) {
+    public Optional<User> finnUser(UUID id) {
         if (id == null) {
             return Optional.empty();
         }
-        return getUserInfo(id);
-    }
-
-    private Optional<User> getUserInfo(UUID uid) {
-        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(uid.toString())
+        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(id.toString())
             .queryParam($SELECT, USER_SELECT)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
@@ -101,10 +97,10 @@ class AzureGraphKlient implements AzureGraph {
         try {
             User user = restKlient.send(request, User.class);
             if (user == null) {
-                LOG.info("MS: finner ikke bruker med id={}", uid);
+                LOG.info("MS: finner ikke bruker med id={}", id);
                 return Optional.empty();
             }
-            LOG.debug("MS: fant bruker med id={}", uid);
+            LOG.debug("MS: fant bruker med id={}", id);
             return Optional.of(user);
         } catch (Exception e) {
             LOG.info("MS: Teknisk feil. Message={}", e.getMessage());
@@ -142,13 +138,13 @@ class AzureGraphKlient implements AzureGraph {
     }
 
     @Override
-	public List<GroupsResponse.Group> groups(User user) {
-		if (user == null || user.id() == null) {
-			return List.of();
+	public Set<Group> hentGrupper(UUID userUid) {
+		if (userUid == null) {
+			return Set.of();
 		}
         // Bruker til å liste alle grupper for en bruker, men det er mulig å liste alle brukere av en gruppe med
         // /v1.0/groups/<group-uid>/members?$count=true
-        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(user.id().toString()).path(MEMBER_OF_PATH)
+        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(userUid.toString()).path(MEMBER_OF_PATH)
             .queryParam($SELECT, GROUPS_SELECT)
             .queryParam("$count", true)
             .build(), restConfig);
@@ -157,8 +153,8 @@ class AzureGraphKlient implements AzureGraph {
         try {
 			var grupper = restKlient.send(request, GroupsResponse.class);
             if (grupper == null || grupper.value() == null || grupper.value().isEmpty()) {
-                LOG.info("MS: finner ikke grupper for bruker={}", user.id());
-                return List.of();
+                LOG.info("MS: finner ikke grupper for bruker={}", userUid);
+                return Set.of();
             }
             if (LOG.isDebugEnabled()) {
                 LOG.debug("MS: Grupper={}", grupper.value().stream().map(Objects::toString).collect(Collectors.joining(", ")));
@@ -166,7 +162,7 @@ class AzureGraphKlient implements AzureGraph {
             return grupper.value();
 		} catch (Exception e) {
             LOG.info("MS: Teknisk feil. Message={}", e.getMessage());
-			return List.of();
+			return Set.of();
 		}
 	}
 

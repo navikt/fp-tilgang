@@ -48,7 +48,7 @@ class AzureGraphKlientTest {
     }
 
     @Test
-    void testUserReturnsUserInfo() {
+    void testUserReturnsFinnUserInfo() {
         // Prepare test data
         String userId = "123456";
         var expectedUser = new User(UUID.randomUUID(), "sam","display", "mail");
@@ -58,35 +58,35 @@ class AzureGraphKlientTest {
         when(mockRestClient.send(any(RestRequest.class), any(Class.class))).thenReturn(response);
 
         // Invoke the method under test
-        Optional<User> result = azureGraphKlient.user(userId);
+        Optional<User> result = azureGraphKlient.finnUser(userId);
 
         // Verify the result
         assertThat(result).isPresent().contains(expectedUser);
     }
 
     @Test
-    void testUserReturnsEmptyOptionalForNullId() {
+    void testFinnUserReturnsEmptyOptionalForNullId() {
         // Invoke the method under test with null ID
-        Optional<User> result = azureGraphKlient.user("null");
+        Optional<User> result = azureGraphKlient.finnUser("null");
 
         // Verify the result
         assertThat(result).isEmpty();
     }
 
     @Test
-    void testUserReturnsEmptyOptionalForNonMatchingId() {
+    void testFinnUserReturnsEmptyOptionalForNonMatchingId() {
         // Prepare test data
         String invalidUserId = "invalidId";
 
         // Invoke the method under test with an invalid ID
-        Optional<User> result = azureGraphKlient.user(invalidUserId);
+        Optional<User> result = azureGraphKlient.finnUser(invalidUserId);
 
         // Verify the result
         assertThat(result).isEmpty();
     }
 
     @Test
-    void testUserReturnsUserInfo2() {
+    void testUserReturnsFinnUserInfo2() {
         // Prepare test data
         UUID userId = UUID.randomUUID();
         var expectedUser = new User(userId, "samAccountName", "displayName", "mail@example.com");
@@ -96,7 +96,7 @@ class AzureGraphKlientTest {
         when(mockRestClient.send(any(RestRequest.class), any(Class.class))).thenReturn(response);
 
         // Invoke the method under test
-        Optional<User> result = azureGraphKlient.user(userId.toString());
+        Optional<User> result = azureGraphKlient.finnUser(userId.toString());
 
         // Validate user object
         assertThat(result).isPresent();
@@ -108,12 +108,12 @@ class AzureGraphKlientTest {
     }
 
     @Test
-    void testUserReturnsEmptyOptionalForNonMatchingId2() {
+    void testFinnUserReturnsEmptyOptionalForNonMatchingId2() {
         // Prepare test data
         String invalidUserId = "invalidId";
 
         // Invoke the method under test with an invalid ID
-        Optional<User> result = azureGraphKlient.user(invalidUserId);
+        Optional<User> result = azureGraphKlient.finnUser(invalidUserId);
 
         // Verify the result
         assertThat(result).isEmpty();
