@@ -35,7 +35,8 @@ public class GrupperCache implements Cache<Set<UUID>> {
     public void store(String key, Set<UUID> value) {
         var cacheKey = hentCacheKey(key);
         try {
-            redisCache.store(cacheKey, DefaultJsonMapper.toJson(value), CACHE_DURATION);
+            LOG.debug("Redis storing for key '{}'", cacheKey);
+            redisCache.store(cacheKey, DefaultJsonMapper.toJson(value));
         } catch (Exception e) {
             logRedisUtilgjengelig();
             lokalCache.put(cacheKey, value);
@@ -46,6 +47,7 @@ public class GrupperCache implements Cache<Set<UUID>> {
     public Optional<Set<UUID>> read(String key) {
         var cacheKey = hentCacheKey(key);
         try {
+            LOG.debug("Redis reading for key '{}'", cacheKey);
             return redisCache.read(cacheKey).map(value -> DefaultJsonMapper.fromJson(value, Set.class));
         } catch (Exception e) {
             logRedisUtilgjengelig();

@@ -65,6 +65,8 @@ public class RedisCacheKlient {
         try (var jedis = getJedisPool().getResource()) {
             LOG.debug("Storing key {} with value {}", key, value);
             jedis.set(key, value, SetParams.setParams().ex(expiresInSeconds));
+        } catch (Exception ignored) {
+            LOG.warn("Redis er ikke tilgjengelig.");
         }
     }
 
@@ -76,8 +78,10 @@ public class RedisCacheKlient {
                 return Optional.of(jedis.get(key));
             }
             LOG.debug("Finner ikke key {}", key);
-            return Optional.empty();
+        } catch (Exception ignored) {
+            LOG.warn("Redis er ikke tilgjengelig.");
         }
+        return Optional.empty();
     }
 
     private JedisPool getJedisPool() {
