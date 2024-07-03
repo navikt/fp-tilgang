@@ -12,6 +12,7 @@ import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.args.FlushMode;
 import redis.clients.jedis.params.SetParams;
 
 public class RedisCacheKlient {
@@ -53,37 +54,62 @@ public class RedisCacheKlient {
     /**
      * Lagres i 60 minutter
      */
-    public void store(String key, String value) {
+    public void store(String key, String value, int database) {
         Objects.requireNonNull(key, "store cache key is null");
         Objects.requireNonNull(value, "store cache value is null");
-        store(key, value, Duration.ofMinutes(DEFAULT_CACHE_DURATION_IN_MINUTES).getSeconds());
+        store(key, value, Duration.ofMinutes(DEFAULT_CACHE_DURATION_IN_MINUTES).getSeconds(), database);
     }
 
-    public void store(String key, String value, long expiresInSeconds) {
+    public void store(String key, String value, long expiresInSeconds, int database) {
         Objects.requireNonNull(key, "store cache key is null");
         Objects.requireNonNull(value, "store cache value is null");
         try (var jedis = getJedisPool().getResource()) {
+            jedis.select(database);
             LOG.debug("Storing key {} with value {}", key, value);
             jedis.set(key, value, SetParams.setParams().ex(expiresInSeconds));
         } catch (Exception e) {
-            LOG.info("Redis er ikke tilgjengelig.");
+            LOG.info("Feil ved lagring i redis: {}. Kjører videre uten cache.", e.getMessage());
             throw e;
         }
     }
 
-    public Optional<String> read(String key) {
+    public Optional<String> read(String key, int database) {
         Objects.requireNonNull(key, "read cache key is null");
         try (var jedis = getJedisPool().getResource()) {
+            jedis.select(database);
             if (jedis.exists(key)) {
                 LOG.debug("Reading key {} from pool", key);
                 return Optional.of(jedis.get(key));
             }
             LOG.debug("Finner ikke key {}", key);
         } catch (Exception e) {
-            LOG.info("Redis er ikke tilgjengelig.");
+            LOG.info("Feil ved lesing fra redis: {}. Kjører videre uten cache.", e.getMessage());
             throw e;
         }
         return Optional.empty();
+    }
+
+    public void remove(String key, int database) {
+        Objects.requireNonNull(key, "remove cache key is null");
+        try (var jedis = getJedisPool().getResource()) {
+            jedis.select(database);
+            LOG.debug("Fjerne key {}", key);
+            jedis.del(key);
+        } catch (Exception e) {
+            LOG.info("Feil ved sletting fra redis: {}. Kjører videre uten cache.", e.getMessage());
+            throw e;
+        }
+    }
+
+    public void evictCacheIn(int database) {
+        try (var jedis = getJedisPool().getResource()) {
+            LOG.debug("Fjerner hele cachen i database {}", database);
+            jedis.select(database);
+            jedis.flushDB(FlushMode.ASYNC);
+        } catch (Exception e) {
+            LOG.info("Feil ved flushing av redis: {}. Kjører videre uten cache.", e.getMessage());
+            throw e;
+        }
     }
 
     private JedisPool getJedisPool() {

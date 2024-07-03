@@ -6,36 +6,33 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import no.nav.foreldrepenger.tilganger.domene.cache.CacheAnsatt;
-import no.nav.foreldrepenger.tilganger.domene.cache.CacheGrupper;
-import no.nav.foreldrepenger.tilganger.integrasjoner.azure.Group;
-
-import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import no.nav.foreldrepenger.tilganger.domene.cache.Cache;
+import no.nav.foreldrepenger.tilganger.domene.cache.AnsattCache;
+import no.nav.foreldrepenger.tilganger.domene.cache.GrupperCache;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.AzureGraph;
+import no.nav.foreldrepenger.tilganger.integrasjoner.azure.Group;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.User;
+import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @ApplicationScoped
 public class AnsattTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(AnsattTjeneste.class);
 
     private AzureGraph azureGraph;
-    private Cache<Ansatt> ansattCache;
-    private Cache<Set<UUID>> grupperCache;
+    private AnsattCache ansattCache;
+    private GrupperCache grupperCache;
 
     AnsattTjeneste() {
         // CDI proxy
     }
 
     @Inject
-    public AnsattTjeneste(@CacheAnsatt Cache<Ansatt> ansattCache,
-                          @CacheGrupper Cache<Set<UUID>> grupperCache,
+    public AnsattTjeneste(AnsattCache ansattCache,
+                          GrupperCache grupperCache,
                           AzureGraph azureGraph) {
         this.ansattCache = ansattCache;
         this.grupperCache = grupperCache;

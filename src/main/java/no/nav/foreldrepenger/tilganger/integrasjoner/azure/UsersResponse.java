@@ -1,7 +1,0 @@
-package no.nav.foreldrepenger.tilganger.integrasjoner.azure;
-
-import jakarta.validation.constraints.NotNull;
-
-import java.util.List;
-
-record UsersResponse(@NotNull List<User> value) {}

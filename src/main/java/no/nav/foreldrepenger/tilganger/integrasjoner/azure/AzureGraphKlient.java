@@ -1,11 +1,14 @@
 package no.nav.foreldrepenger.tilganger.integrasjoner.azure;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import jakarta.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,4 +169,6 @@ class AzureGraphKlient implements AzureGraph {
 		}
 	}
 
+    record UsersResponse(@NotNull List<User> value) {}
+    record GroupsResponse(@NotNull Set<Group> value) {}
 }
