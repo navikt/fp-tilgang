@@ -7,20 +7,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
-import jakarta.validation.constraints.NotNull;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.foreldrepenger.konfig.KonfigVerdi;
-import no.nav.foreldrepenger.tilganger.domene.cache.Cache;
 import no.nav.vedtak.exception.TekniskException;
 
 @Dependent
 public class AnsattProfilTjeneste {
-    private static final Logger LOG = LoggerFactory.getLogger(AnsattProfilTjeneste.class);
     private static final Environment ENV = Environment.current();
 
     private UUID oidSaksbehandler;
@@ -33,8 +27,6 @@ public class AnsattProfilTjeneste {
     private UUID oidKode7;
     private UUID oidDrifter;
 
-    private Cache<AnsattProfil> profilCache;
-
     private AnsattTjeneste ansattTjeneste;
 
     public AnsattProfilTjeneste() {
@@ -43,7 +35,6 @@ public class AnsattProfilTjeneste {
 
     @Inject
     public AnsattProfilTjeneste(AnsattTjeneste ansattTjeneste,
-                                Cache<AnsattProfil> profilCache,
                                 @KonfigVerdi(value = "gruppe.oid.saksbehandler") String saksbehandler,
                                 @KonfigVerdi(value = "gruppe.oid.veileder") String veileder,
                                 @KonfigVerdi(value = "gruppe.oid.beslutter") String beslutter,
@@ -53,7 +44,6 @@ public class AnsattProfilTjeneste {
                                 @KonfigVerdi(value = "gruppe.oid.kode6") String kode6,
                                 @KonfigVerdi(value = "gruppe.oid.kode7") String kode7,
                                 @KonfigVerdi(value = "gruppe.oid.drifter") String drifter) {
-        this.profilCache = profilCache;
         this.oidSaksbehandler = UUID.fromString(saksbehandler);
         this.oidVeileder = UUID.fromString(veileder);
         this.oidBeslutter = UUID.fromString(beslutter);
