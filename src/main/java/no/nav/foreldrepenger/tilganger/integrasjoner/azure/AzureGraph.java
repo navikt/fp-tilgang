@@ -20,6 +20,11 @@ public interface AzureGraph {
      */
     Set<Group> memberOf();
 
+    /**
+     * @return bruker som er logget inn i konteksten.
+     */
+    User meExtended();
+
     Optional<User> finnUser(String ident);
 
     Optional<User> finnUser(UUID id);

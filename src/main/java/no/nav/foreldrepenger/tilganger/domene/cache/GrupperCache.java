@@ -3,7 +3,6 @@ package no.nav.foreldrepenger.tilganger.domene.cache;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -48,11 +47,9 @@ public class GrupperCache {
         var cacheKey = hentCacheKey(key);
         try {
             LOG.debug("Redis reading for key '{}'", cacheKey);
-            var read = redisCache.read(cacheKey, DB_NUMBER);
-            LOG.trace("Redis read for key: {}, value {}", cacheKey, read);
-            var deserialized = read.map(value -> DefaultJsonMapper.listFromJson(value, UUID.class));
-            LOG.trace("Redis read afred deserialization: {}", deserialized);
-            return deserialized;
+            var fromCache = redisCache.read(cacheKey, DB_NUMBER);
+            LOG.trace("Redis read for key: {}, value {}", cacheKey, fromCache);
+            return fromCache.map(value -> DefaultJsonMapper.listFromJson(value, UUID.class));
         } catch (TekniskException tex) {
             LOG.info("Feil ved deserialisering av grupper. Fjerner key fra cache.");
             redisCache.remove(cacheKey, DB_NUMBER);

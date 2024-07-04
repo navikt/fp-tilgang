@@ -39,6 +39,12 @@ public class AnsattTjeneste {
         this.azureGraph = azureGraph;
     }
 
+    public Optional<Ansatt> hentAnsattFraKontekstExtended() {
+        var uid = KontekstHolder.getKontekst().getUid();
+        LOG.debug("Henter antatt fra kontekts: {}", uid);
+        return hentAnsatt(uid, () -> Optional.of(azureGraph.meExtended()));
+    }
+
     public Optional<Ansatt> hentAnsattFraKontekst() {
         var uid = KontekstHolder.getKontekst().getUid();
         LOG.debug("Henter antatt fra kontekts: {}", uid);
@@ -102,6 +108,9 @@ public class AnsattTjeneste {
     }
 
     private static Ansatt mapUser(User user) {
+        if (user.memberOf() != null) {
+            LOG.debug("Fant {} grupper på denne ansatte.", user.memberOf().size());
+        }
         return new Ansatt(user.id(), user.onPremisesSamAccountName(), user.displayName(), user.mail());
     }
 }

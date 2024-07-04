@@ -1,16 +1,28 @@
 package no.nav.foreldrepenger.tilganger.integrasjoner.azure;
 
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.http.HttpResponse;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.validation.constraints.NotNull;
 
+import no.nav.vedtak.exception.IntegrasjonException;
+import no.nav.vedtak.exception.ManglerTilgangException;
+
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
+
+import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.server.spi.ResponseErrorMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +49,13 @@ class AzureGraphKlient implements AzureGraph {
     protected static final String USERS_PATH = "/users";
     protected static final String ME_PATH = "/me";
     protected static final String MEMBER_OF_PATH = "/memberOf";
-    protected static final String USER_SELECT = "id,onPremisesSamAccountName,displayName,mail";
-    protected static final String $SELECT = "$select";
+    protected static final String PARAM_NAME_SELECT = "$select";
+    protected static final String PARAM_VALUE_SELECT_USER = "id,onPremisesSamAccountName,displayName,mail";
     protected static final String CONSISTENCY_LEVEL = "ConsistencyLevel";
     protected static final String EVENTUAL = "eventual";
     protected static final String $FILTER = "$filter";
-    protected static final String GROUPS_SELECT = "id";
+    protected static final String PARAM_VALUE_SELECT_GROUPS = "id";
+    protected static final String PARAM_NAME_EXPAND = "$expand";
 
     private final ProxyRestClient restKlient;
     private final RestConfig restConfig;
@@ -63,7 +76,7 @@ class AzureGraphKlient implements AzureGraph {
     @Override
     public User me() {
         var request = RestRequest.newGET(UriBuilder.fromUri(meEndpoint)
-            .queryParam($SELECT, USER_SELECT)
+            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
@@ -71,9 +84,25 @@ class AzureGraphKlient implements AzureGraph {
     }
 
     @Override
+    public User meExtended() {
+        URI requestUri = UriBuilder.fromUri(meEndpoint)
+            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
+            .queryParam(PARAM_NAME_EXPAND, "memberOf($select=id)")
+            .build();
+
+        var request = RestRequest.newGET(requestUri, restConfig)
+            .header(CONSISTENCY_LEVEL, EVENTUAL);
+
+        LOG.debug("Kaller til MS Graph med: {}", requestUri);
+        var response = restKlient.sendReturnUnhandled(request);
+
+        return mapResponse(handleResponse(response, requestUri), User.class);
+    }
+
+    @Override
     public Set<Group> memberOf() {
         var request = RestRequest.newGET(UriBuilder.fromUri(meEndpoint).path(MEMBER_OF_PATH)
-            .queryParam($SELECT, GROUPS_SELECT)
+            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
@@ -94,7 +123,7 @@ class AzureGraphKlient implements AzureGraph {
             return Optional.empty();
         }
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(id.toString())
-            .queryParam($SELECT, USER_SELECT)
+            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
 
@@ -114,7 +143,7 @@ class AzureGraphKlient implements AzureGraph {
 
     private Optional<User> findUserInfo(String userId) {
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint)
-            .queryParam($SELECT, USER_SELECT)
+            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
             .queryParam($FILTER, "onPremisesSamAccountName eq '" + userId + "'")
             .queryParam("$count", true)
             .build(), restConfig);
@@ -149,7 +178,7 @@ class AzureGraphKlient implements AzureGraph {
         // Bruker til å liste alle grupper for en bruker, men det er mulig å liste alle brukere av en gruppe med
         // /v1.0/groups/<group-uid>/members?$count=true
         var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(userUid.toString()).path(MEMBER_OF_PATH)
-            .queryParam($SELECT, GROUPS_SELECT)
+            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
             .queryParam("$count", true)
             .build(), restConfig);
         request.header(CONSISTENCY_LEVEL, EVENTUAL);
@@ -171,6 +200,37 @@ class AzureGraphKlient implements AzureGraph {
 		}
 	}
 
+    private static String handleResponse(final HttpResponse<String> response, URI endpoint) {
+        int status = response.statusCode();
+        if (status == HttpURLConnection.HTTP_NO_CONTENT) {
+            return null;
+        }
+        if ((status >= HttpURLConnection.HTTP_OK && status < HttpURLConnection.HTTP_MULT_CHOICE)) {
+            return response.body();
+        }
+        if (status == HttpURLConnection.HTTP_FORBIDDEN) {
+            throw new ManglerTilgangException("F-468816", "Feilet mot " + endpoint);
+        }
+        if (status == HttpURLConnection.HTTP_BAD_REQUEST) {
+            ErrorResponse errorResponse = mapResponse(response.body(), ErrorResponse.class);
+            if (errorResponse != null && errorResponse.error() != null) {
+                var error = errorResponse.error();
+                throw new IntegrasjonException("F-468817", String.format("Uventet respons %s fra %s med kode: %s og melding: %s", status, endpoint, error.code(), error.message()));
+            }
+        }
+        throw new IntegrasjonException("F-468817", String.format("Uventet respons %s fra %s", status, endpoint));
+    }
+
+    private static <T> T mapResponse(String response, Class<T> clazz) {
+        if (clazz.isAssignableFrom(String.class)) {
+            return clazz.cast(response);
+        }
+        return DefaultJsonMapper.fromJson(response, clazz);
+    }
+
     record UsersResponse(@NotNull List<User> value) {}
     record GroupsResponse(@NotNull List<Group> value) {}
+    record ErrorResponse(@NotNull Error error) {
+        record Error(@NotNull String code, @NotNull String message) {}
+    }
 }

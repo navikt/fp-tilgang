@@ -1,8 +1,8 @@
 package no.nav.foreldrepenger.tilganger.domene;
 
-import jakarta.validation.constraints.NotNull;
-
 import java.util.UUID;
+
+import jakarta.validation.constraints.NotNull;
 
 public record Ansatt(@NotNull UUID uid,
                      @NotNull String ident,

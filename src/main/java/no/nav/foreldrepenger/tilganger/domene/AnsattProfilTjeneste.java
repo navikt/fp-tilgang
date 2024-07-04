@@ -13,8 +13,12 @@ import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.foreldrepenger.konfig.KonfigVerdi;
 import no.nav.vedtak.exception.TekniskException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Dependent
 public class AnsattProfilTjeneste {
+    private static final Logger LOG = LoggerFactory.getLogger(AnsattProfilTjeneste.class);
     private static final Environment ENV = Environment.current();
 
     private UUID oidSaksbehandler;
@@ -63,6 +67,22 @@ public class AnsattProfilTjeneste {
     public AnsattProfil hentProfil() {
         var ansatt = ansattTjeneste.hentAnsattFraKontekst();
         var grupper = ansattTjeneste.hentGrupperFraKontekst();
+        LOG.debug("MEE. Fant {} grupper på denne ansatte.", grupper.size());
+
+        try {
+            var nyAnsattExtended = ansattTjeneste.hentAnsattFraKontekstExtended();
+            if (nyAnsattExtended.isPresent()) {
+                LOG.debug("MEE. Fant ansatt fra kontekst i utvidet kall.");
+                if (ansatt.orElseThrow().equals(nyAnsattExtended.get())) {
+                    LOG.debug("MEE.Ansatte er like");
+                }
+            } else {
+                LOG.debug("MEE.Fant ikke ansatt fra kontekst i utvidet kall.");
+            }
+        } catch (Exception e) {
+            LOG.debug("MEE. Feil ved kall til utvidet me endepunkt.");
+        }
+
         return mapAnsattProfil(ansatt.orElseThrow(), grupper);
     }
 
