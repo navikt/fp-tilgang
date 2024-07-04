@@ -16,8 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import no.nav.vedtak.exception.IntegrasjonException;
-import no.nav.vedtak.mapper.json.DefaultJsonMapper;
+import javax.net.ssl.SSLSession;
 
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -27,13 +26,13 @@ import org.junit.jupiter.api.Test;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.ProxyRestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 import no.nav.vedtak.sikkerhet.kontekst.RequestKontekst;
-
-import javax.net.ssl.SSLSession;
 
 class AzureGraphKlientTest {
 
@@ -63,7 +62,7 @@ class AzureGraphKlientTest {
     void testUserReturnsFinnUserInfo() {
         // Prepare test data
         String userId = "123456";
-        var expectedUser = new User(UUID.randomUUID(), "sam","display", "mail", null);
+        var expectedUser = new User(UUID.randomUUID(), "sam","display", "mail");
         var response = new AzureGraphKlient.UsersResponse(List.of(expectedUser));
 
         // Mock REST call behavior
@@ -79,7 +78,7 @@ class AzureGraphKlientTest {
     void testUserReturnsFinnUserInfo2() {
         // Prepare test data
         UUID userId = UUID.randomUUID();
-        var expectedUser = new User(userId, "samAccountName", "displayName", "mail@example.com", null);
+        var expectedUser = new User(userId, "samAccountName", "displayName", "mail@example.com");
         var response = new AzureGraphKlient.UsersResponse(List.of(expectedUser));
 
         // Mock REST call behavior

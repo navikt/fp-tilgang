@@ -13,12 +13,8 @@ import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.foreldrepenger.konfig.KonfigVerdi;
 import no.nav.vedtak.exception.TekniskException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @Dependent
 public class AnsattProfilTjeneste {
-    private static final Logger LOG = LoggerFactory.getLogger(AnsattProfilTjeneste.class);
     private static final Environment ENV = Environment.current();
 
     private UUID oidSaksbehandler;

@@ -11,8 +11,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import jakarta.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +47,7 @@ class AzureGraphKlient implements AzureGraph {
     protected static final String EVENTUAL = "eventual";
     protected static final String PARAM_NAME_FILTER = "$filter";
     protected static final String PARAM_VALUE_SELECT_GROUPS = "id";
-    protected static final String PARAM_NAME_EXPAND = "$expand";
     protected static final String PARAM_NAME_COUNT = "$count";
-    protected static final String PARAM_VALUE_EXPAND_MEMBER_OF = "memberOf($select=id)";
 
     private final ProxyRestClient restKlient;
     private final RestConfig restConfig;
@@ -73,7 +69,6 @@ class AzureGraphKlient implements AzureGraph {
     public User me() {
         URI requestUri = UriBuilder.fromUri(meEndpoint)
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
-            .queryParam(PARAM_NAME_EXPAND, PARAM_VALUE_EXPAND_MEMBER_OF)
             .build();
 
         var request = RestRequest.newGET(requestUri, restConfig)
@@ -110,7 +105,6 @@ class AzureGraphKlient implements AzureGraph {
         URI requestUri = UriBuilder.fromUri(userEndpoint)
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
             .queryParam(PARAM_NAME_FILTER, "onPremisesSamAccountName eq '" + ident + "'")
-            .queryParam(PARAM_NAME_EXPAND, PARAM_VALUE_EXPAND_MEMBER_OF)
             .queryParam(PARAM_NAME_COUNT, true)
             .build();
 
@@ -131,7 +125,6 @@ class AzureGraphKlient implements AzureGraph {
         URI requestUri = UriBuilder.fromUri(userEndpoint)
             .path(id.toString())
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
-            .queryParam(PARAM_NAME_EXPAND, PARAM_VALUE_EXPAND_MEMBER_OF)
             .queryParam(PARAM_NAME_COUNT, true)
             .build();
 

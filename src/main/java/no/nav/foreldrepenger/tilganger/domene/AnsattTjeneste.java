@@ -79,13 +79,6 @@ public class AnsattTjeneste {
                 var uid = ansatt.get().uid();
                 LOG.debug("Lagrer i cache {}", uid);
                 ansattCache.store(uid.toString(), ansatt.get());
-
-                // User kall leverer grupper med en gang også - men de caches i en kortere periode.
-                var grupper = user.get().memberOf().stream().map(Group::id).toList();
-                if (!grupper.isEmpty()) {
-                    LOG.debug("Lagrer grupper i cache for {}", identifikator);
-                    grupperCache.store(identifikator, grupper);
-                }
             }
         } else {
             LOG.debug("Fant ansatt i cache for {}", identifikator);
@@ -110,9 +103,6 @@ public class AnsattTjeneste {
     }
 
     private static Ansatt mapUser(User user) {
-        if (user.memberOf() != null) {
-            LOG.debug("Fant {} grupper på denne ansatte.", user.memberOf().size());
-        }
         return new Ansatt(user.id(), user.onPremisesSamAccountName(), user.displayName(), user.mail());
     }
 }
