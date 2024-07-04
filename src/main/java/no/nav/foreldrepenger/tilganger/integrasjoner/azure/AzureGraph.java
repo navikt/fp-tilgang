@@ -15,15 +15,7 @@ public interface AzureGraph {
      */
     User me();
 
-    /**
-     * @return grupper til brukeren som er logget inn i konteksten.
-     */
     Set<Group> memberOf();
-
-    /**
-     * @return bruker som er logget inn i konteksten.
-     */
-    User meExtended();
 
     Optional<User> finnUser(String ident);
 

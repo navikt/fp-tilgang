@@ -65,27 +65,8 @@ public class AnsattProfilTjeneste {
      * Trenger en gyldig OBO azure token.
      */
     public AnsattProfil hentProfil() {
-        Optional<Ansatt> nyAnsattExtended = Optional.empty();
-        try {
-            nyAnsattExtended = ansattTjeneste.hentAnsattFraKontekstExtended();
-            if (nyAnsattExtended.isPresent()) {
-                LOG.debug("MEE. Fant ansatt fra kontekst i utvidet kall.");
-            } else {
-                LOG.debug("MEE.Fant ikke ansatt fra kontekst i utvidet kall.");
-            }
-        } catch (Exception e) {
-            LOG.debug("MEE. Feil ved kall til utvidet me endepunkt.");
-        }
-
         var ansatt = ansattTjeneste.hentAnsattFraKontekst();
         var grupper = ansattTjeneste.hentGrupperFraKontekst();
-
-        if (ansatt.orElseThrow().equals(nyAnsattExtended.get())) {
-            LOG.debug("MEE.Ansatte er like");
-        }
-
-        LOG.debug("MEE. Fant {} grupper på denne ansatte.", grupper.size());
-
         return mapAnsattProfil(ansatt.orElseThrow(), grupper);
     }
 

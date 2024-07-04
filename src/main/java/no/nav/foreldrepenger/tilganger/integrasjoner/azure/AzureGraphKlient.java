@@ -9,31 +9,25 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.inject.Inject;
 
-import jakarta.validation.constraints.NotNull;
-
-import no.nav.vedtak.exception.IntegrasjonException;
-import no.nav.vedtak.exception.ManglerTilgangException;
-
-import no.nav.vedtak.mapper.json.DefaultJsonMapper;
-
-import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.server.spi.ResponseErrorMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.core.UriBuilder;
 import no.nav.foreldrepenger.konfig.Environment;
+import no.nav.vedtak.exception.IntegrasjonException;
+import no.nav.vedtak.exception.ManglerTilgangException;
 import no.nav.vedtak.felles.integrasjon.rest.ProxyRestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE,
@@ -53,9 +47,11 @@ class AzureGraphKlient implements AzureGraph {
     protected static final String PARAM_VALUE_SELECT_USER = "id,onPremisesSamAccountName,displayName,mail";
     protected static final String CONSISTENCY_LEVEL = "ConsistencyLevel";
     protected static final String EVENTUAL = "eventual";
-    protected static final String $FILTER = "$filter";
+    protected static final String PARAM_NAME_FILTER = "$filter";
     protected static final String PARAM_VALUE_SELECT_GROUPS = "id";
     protected static final String PARAM_NAME_EXPAND = "$expand";
+    protected static final String PARAM_NAME_COUNT = "$count";
+    protected static final String PARAM_VALUE_EXPAND_MEMBER_OF = "memberOf($select=id)";
 
     private final ProxyRestClient restKlient;
     private final RestConfig restConfig;
@@ -75,25 +71,15 @@ class AzureGraphKlient implements AzureGraph {
 
     @Override
     public User me() {
-        var request = RestRequest.newGET(UriBuilder.fromUri(meEndpoint)
-            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
-            .build(), restConfig);
-        request.header(CONSISTENCY_LEVEL, EVENTUAL);
-
-        return restKlient.send(request, User.class);
-    }
-
-    @Override
-    public User meExtended() {
         URI requestUri = UriBuilder.fromUri(meEndpoint)
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
-            .queryParam(PARAM_NAME_EXPAND, "memberOf($select=id)")
+            .queryParam(PARAM_NAME_EXPAND, PARAM_VALUE_EXPAND_MEMBER_OF)
             .build();
 
         var request = RestRequest.newGET(requestUri, restConfig)
             .header(CONSISTENCY_LEVEL, EVENTUAL);
 
-        LOG.debug("Kaller til MS Graph med: {}", requestUri);
+        logDebugMelding(requestUri);
         var response = restKlient.sendReturnUnhandled(request);
 
         return mapResponse(handleResponse(response, requestUri), User.class);
@@ -101,73 +87,61 @@ class AzureGraphKlient implements AzureGraph {
 
     @Override
     public Set<Group> memberOf() {
-        var request = RestRequest.newGET(UriBuilder.fromUri(meEndpoint).path(MEMBER_OF_PATH)
-            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
-            .build(), restConfig);
-        request.header(CONSISTENCY_LEVEL, EVENTUAL);
+        var requestUri = UriBuilder.fromUri(meEndpoint).path(MEMBER_OF_PATH).queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS).build();
+        var request = RestRequest.newGET(requestUri, restConfig)
+            .header(CONSISTENCY_LEVEL, EVENTUAL);
 
-        return new HashSet<>(restKlient.send(request, GroupsResponse.class).value());
+        var response = restKlient.sendReturnUnhandled(request);
+        var groupsResponse = mapResponse(handleResponse(response, requestUri), GroupsResponse.class);
+
+        var grupper = groupsResponse.value();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Grupper={}", grupper.stream().map(Objects::toString).collect(Collectors.joining(", ")));
+        }
+        LOG.info("Finner {} grupper.", grupper.size());
+        return new HashSet<>(grupper);
     }
 
     @Override
 	public Optional<User> finnUser(String ident) {
-		if (!ENV.isLocal() && !NAVIDENT_PATTERN.matcher(ident).matches()) {
+		if (!ENV.isLocal() && !AzureGraph.NAVIDENT_PATTERN.matcher(ident).matches()) {
 			return Optional.empty();
 		}
-        return findUserInfo(ident);
-	}
+        URI requestUri = UriBuilder.fromUri(userEndpoint)
+            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
+            .queryParam(PARAM_NAME_FILTER, "onPremisesSamAccountName eq '" + ident + "'")
+            .queryParam(PARAM_NAME_EXPAND, PARAM_VALUE_EXPAND_MEMBER_OF)
+            .queryParam(PARAM_NAME_COUNT, true)
+            .build();
+
+        var request = RestRequest.newGET(requestUri, restConfig)
+            .header(CONSISTENCY_LEVEL, EVENTUAL);
+
+        logDebugMelding(requestUri);
+        var response = restKlient.sendReturnUnhandled(request);
+
+        return Optional.ofNullable(mapResponse(handleResponse(response, requestUri), UsersResponse.class).value().getFirst());
+    }
 
     @Override
     public Optional<User> finnUser(UUID id) {
         if (id == null) {
             return Optional.empty();
         }
-        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(id.toString())
+        URI requestUri = UriBuilder.fromUri(userEndpoint)
+            .path(id.toString())
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
-            .build(), restConfig);
-        request.header(CONSISTENCY_LEVEL, EVENTUAL);
+            .queryParam(PARAM_NAME_EXPAND, PARAM_VALUE_EXPAND_MEMBER_OF)
+            .queryParam(PARAM_NAME_COUNT, true)
+            .build();
 
-        try {
-            User user = restKlient.send(request, User.class);
-            if (user == null) {
-                LOG.info("MS: finner ikke bruker med id={}", id);
-                return Optional.empty();
-            }
-            LOG.debug("MS: fant bruker med id={}", id);
-            return Optional.of(user);
-        } catch (Exception e) {
-            LOG.info("MS: Teknisk feil. Message={}", e.getMessage());
-            return Optional.empty();
-        }
-    }
+        var request = RestRequest.newGET(requestUri, restConfig)
+            .header(CONSISTENCY_LEVEL, EVENTUAL);
 
-    private Optional<User> findUserInfo(String userId) {
-        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint)
-            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
-            .queryParam($FILTER, "onPremisesSamAccountName eq '" + userId + "'")
-            .queryParam("$count", true)
-            .build(), restConfig);
-        request.header(CONSISTENCY_LEVEL, EVENTUAL);
+        logDebugMelding(requestUri);
+        var response = restKlient.sendReturnUnhandled(request);
 
-        try {
-            UsersResponse users = restKlient.send(request, UsersResponse.class);
-            if (users == null || users.value() == null || users.value().isEmpty()) {
-                LOG.info("MS: finner ikke bruker med id={}", userId);
-                return Optional.empty();
-            }
-
-            var first = users.value().getFirst();
-            if (users.value().size() > 1) {
-                LOG.info("MS: finner flere brukere med id={}", userId);
-                return Optional.of(first);
-            }
-
-            LOG.debug("MS: fant bruker med id={}", first.id());
-            return Optional.of(first);
-        } catch (Exception e) {
-            LOG.info("MS: Teknisk feil. Message={}", e.getMessage());
-            return Optional.empty();
-        }
+        return Optional.ofNullable(mapResponse(handleResponse(response, requestUri), User.class));
     }
 
     @Override
@@ -175,29 +149,27 @@ class AzureGraphKlient implements AzureGraph {
 		if (userUid == null) {
 			return Set.of();
 		}
-        // Bruker til å liste alle grupper for en bruker, men det er mulig å liste alle brukere av en gruppe med
-        // /v1.0/groups/<group-uid>/members?$count=true
-        var request = RestRequest.newGET(UriBuilder.fromUri(userEndpoint).path(userUid.toString()).path(MEMBER_OF_PATH)
+        var requestUri = UriBuilder.fromUri(userEndpoint)
+            .path(userUid.toString())
+            .path(MEMBER_OF_PATH)
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
-            .queryParam("$count", true)
-            .build(), restConfig);
-        request.header(CONSISTENCY_LEVEL, EVENTUAL);
+            .queryParam(PARAM_NAME_COUNT, true)
+            .build();
 
-        try {
-			var grupper = restKlient.send(request, GroupsResponse.class);
-            if (grupper == null || grupper.value() == null || grupper.value().isEmpty()) {
-                LOG.info("MS: finner ikke grupper for bruker={}", userUid);
-                return Set.of();
-            }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("MS: Grupper={}", grupper.value().stream().map(Objects::toString).collect(Collectors.joining(", ")));
-            }
-            LOG.info("MS: Finner {} grupper.", grupper.value().size());
-            return new HashSet<>(grupper.value());
-		} catch (Exception e) {
-            LOG.info("MS: Teknisk feil. Message={}", e.getMessage());
-			return Set.of();
-		}
+        var request = RestRequest.newGET(requestUri, restConfig)
+            .header(CONSISTENCY_LEVEL, EVENTUAL);
+
+        logDebugMelding(requestUri);
+        var response = restKlient.sendReturnUnhandled(request);
+
+        var groupsResponse = mapResponse(handleResponse(response, requestUri), GroupsResponse.class);
+
+        var grupper = groupsResponse.value();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("MS: Grupper={}", grupper.stream().map(Objects::toString).collect(Collectors.joining(", ")));
+        }
+        LOG.info("MS: Finner {} grupper.", grupper.size());
+        return new HashSet<>(grupper);
 	}
 
     private static String handleResponse(final HttpResponse<String> response, URI endpoint) {
@@ -226,6 +198,10 @@ class AzureGraphKlient implements AzureGraph {
             return clazz.cast(response);
         }
         return DefaultJsonMapper.fromJson(response, clazz);
+    }
+
+    private static void logDebugMelding(URI requestUri) {
+        LOG.debug("Kaller til MS Graph med: {}", requestUri);
     }
 
     record UsersResponse(@NotNull List<User> value) {}

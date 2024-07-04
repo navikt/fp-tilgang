@@ -39,12 +39,6 @@ public class AnsattTjeneste {
         this.azureGraph = azureGraph;
     }
 
-    public Optional<Ansatt> hentAnsattFraKontekstExtended() {
-        var uid = KontekstHolder.getKontekst().getUid();
-        LOG.debug("Henter antatt fra kontekts: {}", uid);
-        return hentAnsatt(uid, () -> Optional.of(azureGraph.meExtended()));
-    }
-
     public Optional<Ansatt> hentAnsattFraKontekst() {
         var uid = KontekstHolder.getKontekst().getUid();
         LOG.debug("Henter antatt fra kontekts: {}", uid);
@@ -76,14 +70,22 @@ public class AnsattTjeneste {
     private Optional<Ansatt> hentAnsatt(String identifikator, Supplier<Optional<User>> ansattSupplier) {
         var ansatt = ansattCache.read(identifikator);
         if (ansatt.isEmpty()) {
-            LOG.debug("Finner ikke ansatt i cache {}", identifikator);
-            ansatt = ansattSupplier.get().map(AnsattTjeneste::mapUser);
+            LOG.debug("Finner ikke ansatt eller grupper i cache {}", identifikator);
+            var user = ansattSupplier.get();
+            ansatt = user.map(AnsattTjeneste::mapUser);
             if (ansatt.isPresent()) {
                 LOG.debug("Lagrer i cache {}", identifikator);
                 ansattCache.store(identifikator, ansatt.get());
                 var uid = ansatt.get().uid();
                 LOG.debug("Lagrer i cache {}", uid);
                 ansattCache.store(uid.toString(), ansatt.get());
+
+                // User kall leverer grupper med en gang også - men de caches i en kortere periode.
+                var grupper = user.get().memberOf().stream().map(Group::id).toList();
+                if (!grupper.isEmpty()) {
+                    LOG.debug("Lagrer grupper i cache for {}", identifikator);
+                    grupperCache.store(identifikator, grupper);
+                }
             }
         } else {
             LOG.debug("Fant ansatt i cache for {}", identifikator);
