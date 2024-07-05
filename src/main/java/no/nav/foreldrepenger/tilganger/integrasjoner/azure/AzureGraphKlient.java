@@ -82,7 +82,8 @@ class AzureGraphKlient implements AzureGraph {
         var requestUri = UriBuilder.fromUri(meEndpoint)
             .path(MEMBER_OF_PATH)
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
-            .queryParam(PARAM_NAME_TOP, 500);
+            .queryParam(PARAM_NAME_TOP, 500)
+            .queryParam(PARAM_NAME_COUNT, true);
 
         insertGroupFilter(groupFilter, requestUri);
 
