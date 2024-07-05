@@ -1,4 +1,4 @@
-package no.nav.foreldrepenger.tilganger.domene;
+package no.nav.foreldrepenger.tilganger.domene.ansatt;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,11 +6,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import no.nav.foreldrepenger.tilganger.domene.cache.AnsattCache;
 import no.nav.foreldrepenger.tilganger.domene.cache.GrupperCache;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.AzureGraph;
@@ -31,9 +32,7 @@ public class AnsattTjeneste {
     }
 
     @Inject
-    public AnsattTjeneste(AnsattCache ansattCache,
-                          GrupperCache grupperCache,
-                          AzureGraph azureGraph) {
+    public AnsattTjeneste(AnsattCache ansattCache, GrupperCache grupperCache, AzureGraph azureGraph) {
         this.ansattCache = ansattCache;
         this.grupperCache = grupperCache;
         this.azureGraph = azureGraph;
@@ -58,7 +57,7 @@ public class AnsattTjeneste {
 
     public Optional<Ansatt> hentAnsatt(UUID uid) {
         LOG.debug("Henter antatt: {}", uid);
-        return hentAnsatt(uid.toString(), () -> azureGraph.finnUser(uid));
+        return hentAnsatt(uid.toString(), () -> azureGraph.hentUser(uid));
     }
 
     public List<UUID> hentGrupper(Ansatt ansatt) {

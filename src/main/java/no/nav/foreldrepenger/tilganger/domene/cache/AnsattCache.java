@@ -3,12 +3,13 @@ package no.nav.foreldrepenger.tilganger.domene.cache;
 import java.time.Duration;
 import java.util.Optional;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import no.nav.foreldrepenger.tilganger.domene.Ansatt;
+import no.nav.foreldrepenger.tilganger.domene.ansatt.Ansatt;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;

@@ -2,7 +2,6 @@ package no.nav.foreldrepenger.tilganger.server.api;
 
 import java.time.Duration;
 
-import io.micrometer.core.instrument.Metrics;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -10,6 +9,8 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.ext.Provider;
+
+import io.micrometer.core.instrument.Metrics;
 import no.nav.vedtak.log.metrics.MetricsUtil;
 
 @Provider

@@ -16,6 +16,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+
 import javax.net.ssl.SSLSession;
 
 import org.eclipse.jetty.http.HttpStatus;
@@ -23,9 +27,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.ProxyRestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
@@ -62,7 +63,7 @@ class AzureGraphKlientTest {
     void testUserReturnsFinnUserInfo() {
         // Prepare test data
         String userId = "123456";
-        var expectedUser = new User(UUID.randomUUID(), "sam","display", "mail");
+        var expectedUser = new User(UUID.randomUUID(), "sam", "display", "mail");
         var response = new AzureGraphKlient.UsersResponse(List.of(expectedUser));
 
         // Mock REST call behavior

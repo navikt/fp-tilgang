@@ -1,7 +1,7 @@
-package no.nav.foreldrepenger.tilganger.domene;
+package no.nav.foreldrepenger.tilganger.domene.ansatt;
 
 
-import static no.nav.foreldrepenger.tilganger.integrasjoner.azure.AzureGraph.NAVIDENT_PATTERN;
+import static no.nav.foreldrepenger.tilganger.utils.RegexUtils.NAVIDENT_PATTERN;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
+
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.foreldrepenger.konfig.KonfigVerdi;
 import no.nav.vedtak.exception.TekniskException;
@@ -91,8 +92,7 @@ public class AnsattProfilTjeneste {
     }
 
     private AnsattProfil mapAnsattProfil(Ansatt ansatt, List<UUID> grupper) {
-        return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.epost())
-            .kanSaksbehandle(grupper.contains(oidSaksbehandler))
+        return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.epost()).kanSaksbehandle(grupper.contains(oidSaksbehandler))
             .kanVeilede(grupper.contains(oidVeileder))
             .kanBeslutte(grupper.contains(oidBeslutter))
             .kanOverstyre(grupper.contains(oidOverstyrer))

@@ -6,9 +6,6 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import no.nav.foreldrepenger.tilganger.server.api.ApiConfig;
-import no.nav.foreldrepenger.tilganger.server.internal.InternalApiConfig;
-
 import org.eclipse.jetty.ee10.cdi.CdiDecoratingListener;
 import org.eclipse.jetty.ee10.cdi.CdiServletContainerInitializer;
 import org.eclipse.jetty.ee10.servlet.ErrorPageErrorHandler;
@@ -24,6 +21,8 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 
 import no.nav.foreldrepenger.konfig.Environment;
+import no.nav.foreldrepenger.tilganger.server.api.ApiConfig;
+import no.nav.foreldrepenger.tilganger.server.internal.InternalApiConfig;
 
 public class JettyServer {
 

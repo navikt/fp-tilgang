@@ -31,3 +31,40 @@ spec:
     inbound:
       rules:
         - application: fptilgang
+        - application: fpcache-exporter
+---
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: fpcache-exporter
+  namespace: teamforeldrepenger
+  labels:
+    "team": teamforeldrepenger
+spec:
+  image: oliver006/redis_exporter:v1.61.0-alpine
+  port: 9121
+  prometheus:
+    enabled: true
+  replicas:
+    min: 1
+    max: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+  liveness:
+    path: /health
+  accessPolicy:
+    outbound:
+      rules:
+        - application: fpcache
+  envFrom:
+    - secret: fp-cache-tilgang
+  env:
+    - name: REDIS_ADDR
+      value: fpcache.teamforeldrepenger.svc.nais.local:6379
+    - name: REDIS_EXPORTER_LOG_FORMAT
+      value: json

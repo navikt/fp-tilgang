@@ -22,21 +22,17 @@ public class RedisCacheKlient {
 
     private static RedisCacheKlient INSTANCE;
 
-    private JedisPool jedisPool;
+    private final JedisPool jedisPool;
 
     private RedisCacheKlient(String host, int port, String pass) {
-        var jedisConfig = DefaultJedisClientConfig.builder()
-            .password(pass)
-            .build();
+        var jedisConfig = DefaultJedisClientConfig.builder().password(pass).build();
         var poolConfig = new JedisPoolConfig();
         poolConfig.setMinIdle(1);
         poolConfig.setMaxWait(Duration.ofSeconds(3));
         poolConfig.setTestOnBorrow(true);
-        poolConfig.setTestWhileIdle(true);
-
-        LOG.debug("Creating JedisPool with config.");
+        LOG.info("Creating JedisPool");
         jedisPool = new JedisPool(poolConfig, new HostAndPort(host, port), jedisConfig);
-        LOG.debug("JEDIS pool closed: {}", jedisPool.isClosed());
+        LOG.debug("JEDIS pool active: {}", !jedisPool.isClosed());
     }
 
     public static synchronized RedisCacheKlient instance() {
@@ -68,8 +64,7 @@ public class RedisCacheKlient {
             LOG.debug("Storing key {} with value {}", key, value);
             jedis.set(key, value, SetParams.setParams().ex(expiresInSeconds));
         } catch (Exception e) {
-            LOG.info("Feil ved lagring i redis: {}. Kjører videre uten cache.", e.getMessage());
-            throw e;
+            throwRuntimeException(e);
         }
     }
 
@@ -83,8 +78,7 @@ public class RedisCacheKlient {
             }
             LOG.debug("Finner ikke key {}", key);
         } catch (Exception e) {
-            LOG.info("Feil ved lesing fra redis: {}. Kjører videre uten cache.", e.getMessage());
-            throw e;
+            throwRuntimeException(e);
         }
         return Optional.empty();
     }
@@ -96,8 +90,7 @@ public class RedisCacheKlient {
             LOG.debug("Fjerne key {}", key);
             jedis.del(key);
         } catch (Exception e) {
-            LOG.info("Feil ved sletting fra redis: {}. Kjører videre uten cache.", e.getMessage());
-            throw e;
+            throwRuntimeException(e);
         }
     }
 
@@ -107,12 +100,15 @@ public class RedisCacheKlient {
             jedis.select(database);
             jedis.flushDB(FlushMode.ASYNC);
         } catch (Exception e) {
-            LOG.info("Feil ved flushing av redis: {}. Kjører videre uten cache.", e.getMessage());
-            throw e;
+            throwRuntimeException(e);
         }
     }
 
     private JedisPool getJedisPool() {
         return jedisPool;
+    }
+
+    private static void throwRuntimeException(Exception e) {
+        throw new RuntimeException("Redis utilgjengelig", e);
     }
 }

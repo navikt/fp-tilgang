@@ -4,24 +4,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import no.nav.foreldrepenger.tilganger.server.exceptions.GeneralRestExceptionMapper;
-import no.nav.foreldrepenger.tilganger.tjenester.AnsattProfilRestTjeneste;
+import jakarta.ws.rs.ApplicationPath;
+import jakarta.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.ServerProperties;
 
-import jakarta.ws.rs.ApplicationPath;
-import jakarta.ws.rs.core.Application;
+import no.nav.foreldrepenger.tilganger.server.exceptions.GeneralRestExceptionMapper;
+import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattProfilRestTjeneste;
 
 @ApplicationPath(ApiConfig.API_URI)
 public class ApiConfig extends Application {
 
-    public static final String API_URI ="/api";
+    public static final String API_URI = "/api";
 
     @Override
     public Set<Class<?>> getClasses() {
         // eksponert grensesnitt bak sikkerhet
-        return Set.of(
-            AuthorizationAbacFilter.class,
+        return Set.of(AuthorizationAbacFilter.class,
             AuthenticationFilter.class,
             TimingFilter.class,
             AnsattProfilRestTjeneste.class,

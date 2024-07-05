@@ -1,13 +1,14 @@
 package no.nav.foreldrepenger.tilganger.server.exceptions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
 import no.nav.vedtak.exception.ManglerTilgangException;
 import no.nav.vedtak.log.mdc.MDCOperations;
 import no.nav.vedtak.log.util.LoggerUtils;
@@ -26,6 +27,7 @@ public class GeneralRestExceptionMapper implements ExceptionMapper<Throwable> {
             return serverError(cause);
         }
     }
+
     private static Response serverError(Throwable feil) {
         String feilmelding = getVLExceptionFeilmelding(feil);
         return Response.serverError().entity(new FeilDto(feilmelding, FeilType.GENERELL_FEIL)).type(MediaType.APPLICATION_JSON).build();

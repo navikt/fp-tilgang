@@ -1,4 +1,4 @@
-package no.nav.foreldrepenger.tilganger.tjenester;
+package no.nav.foreldrepenger.tilganger.tjenester.ansatt;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
@@ -17,8 +17,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import no.nav.foreldrepenger.tilganger.domene.AnsattProfil;
-import no.nav.foreldrepenger.tilganger.domene.AnsattProfilTjeneste;
+
+import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattProfil;
+import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattProfilTjeneste;
 import no.nav.vedtak.sikkerhet.jaxrs.UtenAutentisering;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
@@ -65,36 +66,27 @@ public class AnsattProfilRestTjeneste {
         return mapTilProfilDto(ansattProfilTjeneste.hentProfil(request.uid()));
     }
 
-    public record ProfilUidRequest(@NotNull UUID uid) {}
+    public record ProfilUidRequest(@NotNull UUID uid) {
+    }
 
-    public record ProfilIdentRequest(@NotNull String ident) {}
+    public record ProfilIdentRequest(@NotNull String ident) {
+    }
 
-    public record BrukerProfilResponseDto(@NotNull String ident, @NotNull String navn, String epost) {}
+    public record BrukerProfilResponseDto(@NotNull String ident, @NotNull String navn, String epost) {
+    }
 
-    public record BrukerProfilUtvidetResponseDto(@NotNull String brukernavn,
-                                                 @NotNull String navn,
-                                                 boolean kanSaksbehandle,
-                                                 boolean kanVeilede,
-                                                 boolean kanBeslutte,
-                                                 boolean kanOverstyre,
-                                                 boolean kanOppgavestyre,
-                                                 boolean kanBehandleKode6,
-                                                 LocalDateTime funksjonellTid) {}
+    public record BrukerProfilUtvidetResponseDto(@NotNull String brukernavn, @NotNull String navn, boolean kanSaksbehandle, boolean kanVeilede,
+                                                 boolean kanBeslutte, boolean kanOverstyre, boolean kanOppgavestyre, boolean kanBehandleKode6,
+                                                 LocalDateTime funksjonellTid) {
+    }
 
     private BrukerProfilResponseDto mapTilProfilDto(AnsattProfil brukerProfil) {
         return new BrukerProfilResponseDto(brukerProfil.brukernavn(), brukerProfil.navn(), brukerProfil.epost());
     }
 
     private BrukerProfilUtvidetResponseDto mapTilUtvidetProfilDto(AnsattProfil brukerProfil) {
-        return new BrukerProfilUtvidetResponseDto(
-            brukerProfil.brukernavn(),
-            brukerProfil.navn(),
-            brukerProfil.kanSaksbehandle(),
-            brukerProfil.kanVeilede(),
-            brukerProfil.kanBeslutte(),
-            brukerProfil.kanOverstyre(),
-            brukerProfil.kanOppgavestyre(),
-            brukerProfil.kanBehandleKode6(),
-            brukerProfil.funksjonellTid());
+        return new BrukerProfilUtvidetResponseDto(brukerProfil.brukernavn(), brukerProfil.navn(), brukerProfil.kanSaksbehandle(),
+            brukerProfil.kanVeilede(), brukerProfil.kanBeslutte(), brukerProfil.kanOverstyre(), brukerProfil.kanOppgavestyre(),
+            brukerProfil.kanBehandleKode6(), brukerProfil.funksjonellTid());
     }
 }

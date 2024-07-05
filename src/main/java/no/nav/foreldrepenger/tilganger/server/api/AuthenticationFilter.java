@@ -9,6 +9,7 @@ import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.ext.Provider;
+
 import no.nav.vedtak.sikkerhet.jaxrs.AuthenticationFilterDelegate;
 
 @Provider
@@ -23,13 +24,12 @@ public class AuthenticationFilter implements ContainerRequestFilter, ContainerRe
     }
 
     @Override
-    public void filter(ContainerRequestContext req, ContainerResponseContext res) {
-        AuthenticationFilterDelegate.fjernKontekst();
-    }
-
-    @Override
     public void filter(ContainerRequestContext req) {
         AuthenticationFilterDelegate.validerSettKontekst(resourceinfo, req);
     }
 
+    @Override
+    public void filter(ContainerRequestContext req, ContainerResponseContext res) {
+        AuthenticationFilterDelegate.fjernKontekst();
+    }
 }
