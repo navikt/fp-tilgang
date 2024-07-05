@@ -1,5 +1,6 @@
 package no.nav.foreldrepenger.tilganger.domene.ansatt;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -44,10 +45,10 @@ public class AnsattTjeneste {
         return hentAnsatt(uid, () -> Optional.of(azureGraph.me()));
     }
 
-    public List<UUID> hentGrupperFraKontekst() {
+    public List<UUID> hentGrupperFraKontekst(List<UUID> gruppeFilter) {
         var uid = KontekstHolder.getKontekst().getUid();
         LOG.debug("Henter grupper fra kontekts: {}", uid);
-        return hentGrupper(uid, () -> azureGraph.memberOf());
+        return hentGrupper(uid, () -> azureGraph.memberOf(new HashSet<>(gruppeFilter)));
     }
 
     public Optional<Ansatt> hentAnsatt(String ident) {
@@ -60,10 +61,10 @@ public class AnsattTjeneste {
         return hentAnsatt(uid.toString(), () -> azureGraph.hentUser(uid));
     }
 
-    public List<UUID> hentGrupper(Ansatt ansatt) {
+    public List<UUID> hentGrupper(Ansatt ansatt, List<UUID> gruppeFilter) {
         var identifikator = ansatt.uid().toString();
         LOG.debug("Henter ansatt grupper: {}", identifikator);
-        return hentGrupper(identifikator, () -> azureGraph.hentGrupper(ansatt.uid()));
+        return hentGrupper(identifikator, () -> azureGraph.hentGrupper(ansatt.uid(), new HashSet<>(gruppeFilter)));
     }
 
     private Optional<Ansatt> hentAnsatt(String identifikator, Supplier<Optional<User>> ansattSupplier) {

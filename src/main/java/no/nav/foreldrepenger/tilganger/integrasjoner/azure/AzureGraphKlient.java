@@ -41,12 +41,13 @@ class AzureGraphKlient implements AzureGraph {
     protected static final String ME_PATH = "/me";
     protected static final String MEMBER_OF_PATH = "/memberOf";
     protected static final String PARAM_NAME_SELECT = "$select";
-    protected static final String PARAM_VALUE_SELECT_USER = "id,onPremisesSamAccountName,displayName,mail";
-    protected static final String CONSISTENCY_LEVEL = "ConsistencyLevel";
-    protected static final String EVENTUAL = "eventual";
     protected static final String PARAM_NAME_FILTER = "$filter";
-    protected static final String PARAM_VALUE_SELECT_GROUPS = "id";
     protected static final String PARAM_NAME_COUNT = "$count";
+    protected static final String PARAM_NAME_TOP = "$top";
+    protected static final String PARAM_VALUE_SELECT_USER = "id,onPremisesSamAccountName,displayName,mail";
+    protected static final String PARAM_VALUE_SELECT_GROUPS = "id";
+    protected static final String HEADER_CONSISTENCY_LEVEL = "ConsistencyLevel";
+    protected static final String EVENTUAL = "eventual";
 
     private final ProxyRestClient restKlient;
     private final RestConfig restConfig;
@@ -68,7 +69,7 @@ class AzureGraphKlient implements AzureGraph {
     public User me() {
         URI requestUri = UriBuilder.fromUri(meEndpoint).queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER).build();
 
-        var request = RestRequest.newGET(requestUri, restConfig).header(CONSISTENCY_LEVEL, EVENTUAL);
+        var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestUri);
         var response = restKlient.sendReturnUnhandled(request);
@@ -77,12 +78,20 @@ class AzureGraphKlient implements AzureGraph {
     }
 
     @Override
-    public Set<Group> memberOf() {
-        var requestUri = UriBuilder.fromUri(meEndpoint).path(MEMBER_OF_PATH).queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS).build();
-        var request = RestRequest.newGET(requestUri, restConfig).header(CONSISTENCY_LEVEL, EVENTUAL);
+    public Set<Group> memberOf(Set<UUID> groupFilter) {
+        var requestUri = UriBuilder.fromUri(meEndpoint)
+            .path(MEMBER_OF_PATH)
+            .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
+            .queryParam(PARAM_NAME_TOP, 500);
 
+        insertGroupFilter(groupFilter, requestUri);
+
+        var requestTarget = requestUri.build();
+        var request = RestRequest.newGET(requestTarget, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
+
+        logDebugMelding(requestTarget);
         var response = restKlient.sendReturnUnhandled(request);
-        var groupsResponse = mapResponse(handleResponse(response, requestUri), GroupsResponse.class);
+        var groupsResponse = mapResponse(handleResponse(response, requestTarget), GroupsResponse.class);
 
         var grupper = groupsResponse.value();
         if (LOG.isDebugEnabled()) {
@@ -103,7 +112,7 @@ class AzureGraphKlient implements AzureGraph {
             .queryParam(PARAM_NAME_COUNT, true)
             .build();
 
-        var request = RestRequest.newGET(requestUri, restConfig).header(CONSISTENCY_LEVEL, EVENTUAL);
+        var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestUri);
         var response = restKlient.sendReturnUnhandled(request);
@@ -122,7 +131,7 @@ class AzureGraphKlient implements AzureGraph {
             .queryParam(PARAM_NAME_COUNT, true)
             .build();
 
-        var request = RestRequest.newGET(requestUri, restConfig).header(CONSISTENCY_LEVEL, EVENTUAL);
+        var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestUri);
         var response = restKlient.sendReturnUnhandled(request);
@@ -131,7 +140,7 @@ class AzureGraphKlient implements AzureGraph {
     }
 
     @Override
-    public Set<Group> hentGrupper(UUID userUid) {
+    public Set<Group> hentGrupper(UUID userUid, Set<UUID> groupFilter) {
         if (userUid == null) {
             return Set.of();
         }
@@ -139,15 +148,19 @@ class AzureGraphKlient implements AzureGraph {
             .path(userUid.toString())
             .path(MEMBER_OF_PATH)
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
-            .queryParam(PARAM_NAME_COUNT, true)
-            .build();
+            .queryParam(PARAM_NAME_TOP, 500)
+            .queryParam(PARAM_NAME_COUNT, true);
 
-        var request = RestRequest.newGET(requestUri, restConfig).header(CONSISTENCY_LEVEL, EVENTUAL);
+        insertGroupFilter(groupFilter, requestUri);
 
-        logDebugMelding(requestUri);
+        var requestTarget = requestUri.build();
+
+        var request = RestRequest.newGET(requestTarget, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
+
+        logDebugMelding(requestTarget);
         var response = restKlient.sendReturnUnhandled(request);
 
-        var groupsResponse = mapResponse(handleResponse(response, requestUri), GroupsResponse.class);
+        var groupsResponse = mapResponse(handleResponse(response, requestTarget), GroupsResponse.class);
 
         var grupper = groupsResponse.value();
         if (LOG.isDebugEnabled()) {
@@ -155,6 +168,13 @@ class AzureGraphKlient implements AzureGraph {
         }
         LOG.info("Funnet {} grupper", grupper.size());
         return new HashSet<>(grupper);
+    }
+
+    private static void insertGroupFilter(Set<UUID> groupFilter, UriBuilder requestUri) {
+        if (!groupFilter.isEmpty()) {
+            var grupper = groupFilter.stream().map(uuid -> "'" + uuid.toString() + "'").collect(Collectors.joining(","));
+            requestUri.queryParam(PARAM_NAME_FILTER, "id in (" + grupper + ")");
+        }
     }
 
     private static String handleResponse(final HttpResponse<String> response, URI endpoint) {

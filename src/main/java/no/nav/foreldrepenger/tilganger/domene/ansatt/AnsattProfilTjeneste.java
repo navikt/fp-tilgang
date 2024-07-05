@@ -11,49 +11,20 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.konfig.Environment;
-import no.nav.foreldrepenger.konfig.KonfigVerdi;
 import no.nav.vedtak.exception.TekniskException;
 
 @Dependent
 public class AnsattProfilTjeneste {
     private static final Environment ENV = Environment.current();
 
-    private UUID oidSaksbehandler;
-    private UUID oidVeileder;
-    private UUID oidBeslutter;
-    private UUID oidOverstyrer;
-    private UUID oidOppgavestyrer;
-    private UUID oidEgenAnsatt;
-    private UUID oidKode6;
-    private UUID oidKode7;
-    private UUID oidDrifter;
-
     private AnsattTjeneste ansattTjeneste;
 
     public AnsattProfilTjeneste() {
-        // CDI
+        // CDI proxy
     }
 
     @Inject
-    public AnsattProfilTjeneste(AnsattTjeneste ansattTjeneste,
-                                @KonfigVerdi(value = "gruppe.oid.saksbehandler") String saksbehandler,
-                                @KonfigVerdi(value = "gruppe.oid.veileder") String veileder,
-                                @KonfigVerdi(value = "gruppe.oid.beslutter") String beslutter,
-                                @KonfigVerdi(value = "gruppe.oid.overstyrer") String overstyrer,
-                                @KonfigVerdi(value = "gruppe.oid.oppgavestyrer") String oppgavestyrer,
-                                @KonfigVerdi(value = "gruppe.oid.egenansatt") String egenAnsatt,
-                                @KonfigVerdi(value = "gruppe.oid.kode6") String kode6,
-                                @KonfigVerdi(value = "gruppe.oid.kode7") String kode7,
-                                @KonfigVerdi(value = "gruppe.oid.drifter") String drifter) {
-        this.oidSaksbehandler = UUID.fromString(saksbehandler);
-        this.oidVeileder = UUID.fromString(veileder);
-        this.oidBeslutter = UUID.fromString(beslutter);
-        this.oidOverstyrer = UUID.fromString(overstyrer);
-        this.oidOppgavestyrer = UUID.fromString(oppgavestyrer);
-        this.oidEgenAnsatt = UUID.fromString(egenAnsatt);
-        this.oidKode6 = UUID.fromString(kode6);
-        this.oidKode7 = UUID.fromString(kode7);
-        this.oidDrifter = UUID.fromString(drifter);
+    public AnsattProfilTjeneste(AnsattTjeneste ansattTjeneste) {
         this.ansattTjeneste = ansattTjeneste;
     }
 
@@ -63,7 +34,7 @@ public class AnsattProfilTjeneste {
      */
     public AnsattProfil hentProfil() {
         var ansatt = ansattTjeneste.hentAnsattFraKontekst();
-        var grupper = ansattTjeneste.hentGrupperFraKontekst();
+        var grupper = ansattTjeneste.hentGrupperFraKontekst(Gruppe.getAlleGrupper());
         return mapAnsattProfil(ansatt.orElseThrow(), grupper);
     }
 
@@ -87,20 +58,21 @@ public class AnsattProfilTjeneste {
     }
 
     private AnsattProfil getAnsattProfil(Optional<Ansatt> ansatt) {
-        var grupper = ansatt.map(u -> ansattTjeneste.hentGrupper(u)).orElseThrow(() -> new IllegalStateException("Fant ikke bruker"));
+        var grupper = ansatt.map(u -> ansattTjeneste.hentGrupper(u, Gruppe.getAlleGrupper())).orElseThrow(() -> new IllegalStateException("Fant ikke bruker"));
         return mapAnsattProfil(ansatt.orElseThrow(), grupper);
     }
 
     private AnsattProfil mapAnsattProfil(Ansatt ansatt, List<UUID> grupper) {
-        return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.epost()).kanSaksbehandle(grupper.contains(oidSaksbehandler))
-            .kanVeilede(grupper.contains(oidVeileder))
-            .kanBeslutte(grupper.contains(oidBeslutter))
-            .kanOverstyre(grupper.contains(oidOverstyrer))
-            .kanOppgavestyre(grupper.contains(oidOppgavestyrer))
-            .kanBehandleKodeEgenAnsatt(grupper.contains(oidEgenAnsatt))
-            .kanBehandleKode6(grupper.contains(oidKode6))
-            .kanBehandleKode7(grupper.contains(oidKode7))
-            .kanDrifte(grupper.contains(oidDrifter))
+        return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.epost())
+            .kanSaksbehandle(grupper.contains(Gruppe.SAKSBEHNADLER.getId()))
+            .kanVeilede(grupper.contains(Gruppe.VEILEDER.getId()))
+            .kanBeslutte(grupper.contains(Gruppe.BESLUTTER.getId()))
+            .kanOverstyre(grupper.contains(Gruppe.OVERSTYRER.getId()))
+            .kanOppgavestyre(grupper.contains(Gruppe.OPPGAVESTYRER.getId()))
+            .kanBehandleKodeEgenAnsatt(grupper.contains(Gruppe.EGENANSATT.getId()))
+            .kanBehandleKode6(grupper.contains(Gruppe.KODE6.getId()))
+            .kanBehandleKode7(grupper.contains(Gruppe.KODE7.getId()))
+            .kanDrifte(grupper.contains(Gruppe.DRIFTER.getId()))
             .build();
     }
 }
