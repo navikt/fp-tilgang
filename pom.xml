@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.nav.foreldrepenger.felles</groupId>
         <artifactId>fp-bom</artifactId>
-        <version>3.3.1</version>
+        <version>3.4.0</version>
     </parent>
 
     <groupId>no.nav.foreldrepenger.tilgang</groupId>
@@ -22,7 +22,7 @@
             <dependency>
                 <groupId>no.nav.foreldrepenger.felles</groupId>
                 <artifactId>fp-bom</artifactId>
-                <version>3.3.1</version>
+                <version>3.4.0</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -117,12 +117,13 @@
         </dependency>
 
         <dependency>
-            <groupId>net.logstash.logback</groupId>
-            <artifactId>logstash-logback-encoder</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
         </dependency>
 
         <dependency>

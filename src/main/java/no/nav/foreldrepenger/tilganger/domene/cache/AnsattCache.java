@@ -56,6 +56,15 @@ public class AnsattCache {
         return Optional.ofNullable(lokalCache.get(cacheKey));
     }
 
+    public void flushCache() {
+        LOG.info("Flushing ansatt cache");
+        try {
+            redisCache.evictCacheIn(DB_NUMBER);
+        } catch (Exception e) {
+            logRedisUtilgjengelig();
+        }
+    }
+
     private static String hentCacheKey(String key) {
         return CACHE_KEY_PREFIX + key;
     }

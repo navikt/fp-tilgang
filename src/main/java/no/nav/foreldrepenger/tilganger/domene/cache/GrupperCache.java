@@ -61,7 +61,7 @@ public class GrupperCache {
         }
     }
 
-    public void flushAnsattCache() {
+    public void flushCache() {
         LOG.info("Flushing ansatt cache");
         try {
             redisCache.evictCacheIn(DB_NUMBER);

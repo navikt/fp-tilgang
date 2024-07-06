@@ -2,13 +2,33 @@ package no.nav.foreldrepenger.tilganger.domene.ansatt;
 
 import java.time.LocalDateTime;
 
-public record AnsattProfil(String brukernavn, String navn, String epost, boolean kanSaksbehandle, boolean kanVeilede, boolean kanBeslutte,
-                           boolean kanOverstyre, boolean kanOppgavestyre, boolean kanBehandleKodeEgenAnsatt, boolean kanBehandleKode6,
-                           boolean kanBehandleKode7, boolean kanDrifte, LocalDateTime funksjonellTid) {
+public record AnsattProfil(String brukernavn,
+                           String navn,
+                           String epost,
+                           boolean kanSaksbehandle,
+                           boolean kanVeilede,
+                           boolean kanBeslutte,
+                           boolean kanOverstyre,
+                           boolean kanOppgavestyre,
+                           boolean kanBehandleKodeEgenAnsatt,
+                           boolean kanBehandleKode6,
+                           boolean kanBehandleKode7,
+                           boolean kanDrifte,
+                           LocalDateTime funksjonellTid) {
 
     private AnsattProfil(Builder builder) {
-        this(builder.brukernavn, builder.navn, builder.epost, builder.kanSaksbehandle, builder.kanVeilede, builder.kanBeslutte, builder.kanOverstyre,
-            builder.kanOppgavestyre, builder.kanBehandleKodeEgenAnsatt, builder.kanBehandleKode6, builder.kanBehandleKode7, builder.kanDrifte,
+        this(builder.brukernavn,
+            builder.navn,
+            builder.epost,
+            builder.kanSaksbehandle,
+            builder.kanVeilede,
+            builder.kanBeslutte,
+            builder.kanOverstyre,
+            builder.kanOppgavestyre,
+            builder.kanBehandleKodeEgenAnsatt,
+            builder.kanBehandleKode6,
+            builder.kanBehandleKode7,
+            builder.kanDrifte,
             LocalDateTime.now());
     }
 

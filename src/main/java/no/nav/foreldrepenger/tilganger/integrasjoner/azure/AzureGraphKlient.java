@@ -82,8 +82,8 @@ class AzureGraphKlient implements AzureGraph {
         var requestUri = UriBuilder.fromUri(meEndpoint)
             .path(MEMBER_OF_PATH)
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
-            .queryParam(PARAM_NAME_TOP, 500)
-            .queryParam(PARAM_NAME_COUNT, true);
+            .queryParam(PARAM_NAME_TOP, 500) // ellers er kun 100 returnert - filter hjelper om brukt
+            .queryParam(PARAM_NAME_COUNT, true); // må være satt til å få filter til å virke
 
         insertGroupFilter(groupFilter, requestUri);
 
@@ -110,7 +110,7 @@ class AzureGraphKlient implements AzureGraph {
         URI requestUri = UriBuilder.fromUri(userEndpoint)
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
             .queryParam(PARAM_NAME_FILTER, "onPremisesSamAccountName eq '" + ident + "'")
-            .queryParam(PARAM_NAME_COUNT, true)
+            .queryParam(PARAM_NAME_COUNT, true) // må være satt til å få filter til å virke
             .build();
 
         var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
@@ -129,7 +129,7 @@ class AzureGraphKlient implements AzureGraph {
         URI requestUri = UriBuilder.fromUri(userEndpoint)
             .path(id.toString())
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_USER)
-            .queryParam(PARAM_NAME_COUNT, true)
+            .queryParam(PARAM_NAME_COUNT, true) // må være satt til å få filter til å virke
             .build();
 
         var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
@@ -149,8 +149,8 @@ class AzureGraphKlient implements AzureGraph {
             .path(userUid.toString())
             .path(MEMBER_OF_PATH)
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
-            .queryParam(PARAM_NAME_TOP, 500)
-            .queryParam(PARAM_NAME_COUNT, true);
+            .queryParam(PARAM_NAME_TOP, 500) // ellers er kun 100 returnert - filter hjelper om brukt
+            .queryParam(PARAM_NAME_COUNT, true); // må være satt til å få filter til å virke
 
         insertGroupFilter(groupFilter, requestUri);
 

@@ -26,7 +26,7 @@ public enum Gruppe {
         ALLE_GRUPPER.addAll(Arrays.stream(values()).map(Gruppe::getId).toList());
     }
 
-    private UUID id;
+    private final UUID id;
 
     Gruppe(String id) {
         this.id = UUID.fromString(id);
