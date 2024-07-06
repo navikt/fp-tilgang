@@ -14,13 +14,13 @@ spec:
   {{/if}}
   liveness:
     path: /fptilgang/internal/health/isAlive
-    initialDelay: 10
+    initialDelay: 2
     periodSeconds: 10
     failureThreshold: 20
     timeout: 3
   readiness:
     path: /fptilgang/internal/health/isReady
-    initialDelay: 10
+    initialDelay: 2
     periodSeconds: 10
     failureThreshold: 20
     timeout: 3
@@ -43,8 +43,6 @@ spec:
     requests:
       cpu: "{{requests.cpu}}"
       memory: "{{requests.mem}}"
-  secureLogs:
-    enabled: true
   azure:
     application:
       enabled: true
