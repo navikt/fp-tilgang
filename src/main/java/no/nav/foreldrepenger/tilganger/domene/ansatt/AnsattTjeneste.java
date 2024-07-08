@@ -1,5 +1,6 @@
 package no.nav.foreldrepenger.tilganger.domene.ansatt;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -68,6 +69,7 @@ public class AnsattTjeneste {
     }
 
     private Optional<Ansatt> hentAnsatt(String identifikator, Supplier<Optional<User>> ansattSupplier) {
+        var før = System.nanoTime();
         var ansatt = ansattCache.read(identifikator);
         if (ansatt.isEmpty()) {
             LOG.debug("Finner ikke ansatt eller grupper i cache {}", identifikator);
@@ -83,11 +85,13 @@ public class AnsattTjeneste {
         } else {
             LOG.debug("Fant ansatt i cache for {}", identifikator);
         }
+        LOG.info("[{} ms] Hent ansatt.", Duration.ofNanos(System.nanoTime() - før).toMillis());
         return ansatt;
     }
 
     private List<UUID> hentGrupper(String identifikator, Supplier<Set<Group>> grupperSupplier) {
         LOG.debug("Henter grupper for: {}", identifikator);
+        var før = System.nanoTime();
         var grupper = grupperCache.read(identifikator);
         if (grupper.isEmpty()) {
             LOG.debug("Finner ikke grupper i cache for {}", identifikator);
@@ -99,6 +103,7 @@ public class AnsattTjeneste {
         } else {
             LOG.debug("Fant grupper i cache for {}", identifikator);
         }
+        LOG.info("[{} ms] Hent grupper.", Duration.ofNanos(System.nanoTime() - før).toMillis());
         return grupper.get();
     }
 
