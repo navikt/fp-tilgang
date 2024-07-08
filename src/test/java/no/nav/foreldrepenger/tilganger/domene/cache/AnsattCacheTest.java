@@ -152,7 +152,7 @@ class AnsattCacheTest {
     @DisplayName("Evict fra Redis - OK.")
     void flushCache() throws RedigCacheUtilgjengeligException {
         doNothing().when(redisKlient).slettCache(AnsattCache.REDIS_ANSATT_CACHE);
-        cache.kasteCache();
+        cache.deleteCache();
         verify(redisKlient, times(1)).slettCache(AnsattCache.REDIS_ANSATT_CACHE);
         verifyNoInteractions(lokalCache);
     }
@@ -161,7 +161,7 @@ class AnsattCacheTest {
     @DisplayName("Evict fra Redis - NOK.")
     void flushCacheFeil() throws RedigCacheUtilgjengeligException {
         doThrow(new RedigCacheUtilgjengeligException("Exception")).when(redisKlient).slettCache(AnsattCache.REDIS_ANSATT_CACHE);
-        cache.kasteCache();
+        cache.deleteCache();
         verify(redisKlient, times(1)).slettCache(AnsattCache.REDIS_ANSATT_CACHE);
         verifyNoInteractions(lokalCache);
     }

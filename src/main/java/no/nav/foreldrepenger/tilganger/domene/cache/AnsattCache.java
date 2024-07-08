@@ -67,8 +67,8 @@ public class AnsattCache {
         return Optional.ofNullable(lokalCache.get(cacheKey));
     }
 
-    public void kasteCache() {
-        LOG.info("Flushing ansatt cache");
+    public void deleteCache() {
+        LOG.info("Fjerner ansatt cache.");
         try {
             redisCache.slettCache(REDIS_ANSATT_CACHE);
         } catch (RedigCacheUtilgjengeligException e) {

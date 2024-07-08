@@ -151,7 +151,7 @@ class GrupperCacheTest {
     @DisplayName("Evict fra Redis - OK.")
     void flushCache() throws RedigCacheUtilgjengeligException {
         doNothing().when(redisKlient).slettCache(GrupperCache.REDIS_GRUPPE_CACHE);
-        cache.kasteCache();
+        cache.deleteCache();
         verify(redisKlient, times(1)).slettCache(GrupperCache.REDIS_GRUPPE_CACHE);
         verifyNoInteractions(lokalCache);
     }
@@ -160,7 +160,7 @@ class GrupperCacheTest {
     @DisplayName("Evict fra Redis - NOK.")
     void flushCacheFeil() throws RedigCacheUtilgjengeligException {
         doThrow(new RedigCacheUtilgjengeligException("Exception")).when(redisKlient).slettCache(GrupperCache.REDIS_GRUPPE_CACHE);
-        cache.kasteCache();
+        cache.deleteCache();
         verify(redisKlient, times(1)).slettCache(GrupperCache.REDIS_GRUPPE_CACHE);
         verifyNoInteractions(lokalCache);
     }

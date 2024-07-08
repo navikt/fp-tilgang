@@ -55,7 +55,7 @@ public class GrupperCache {
     public Optional<List<UUID>> read(String key) {
         var cacheKey = hentCacheKey(key);
         try {
-            LOG.debug("Redis reading for key '{}'", cacheKey);
+            LOG.debug("Redis reading for key: {}", cacheKey);
             var fromCache = redisCache.les(cacheKey, REDIS_GRUPPE_CACHE);
             LOG.trace("Redis read for key: {}, value {}", cacheKey, fromCache);
             return fromCache.map(value -> DefaultJsonMapper.listFromJson(value, UUID.class));
@@ -72,8 +72,8 @@ public class GrupperCache {
         return Optional.ofNullable(lokalCache.get(cacheKey));
     }
 
-    public void kasteCache() {
-        LOG.info("Flushing ansatt cache");
+    public void deleteCache() {
+        LOG.info("Fjerner group cache.");
         try {
             redisCache.slettCache(REDIS_GRUPPE_CACHE);
         } catch (RedigCacheUtilgjengeligException e) {
