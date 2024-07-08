@@ -6,11 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -20,11 +16,9 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
-import javax.net.ssl.SSLSession;
-
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import no.nav.vedtak.exception.IntegrasjonException;
@@ -60,103 +54,219 @@ class AzureGraphKlientTest {
     }
 
     @Test
-    void testUserReturnsFinnUserInfo() {
+    @DisplayName("Find user by ident OK - find 1 user")
+    void testFinnUserByIdent() {
         // Prepare test data
         String userId = "123456";
         var expectedUser = new User(UUID.randomUUID(), "sam", "display", "mail");
         var response = new AzureGraphKlient.UsersResponse(List.of(expectedUser));
 
         // Mock REST call behavior
-        when(mockRestClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(opprettResponse(response, HttpStatus.Code.OK));
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(response);
         // Invoke the method under test
-        Optional<User> result = azureGraphKlient.finnUser(userId);
+        var result = azureGraphKlient.finnUser(userId);
 
         // Verify the result
         assertThat(result).isPresent().contains(expectedUser);
+        assertThat(validator.validate(result)).isEmpty(); // No validation errors expected
     }
 
     @Test
-    void testUserReturnsFinnUserInfo2() {
+    @DisplayName("Find user by ident OK - find 2 user. Match by ident and return matching.")
+    void testFinnUserByIdentReturnsToUsers() {
+        // Prepare test data
+        String userId = "123456";
+        var user = new User(UUID.randomUUID(), "one", "display", "mail");
+        var expectedUser = new User(UUID.randomUUID(), userId, "user", "mail");
+        var response = new AzureGraphKlient.UsersResponse(List.of(user, expectedUser));
+
+        // Mock REST call behavior
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(response);
+        // Invoke the method under test
+        var result = azureGraphKlient.finnUser(userId);
+
+        // Verify the result
+        assertThat(result).isPresent().contains(expectedUser);
+        assertThat(validator.validate(result)).isEmpty(); // No validation errors expected
+    }
+
+
+    @Test
+    @DisplayName("Find user by ident OK - find 2 user. Match by ident and return no match.")
+    void testFinnUserByIdentReturnsNoMatchingUser() {
+        // Prepare test data
+        String userId = "123456";
+        var user = new User(UUID.randomUUID(), "one", "display", "mail");
+        var secondUser = new User(UUID.randomUUID(), "two", "user", "mail");
+        var response = new AzureGraphKlient.UsersResponse(List.of(user, secondUser));
+
+        // Mock REST call behavior
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(response);
+        // Invoke the method under test
+        var result = azureGraphKlient.finnUser(userId);
+
+        // Verify the result
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Find user by ident OK - no users found.")
+    void testFinnUserByIdentReturnsEmptyList() {
+        // Prepare test data
+        String userId = "123456";
+        var response = new AzureGraphKlient.UsersResponse(List.of());
+
+        // Mock REST call behavior
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(response);
+        // Invoke the method under test
+        var result = azureGraphKlient.finnUser(userId);
+
+        // Verify the result
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Find Me user info - OK.")
+    void testMe() {
         // Prepare test data
         UUID userId = UUID.randomUUID();
         var expectedUser = new User(userId, "samAccountName", "displayName", "mail@example.com");
-        var response = new AzureGraphKlient.UsersResponse(List.of(expectedUser));
 
         // Mock REST call behavior
-        when(mockRestClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(opprettResponse(response, HttpStatus.Code.OK));
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(expectedUser);
 
         // Invoke the method under test
-        Optional<User> result = azureGraphKlient.finnUser(userId.toString());
+        var result = azureGraphKlient.me();
 
         // Validate user object
-        assertThat(result).isPresent();
-        User actualUser = result.get();
-        assertThat(actualUser).isEqualTo(expectedUser);
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo(userId);
 
         // Validate user properties using Jakarta Validation API
-        assertThat(validator.validate(actualUser)).isEmpty(); // No validation errors expected
+        assertThat(validator.validate(result)).isEmpty(); // No validation errors expected
     }
-
 
     @Test
-    void testUserReturnsError() {
-        // Prepare test data
-        var userId = UUID.randomUUID().toString();
-        var response = new AzureGraphKlient.ErrorResponse(new AzureGraphKlient.ErrorResponse.Error("12345", "Feilmelding"));
-
+    @DisplayName("Find Me user info - NOK.")
+    void testMeNok() {
         // Mock REST call behavior
-        when(mockRestClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(opprettResponse(response, HttpStatus.Code.BAD_REQUEST));
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(null);
 
         // Invoke the method under test
-        var error = assertThrows(IntegrasjonException.class, () -> azureGraphKlient.finnUser(userId));
+        var result = azureGraphKlient.me();
 
-        assertThat(error).isNotNull();
-        assertThat(error.getMessage()).contains("12345", "Feilmelding");
+        // Validate user object
+        assertThat(result).isNull();
     }
 
+    @Test
+    @DisplayName("Find Me memberOf user info - OK.")
+    void testMeMemberOfOk() {
+        // Prepare test data
+        var grupper = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        var response = new AzureGraphKlient.GroupsResponse(grupper.stream().map(Group::new).toList());
 
-    private static <T> HttpResponse<String> opprettResponse(T response, HttpStatus.Code statusCode) {
-        return new HttpResponse<>() {
-            @Override
-            public int statusCode() {
-                return statusCode.getCode();
-            }
+        // Mock REST call behavior
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(response);
 
-            @Override
-            public HttpRequest request() {
-                return null;
-            }
+        // Invoke the method under test
+        var result = azureGraphKlient.memberOf(new HashSet<>(grupper));
 
-            @Override
-            public Optional<HttpResponse<String>> previousResponse() {
-                return Optional.empty();
-            }
+        // Validate user object
+        assertThat(result).isNotEmpty().hasSize(4);
 
-            @Override
-            public HttpHeaders headers() {
-                return null;
-            }
+        // Validate user properties using Jakarta Validation API
+        assertThat(validator.validate(result)).isEmpty(); // No validation errors expected
+    }
 
-            @Override
-            public String body() {
-                return DefaultJsonMapper.toJson(response);
-            }
+    @Test
+    @DisplayName("Find Me memberOf user info - NOK.")
+    void testMeMemberOfNok() {
+        // Mock REST call behavior
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(new AzureGraphKlient.GroupsResponse(List.of()));
 
-            @Override
-            public Optional<SSLSession> sslSession() {
-                return Optional.empty();
-            }
+        // Invoke the method under test
+        var result = azureGraphKlient.memberOf(Set.of());
 
-            @Override
-            public URI uri() {
-                return null;
-            }
+        // Validate user object
+        assertThat(result).isEmpty();
 
-            @Override
-            public HttpClient.Version version() {
-                return null;
-            }
-        };
+        // Validate user properties using Jakarta Validation API
+        assertThat(validator.validate(result)).isEmpty(); // No validation errors expected
+    }
+
+    @Test
+    @DisplayName("Hent user by uid - OK.")
+    void testHentUserByUid() {
+        // Prepare test data
+        UUID userId = UUID.randomUUID();
+        var expectedUser = new User(userId, "samAccountName", "displayName", "mail@example.com");
+
+        // Mock REST call behavior
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(expectedUser);
+
+        // Invoke the method under test
+        var result = azureGraphKlient.hentUser(userId);
+
+        // Validate user object
+        assertThat(result).isNotEmpty();
+        assertThat(result.get()).isEqualTo(expectedUser);
+
+        // Validate user properties using Jakarta Validation API
+        assertThat(validator.validate(result)).isEmpty(); // No validation errors expected
+    }
+
+    @Test
+    @DisplayName("Hent user by uid - no user.")
+    void testHentUserByUidNok() {
+        // Prepare test data
+        UUID userId = UUID.randomUUID();
+
+        // Mock REST call behavior
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(null);
+
+        // Invoke the method under test
+        var result = azureGraphKlient.hentUser(userId);
+
+        // Validate user object
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Hent grupper of user - OK.")
+    void testHentGrupperOk() {
+        // Prepare test data
+        var grupper = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        var response = new AzureGraphKlient.GroupsResponse(grupper.stream().map(Group::new).toList());
+
+        // Mock REST call behavior
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(response);
+
+        // Invoke the method under test
+        var result = azureGraphKlient.hentGrupper(UUID.randomUUID(), new HashSet<>(grupper));
+
+        // Validate user object
+        assertThat(result).isNotEmpty().hasSize(3);
+
+        // Validate user properties using Jakarta Validation API
+        assertThat(validator.validate(result)).isEmpty(); // No validation errors expected
+    }
+
+    @Test
+    @DisplayName("Hent grupper of user - NOK empty response.")
+    void testHentGrupperNok() {
+        // Prepare test data
+        var filter = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+        var response = new AzureGraphKlient.GroupsResponse(List.of());
+
+        // Mock REST call behavior
+        when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(response);
+
+        // Invoke the method under test
+        var result = azureGraphKlient.hentGrupper(UUID.randomUUID(), new HashSet<>(filter));
+
+        // Validate user object
+        assertThat(result).isEmpty();
     }
 
 }

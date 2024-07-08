@@ -6,11 +6,14 @@ import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedigCacheUtilgjengeligException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.tilganger.domene.ansatt.Ansatt;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisDatabase;
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 import no.nav.vedtak.util.LRUCache;
@@ -21,10 +24,15 @@ public class AnsattCache {
     private static final Logger LOG = LoggerFactory.getLogger(AnsattCache.class);
     private static final long CACHE_DURATION = Duration.ofDays(30).getSeconds();
     static final String CACHE_KEY_PREFIX = "ansatt_";
-    static final int DB_NUMBER = 0;
+    static final RedisDatabase REDIS_ANSATT_CACHE = RedisDatabase.ZERO;
 
     private final RedisCacheKlient redisCache;
     private final LRUCache<String, Ansatt> lokalCache;
+
+    AnsattCache(RedisCacheKlient redisCache, LRUCache<String, Ansatt> lokalCache) {
+        this.redisCache = redisCache;
+        this.lokalCache = lokalCache;
+    }
 
     @Inject
     public AnsattCache() {
@@ -35,8 +43,8 @@ public class AnsattCache {
     public void store(String key, Ansatt value) {
         var cacheKey = hentCacheKey(key);
         try {
-            redisCache.store(cacheKey, DefaultJsonMapper.toJson(value), CACHE_DURATION, DB_NUMBER);
-        } catch (Exception e) {
+            redisCache.lagre(cacheKey, DefaultJsonMapper.toJson(value), CACHE_DURATION, REDIS_ANSATT_CACHE);
+        } catch (RedigCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
             lokalCache.put(cacheKey, value);
         }
@@ -45,31 +53,34 @@ public class AnsattCache {
     public Optional<Ansatt> read(String key) {
         var cacheKey = hentCacheKey(key);
         try {
-            return redisCache.read(cacheKey, DB_NUMBER).map(value -> DefaultJsonMapper.fromJson(value, Ansatt.class));
+            return redisCache.les(cacheKey, REDIS_ANSATT_CACHE).map(value -> DefaultJsonMapper.fromJson(value, Ansatt.class));
         } catch (TekniskException tex) {
             LOG.info("Feil ved deserialisering av ansatt. Fjerner key fra cache.");
-            redisCache.remove(cacheKey, DB_NUMBER);
-            throw tex;
-        } catch (Exception e) {
+            try {
+                redisCache.fjern(cacheKey, REDIS_ANSATT_CACHE);
+            } catch (RedigCacheUtilgjengeligException e) {
+                logRedisUtilgjengelig();
+            }
+        } catch (RedigCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
         }
         return Optional.ofNullable(lokalCache.get(cacheKey));
     }
 
-    public void flushCache() {
+    public void kasteCache() {
         LOG.info("Flushing ansatt cache");
         try {
-            redisCache.evictCacheIn(DB_NUMBER);
-        } catch (Exception e) {
+            redisCache.slettCache(REDIS_ANSATT_CACHE);
+        } catch (RedigCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
         }
     }
 
-    private static String hentCacheKey(String key) {
+    static String hentCacheKey(String key) {
         return CACHE_KEY_PREFIX + key;
     }
 
     private static void logRedisUtilgjengelig() {
-        LOG.info("Redis ikke tilgjengelig. Kjører videre med lokalt cache.");
+        LOG.info("Redis ikke tilgjengelig. Kjører videre med lokal cache.");
     }
 }

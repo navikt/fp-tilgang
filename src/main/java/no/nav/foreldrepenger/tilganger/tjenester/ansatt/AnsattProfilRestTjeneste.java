@@ -75,8 +75,14 @@ public class AnsattProfilRestTjeneste {
     public record BrukerProfilResponseDto(@NotNull String ident, @NotNull String navn, String epost) {
     }
 
-    public record BrukerProfilUtvidetResponseDto(@NotNull String brukernavn, @NotNull String navn, boolean kanSaksbehandle, boolean kanVeilede,
-                                                 boolean kanBeslutte, boolean kanOverstyre, boolean kanOppgavestyre, boolean kanBehandleKode6,
+    public record BrukerProfilUtvidetResponseDto(@NotNull String brukernavn,
+                                                 @NotNull String navn,
+                                                 boolean kanSaksbehandle,
+                                                 boolean kanVeilede,
+                                                 boolean kanBeslutte,
+                                                 boolean kanOverstyre,
+                                                 boolean kanOppgavestyre,
+                                                 boolean kanBehandleKode6,
                                                  LocalDateTime funksjonellTid) {
     }
 
@@ -85,8 +91,14 @@ public class AnsattProfilRestTjeneste {
     }
 
     private BrukerProfilUtvidetResponseDto mapTilUtvidetProfilDto(AnsattProfil brukerProfil) {
-        return new BrukerProfilUtvidetResponseDto(brukerProfil.brukernavn(), brukerProfil.navn(), brukerProfil.kanSaksbehandle(),
-            brukerProfil.kanVeilede(), brukerProfil.kanBeslutte(), brukerProfil.kanOverstyre(), brukerProfil.kanOppgavestyre(),
-            brukerProfil.kanBehandleKode6(), brukerProfil.funksjonellTid());
+        return new BrukerProfilUtvidetResponseDto(brukerProfil.brukernavn(),
+            brukerProfil.navn(),
+            brukerProfil.kanSaksbehandle(),
+            brukerProfil.kanVeilede(),
+            brukerProfil.kanBeslutte(),
+            brukerProfil.kanOverstyre(),
+            brukerProfil.kanOppgavestyre(),
+            brukerProfil.kanBehandleKode6(),
+            brukerProfil.funksjonellTid());
     }
 }

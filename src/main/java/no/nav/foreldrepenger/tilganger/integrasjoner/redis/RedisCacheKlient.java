@@ -18,7 +18,6 @@ import redis.clients.jedis.params.SetParams;
 public class RedisCacheKlient {
     private static final Logger LOG = LoggerFactory.getLogger(RedisCacheKlient.class);
     private static final Environment ENV = Environment.current();
-    private static final int DEFAULT_CACHE_DURATION_IN_MINUTES = 60;
 
     private static RedisCacheKlient INSTANCE;
 
@@ -47,60 +46,52 @@ public class RedisCacheKlient {
         return inst;
     }
 
-    /**
-     * Lagres i 60 minutter
-     */
-    public void store(String key, String value, int database) {
+    public void lagre(String key, String value, long expiresInSeconds, RedisDatabase redisDatabase) throws RedigCacheUtilgjengeligException {
         Objects.requireNonNull(key, "store cache key is null");
         Objects.requireNonNull(value, "store cache value is null");
-        store(key, value, Duration.ofMinutes(DEFAULT_CACHE_DURATION_IN_MINUTES).getSeconds(), database);
-    }
-
-    public void store(String key, String value, long expiresInSeconds, int database) {
-        Objects.requireNonNull(key, "store cache key is null");
-        Objects.requireNonNull(value, "store cache value is null");
+        Objects.requireNonNull(redisDatabase, "store database value is null");
         try (var jedis = getJedisPool().getResource()) {
-            jedis.select(database);
+            jedis.select(mapToDatabaseNumber(redisDatabase));
             LOG.debug("Storing key {} with value {}", key, value);
             jedis.set(key, value, SetParams.setParams().ex(expiresInSeconds));
         } catch (Exception e) {
-            throwRuntimeException(e);
+            throwRedisUtilgjengeligException(e);
         }
     }
 
-    public Optional<String> read(String key, int database) {
+    public Optional<String> les(String key, RedisDatabase redisDatabase) throws RedigCacheUtilgjengeligException {
         Objects.requireNonNull(key, "read cache key is null");
         try (var jedis = getJedisPool().getResource()) {
-            jedis.select(database);
+            jedis.select(mapToDatabaseNumber(redisDatabase));
             if (jedis.exists(key)) {
                 LOG.debug("Reading key {} from pool", key);
                 return Optional.of(jedis.get(key));
             }
             LOG.debug("Finner ikke key {}", key);
         } catch (Exception e) {
-            throwRuntimeException(e);
+            throwRedisUtilgjengeligException(e);
         }
         return Optional.empty();
     }
 
-    public void remove(String key, int database) {
+    public void fjern(String key, RedisDatabase redisDatabase) throws RedigCacheUtilgjengeligException {
         Objects.requireNonNull(key, "remove cache key is null");
         try (var jedis = getJedisPool().getResource()) {
-            jedis.select(database);
+            jedis.select(mapToDatabaseNumber(redisDatabase));
             LOG.debug("Fjerne key {}", key);
             jedis.del(key);
         } catch (Exception e) {
-            throwRuntimeException(e);
+            throwRedisUtilgjengeligException(e);
         }
     }
 
-    public void evictCacheIn(int database) {
+    public void slettCache(RedisDatabase redisDatabase) throws RedigCacheUtilgjengeligException {
         try (var jedis = getJedisPool().getResource()) {
-            LOG.debug("Fjerner hele cachen i database {}", database);
-            jedis.select(database);
+            LOG.debug("Fjerner hele cachen i database {}", redisDatabase);
+            jedis.select(mapToDatabaseNumber(redisDatabase));
             jedis.flushDB(FlushMode.ASYNC);
         } catch (Exception e) {
-            throwRuntimeException(e);
+            throwRedisUtilgjengeligException(e);
         }
     }
 
@@ -108,7 +99,28 @@ public class RedisCacheKlient {
         return jedisPool;
     }
 
-    private static void throwRuntimeException(Exception e) {
-        throw new RuntimeException("Redis utilgjengelig", e);
+    private int mapToDatabaseNumber(RedisDatabase redisDatabase) {
+        return switch (redisDatabase) {
+            case ZERO -> 0;
+            case ONE -> 1;
+            case TWO -> 2;
+            case THREE -> 3;
+            case FOUR -> 4;
+            case FIVE -> 5;
+            case SIX -> 6;
+            case SEVEN -> 7;
+            case EIGHT -> 8;
+            case NINE -> 9;
+            case TEN -> 10;
+            case ELEVEN -> 11;
+            case TWELVE -> 12;
+            case THIRTEEN -> 13;
+            case FOURTEEN -> 14;
+            case FIFTEEN -> 15;
+        };
+    }
+
+    private static void throwRedisUtilgjengeligException(Exception e) throws RedigCacheUtilgjengeligException {
+        throw new RedigCacheUtilgjengeligException("Redis utilgjengelig.");
     }
 }

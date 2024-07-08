@@ -2,9 +2,7 @@ package no.nav.foreldrepenger.tilganger.integrasjoner.azure;
 
 import static no.nav.foreldrepenger.tilganger.utils.RegexUtils.NAVIDENT_PATTERN;
 
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.http.HttpResponse;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -12,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.constraints.NotNull;
@@ -21,14 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.konfig.Environment;
-import no.nav.vedtak.exception.IntegrasjonException;
-import no.nav.vedtak.exception.ManglerTilgangException;
 import no.nav.vedtak.felles.integrasjon.rest.ProxyRestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
-import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE, endpointProperty = "ms.graph.url", endpointDefault = "https://graph.microsoft.com/v1.0", scopesProperty = "ms.graph.scopes", scopesDefault = "https://graph.microsoft.com/.default")
@@ -72,9 +68,7 @@ class AzureGraphKlient implements AzureGraph {
         var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestUri);
-        var response = restKlient.sendReturnUnhandled(request);
-
-        return mapResponse(handleResponse(response, requestUri), User.class);
+        return restKlient.send(request, User.class);
     }
 
     @Override
@@ -91,14 +85,11 @@ class AzureGraphKlient implements AzureGraph {
         var request = RestRequest.newGET(requestTarget, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestTarget);
-        var response = restKlient.sendReturnUnhandled(request);
-        var groupsResponse = mapResponse(handleResponse(response, requestTarget), GroupsResponse.class);
+        var response = restKlient.send(request, GroupsResponse.class);
 
-        var grupper = groupsResponse.value();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Grupper: {}", grupper.stream().map(Objects::toString).collect(Collectors.joining(", ")));
-        }
-        LOG.info("Funnet {} grupper", grupper.size());
+        var grupper = response.value();
+        LOG.info("Fant grupper {}", grupper.size());
+        loggGrupperIfDebug("Grupper: {}", grupper.stream().map(Objects::toString));
         return new HashSet<>(grupper);
     }
 
@@ -116,9 +107,23 @@ class AzureGraphKlient implements AzureGraph {
         var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestUri);
-        var response = restKlient.sendReturnUnhandled(request);
+        var response = restKlient.send(request, UsersResponse.class);
+        if (response == null || response.value() == null || response.value().isEmpty()) {
+            LOG.info("Fant ikke bruker med ident: {}", ident);
+            return Optional.empty();
+        }
 
-        return Optional.ofNullable(mapResponse(handleResponse(response, requestUri), UsersResponse.class).value().getFirst());
+        var brukere = response.value();
+        if (brukere.size() > 1) {
+            LOG.info("Fant flere brukere med ident: {}", ident);
+            loggGrupperIfDebug("Brukere {}", brukere.stream().map(User::onPremisesSamAccountName));
+            var firstUser = brukere.stream().filter(user -> user.onPremisesSamAccountName().equals(ident)).findFirst();
+            LOG.info("Returnerer: {}", firstUser);
+            return firstUser;
+        }
+        var bruker = response.value().getFirst();
+        LOG.info("Fant bruker: {}", ident.equals(bruker.onPremisesSamAccountName()));
+        return Optional.of(bruker);
     }
 
     @Override
@@ -133,11 +138,18 @@ class AzureGraphKlient implements AzureGraph {
             .build();
 
         var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
-
         logDebugMelding(requestUri);
-        var response = restKlient.sendReturnUnhandled(request);
 
-        return Optional.ofNullable(mapResponse(handleResponse(response, requestUri), User.class));
+        var response = restKlient.send(request, User.class);
+        if (response != null) {
+            LOG.info("Fant bruker: {}", id.equals(response.id()));
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Bruker: {}", response);
+            }
+        } else {
+            LOG.info("Fant ikke bruker");
+        }
+        return Optional.ofNullable(response);
     }
 
     @Override
@@ -151,23 +163,17 @@ class AzureGraphKlient implements AzureGraph {
             .queryParam(PARAM_NAME_SELECT, PARAM_VALUE_SELECT_GROUPS)
             .queryParam(PARAM_NAME_TOP, 500) // ellers er kun 100 returnert - filter hjelper om brukt
             .queryParam(PARAM_NAME_COUNT, true); // må være satt til å få filter til å virke
-
         insertGroupFilter(groupFilter, requestUri);
 
         var requestTarget = requestUri.build();
-
         var request = RestRequest.newGET(requestTarget, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestTarget);
-        var response = restKlient.sendReturnUnhandled(request);
+        var response = restKlient.send(request, GroupsResponse.class);
 
-        var groupsResponse = mapResponse(handleResponse(response, requestTarget), GroupsResponse.class);
-
-        var grupper = groupsResponse.value();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Grupper: {}", grupper.stream().map(Objects::toString).collect(Collectors.joining(", ")));
-        }
-        LOG.info("Funnet {} grupper", grupper.size());
+        var grupper = response.value();
+        LOG.info("Fant grupper: {}", grupper.size());
+        loggGrupperIfDebug("Grupper: {}", grupper.stream().map(Objects::toString));
         return new HashSet<>(grupper);
     }
 
@@ -178,47 +184,19 @@ class AzureGraphKlient implements AzureGraph {
         }
     }
 
-    private static String handleResponse(final HttpResponse<String> response, URI endpoint) {
-        int status = response.statusCode();
-        if (status == HttpURLConnection.HTTP_NO_CONTENT) {
-            return null;
+    private static void loggGrupperIfDebug(String format, Stream<String> grupper) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(format, grupper.collect(Collectors.joining(", ")));
         }
-        if ((status >= HttpURLConnection.HTTP_OK && status < HttpURLConnection.HTTP_MULT_CHOICE)) {
-            return response.body();
-        }
-        if (status == HttpURLConnection.HTTP_FORBIDDEN) {
-            throw new ManglerTilgangException("F-468816", "Feilet mot " + endpoint);
-        }
-        if (status == HttpURLConnection.HTTP_BAD_REQUEST) {
-            ErrorResponse errorResponse = mapResponse(response.body(), ErrorResponse.class);
-            if (errorResponse != null && errorResponse.error() != null) {
-                var error = errorResponse.error();
-                throw new IntegrasjonException("F-468817",
-                    String.format("Uventet respons %s fra %s med kode: %s og melding: %s", status, endpoint, error.code(), error.message()));
-            }
-        }
-        throw new IntegrasjonException("F-468817", String.format("Uventet respons %s fra %s", status, endpoint));
-    }
-
-    private static <T> T mapResponse(String response, Class<T> clazz) {
-        if (clazz.isAssignableFrom(String.class)) {
-            return clazz.cast(response);
-        }
-        return DefaultJsonMapper.fromJson(response, clazz);
     }
 
     private static void logDebugMelding(URI requestUri) {
-        LOG.debug("Kaller til MS Graph på: {}", requestUri);
+        LOG.debug("Kaller til MS Graph: {}", requestUri);
     }
 
     record UsersResponse(@NotNull List<User> value) {
     }
 
     record GroupsResponse(@NotNull List<Group> value) {
-    }
-
-    record ErrorResponse(@NotNull Error error) {
-        record Error(@NotNull String code, @NotNull String message) {
-        }
     }
 }
