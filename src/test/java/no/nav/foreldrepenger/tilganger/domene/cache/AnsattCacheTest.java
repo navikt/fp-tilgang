@@ -28,7 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.tilganger.domene.ansatt.Ansatt;
-import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedigCacheUtilgjengeligException;
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisDatabase;
 
@@ -50,7 +50,7 @@ class AnsattCacheTest {
 
     @Test
     @DisplayName("Lagre i Redis - OK")
-    void storeOKWithRedis() throws RedigCacheUtilgjengeligException {
+    void storeOKWithRedis() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
         var ansatt = lagTestAnsatt(key);
         cache.store(key, ansatt);
@@ -60,9 +60,9 @@ class AnsattCacheTest {
 
     @Test
     @DisplayName("Lagre i Redis - NOK. Lagre i lokal cache - OK.")
-    void storeOKWithoutRedisInLocalCache() throws RedigCacheUtilgjengeligException {
+    void storeOKWithoutRedisInLocalCache() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
-        doThrow(new RedigCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).lagre(anyString(), anyString(), anyLong(), any());
+        doThrow(new RedisCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).lagre(anyString(), anyString(), anyLong(), any());
 
         var ansatt = lagTestAnsatt(key);
         cache.store(key, ansatt);
@@ -72,7 +72,7 @@ class AnsattCacheTest {
 
     @Test
     @DisplayName("Les fra Redis - OK")
-    void readOKWithRedis() throws RedigCacheUtilgjengeligException {
+    void readOKWithRedis() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
         var ansatt = lagTestAnsatt(key);
 
@@ -89,12 +89,12 @@ class AnsattCacheTest {
 
     @Test
     @DisplayName("Les fra Redis - NOK. Les fra lokal cache - OK.")
-    void readOKWithoutRedisFromLokalCache() throws RedigCacheUtilgjengeligException {
+    void readOKWithoutRedisFromLokalCache() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
         var ansatt = lagTestAnsatt(key);
 
         var cacheKey = AnsattCache.hentCacheKey(key);
-        doThrow(new RedigCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).les(cacheKey, AnsattCache.REDIS_ANSATT_CACHE);
+        doThrow(new RedisCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).les(cacheKey, AnsattCache.REDIS_ANSATT_CACHE);
         when(lokalCache.get(cacheKey)).thenReturn(ansatt);
 
         var cacheResult = cache.read(key);
@@ -108,14 +108,14 @@ class AnsattCacheTest {
 
     @Test
     @DisplayName("Les fra Redis - OK men data er korrupt. Slett key fra Redis - OK. Les fra lokal cache - OK.")
-    void readErrorFromRedisMenOkFraLokalCache() throws RedigCacheUtilgjengeligException {
+    void readErrorFromRedisMenOkFraLokalCache() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
         var ansatt = lagTestAnsatt(key);
 
         var cacheKey = AnsattCache.hentCacheKey(key);
         when(redisKlient.les(cacheKey, AnsattCache.REDIS_ANSATT_CACHE)).thenReturn(Optional.of("{\"noe\"}"));
 
-        doThrow(new RedigCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).fjern(cacheKey, AnsattCache.REDIS_ANSATT_CACHE);
+        doThrow(new RedisCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).fjern(cacheKey, AnsattCache.REDIS_ANSATT_CACHE);
         when(lokalCache.get(cacheKey)).thenReturn(ansatt);
 
         var cacheResult = cache.read(key);
@@ -130,13 +130,13 @@ class AnsattCacheTest {
 
     @Test
     @DisplayName("Les fra Redis - OK men data er korrupt. Slett key fra Redis - NOK. Les fra lokal cache - ingen resultat i cache.")
-    void readErrorFromRedisSlettFraCacheIngenTreff() throws RedigCacheUtilgjengeligException {
+    void readErrorFromRedisSlettFraCacheIngenTreff() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
 
         var cacheKey = AnsattCache.hentCacheKey(key);
         when(redisKlient.les(cacheKey, AnsattCache.REDIS_ANSATT_CACHE)).thenReturn(Optional.of("{\"noe\"}"));
 
-        doThrow(new RedigCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).fjern(cacheKey, AnsattCache.REDIS_ANSATT_CACHE);
+        doThrow(new RedisCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).fjern(cacheKey, AnsattCache.REDIS_ANSATT_CACHE);
         when(lokalCache.get(cacheKey)).thenReturn(null);
 
         var cacheResult = cache.read(key);
@@ -150,7 +150,7 @@ class AnsattCacheTest {
 
     @Test
     @DisplayName("Evict fra Redis - OK.")
-    void flushCache() throws RedigCacheUtilgjengeligException {
+    void flushCache() throws RedisCacheUtilgjengeligException {
         doNothing().when(redisKlient).slettCache(AnsattCache.REDIS_ANSATT_CACHE);
         cache.deleteCache();
         verify(redisKlient, times(1)).slettCache(AnsattCache.REDIS_ANSATT_CACHE);
@@ -159,8 +159,8 @@ class AnsattCacheTest {
 
     @Test
     @DisplayName("Evict fra Redis - NOK.")
-    void flushCacheFeil() throws RedigCacheUtilgjengeligException {
-        doThrow(new RedigCacheUtilgjengeligException("Exception")).when(redisKlient).slettCache(AnsattCache.REDIS_ANSATT_CACHE);
+    void flushCacheFeil() throws RedisCacheUtilgjengeligException {
+        doThrow(new RedisCacheUtilgjengeligException("Exception")).when(redisKlient).slettCache(AnsattCache.REDIS_ANSATT_CACHE);
         cache.deleteCache();
         verify(redisKlient, times(1)).slettCache(AnsattCache.REDIS_ANSATT_CACHE);
         verifyNoInteractions(lokalCache);

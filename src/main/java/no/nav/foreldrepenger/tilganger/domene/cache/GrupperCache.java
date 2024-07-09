@@ -11,7 +11,7 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedigCacheUtilgjengeligException;
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisDatabase;
 import no.nav.vedtak.exception.TekniskException;
@@ -46,7 +46,7 @@ public class GrupperCache {
         try {
             LOG.debug("Redis storing for key '{}'", cacheKey);
             redisCache.lagre(cacheKey, DefaultJsonMapper.toJson(value), CACHE_DURATION, REDIS_GRUPPE_CACHE);
-        } catch (RedigCacheUtilgjengeligException e) {
+        } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
             lokalCache.put(cacheKey, value);
         }
@@ -63,10 +63,10 @@ public class GrupperCache {
             LOG.info("Feil ved deserialisering av grupper. Fjerner key fra cache.");
             try {
                 redisCache.fjern(cacheKey, REDIS_GRUPPE_CACHE);
-            } catch (RedigCacheUtilgjengeligException e) {
+            } catch (RedisCacheUtilgjengeligException e) {
                 logRedisUtilgjengelig();
             }
-        } catch (RedigCacheUtilgjengeligException e) {
+        } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
         }
         return Optional.ofNullable(lokalCache.get(cacheKey));
@@ -76,7 +76,7 @@ public class GrupperCache {
         LOG.info("Fjerner group cache.");
         try {
             redisCache.slettCache(REDIS_GRUPPE_CACHE);
-        } catch (RedigCacheUtilgjengeligException e) {
+        } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
         }
     }

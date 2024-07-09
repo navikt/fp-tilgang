@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 
-import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedigCacheUtilgjengeligException;
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisDatabase;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
@@ -49,7 +49,7 @@ class GrupperCacheTest {
 
     @Test
     @DisplayName("Lagre i Redis - OK")
-    void storeOKWithRedis() throws RedigCacheUtilgjengeligException {
+    void storeOKWithRedis() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
         var grupper = lagAnsattGrupper();
         cache.store(key, grupper);
@@ -59,9 +59,9 @@ class GrupperCacheTest {
 
     @Test
     @DisplayName("Lagre i Redis - NOK. Lagre i lokal cache - OK.")
-    void storeOKWithoutRedisInLocalCache() throws RedigCacheUtilgjengeligException {
+    void storeOKWithoutRedisInLocalCache() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
-        doThrow(new RedigCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).lagre(anyString(), anyString(), anyLong(), any());
+        doThrow(new RedisCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).lagre(anyString(), anyString(), anyLong(), any());
 
         var grupper = lagAnsattGrupper();
         cache.store(key, grupper);
@@ -71,7 +71,7 @@ class GrupperCacheTest {
 
     @Test
     @DisplayName("Les fra Redis - OK")
-    void readOKWithRedis() throws RedigCacheUtilgjengeligException {
+    void readOKWithRedis() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
         var grupper = lagAnsattGrupper();
 
@@ -88,12 +88,12 @@ class GrupperCacheTest {
 
     @Test
     @DisplayName("Les fra Redis - NOK. Les fra lokal cache - OK.")
-    void readOKWithoutRedisFromLokalCache() throws RedigCacheUtilgjengeligException {
+    void readOKWithoutRedisFromLokalCache() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
         var grupper = lagAnsattGrupper();
 
         var cacheKey = GrupperCache.hentCacheKey(key);
-        doThrow(new RedigCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).les(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
+        doThrow(new RedisCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).les(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
         when(lokalCache.get(cacheKey)).thenReturn(grupper);
 
         var cacheResult = cache.read(key);
@@ -107,14 +107,14 @@ class GrupperCacheTest {
 
     @Test
     @DisplayName("Les fra Redis - OK men data er korrupt. Slett key fra Redis - OK. Les fra lokal cache - OK.")
-    void readErrorFromRedisMenOkFraLokalCache() throws RedigCacheUtilgjengeligException {
+    void readErrorFromRedisMenOkFraLokalCache() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
         var grupper = lagAnsattGrupper();
 
         var cacheKey = GrupperCache.hentCacheKey(key);
         when(redisKlient.les(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE)).thenReturn(Optional.of("{\"noe\"}"));
 
-        doThrow(new RedigCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).fjern(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
+        doThrow(new RedisCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).fjern(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
         when(lokalCache.get(cacheKey)).thenReturn(grupper);
 
         var cacheResult = cache.read(key);
@@ -129,13 +129,13 @@ class GrupperCacheTest {
 
     @Test
     @DisplayName("Les fra Redis - OK men data er korrupt. Slett key fra Redis - NOK. Les fra lokal cache - ingen resultat i cache.")
-    void readErrorFromRedisSlettFraCacheIngenTreff() throws RedigCacheUtilgjengeligException {
+    void readErrorFromRedisSlettFraCacheIngenTreff() throws RedisCacheUtilgjengeligException {
         var key = "x000000";
 
         var cacheKey = GrupperCache.hentCacheKey(key);
         when(redisKlient.les(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE)).thenReturn(Optional.of("{\"noe\"}"));
 
-        doThrow(new RedigCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).fjern(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
+        doThrow(new RedisCacheUtilgjengeligException("Redis utilgjengelig")).when(redisKlient).fjern(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
         when(lokalCache.get(cacheKey)).thenReturn(null);
 
         var cacheResult = cache.read(key);
@@ -149,7 +149,7 @@ class GrupperCacheTest {
 
     @Test
     @DisplayName("Evict fra Redis - OK.")
-    void flushCache() throws RedigCacheUtilgjengeligException {
+    void flushCache() throws RedisCacheUtilgjengeligException {
         doNothing().when(redisKlient).slettCache(GrupperCache.REDIS_GRUPPE_CACHE);
         cache.deleteCache();
         verify(redisKlient, times(1)).slettCache(GrupperCache.REDIS_GRUPPE_CACHE);
@@ -158,8 +158,8 @@ class GrupperCacheTest {
 
     @Test
     @DisplayName("Evict fra Redis - NOK.")
-    void flushCacheFeil() throws RedigCacheUtilgjengeligException {
-        doThrow(new RedigCacheUtilgjengeligException("Exception")).when(redisKlient).slettCache(GrupperCache.REDIS_GRUPPE_CACHE);
+    void flushCacheFeil() throws RedisCacheUtilgjengeligException {
+        doThrow(new RedisCacheUtilgjengeligException("Exception")).when(redisKlient).slettCache(GrupperCache.REDIS_GRUPPE_CACHE);
         cache.deleteCache();
         verify(redisKlient, times(1)).slettCache(GrupperCache.REDIS_GRUPPE_CACHE);
         verifyNoInteractions(lokalCache);

@@ -46,7 +46,7 @@ public class RedisCacheKlient {
         return inst;
     }
 
-    public void lagre(String key, String value, long expiresInSeconds, RedisDatabase redisDatabase) throws RedigCacheUtilgjengeligException {
+    public void lagre(String key, String value, long expiresInSeconds, RedisDatabase redisDatabase) throws RedisCacheUtilgjengeligException {
         Objects.requireNonNull(key, "store cache key is null");
         Objects.requireNonNull(value, "store cache value is null");
         Objects.requireNonNull(redisDatabase, "store database value is null");
@@ -59,7 +59,7 @@ public class RedisCacheKlient {
         }
     }
 
-    public Optional<String> les(String key, RedisDatabase redisDatabase) throws RedigCacheUtilgjengeligException {
+    public Optional<String> les(String key, RedisDatabase redisDatabase) throws RedisCacheUtilgjengeligException {
         Objects.requireNonNull(key, "read cache key is null");
         try (var jedis = getJedisPool().getResource()) {
             jedis.select(mapToDatabaseNumber(redisDatabase));
@@ -74,7 +74,7 @@ public class RedisCacheKlient {
         return Optional.empty();
     }
 
-    public void fjern(String key, RedisDatabase redisDatabase) throws RedigCacheUtilgjengeligException {
+    public void fjern(String key, RedisDatabase redisDatabase) throws RedisCacheUtilgjengeligException {
         Objects.requireNonNull(key, "remove cache key is null");
         try (var jedis = getJedisPool().getResource()) {
             jedis.select(mapToDatabaseNumber(redisDatabase));
@@ -85,7 +85,7 @@ public class RedisCacheKlient {
         }
     }
 
-    public void slettCache(RedisDatabase redisDatabase) throws RedigCacheUtilgjengeligException {
+    public void slettCache(RedisDatabase redisDatabase) throws RedisCacheUtilgjengeligException {
         try (var jedis = getJedisPool().getResource()) {
             LOG.debug("Fjerner hele cachen i database {}", redisDatabase);
             jedis.select(mapToDatabaseNumber(redisDatabase));
@@ -120,7 +120,7 @@ public class RedisCacheKlient {
         };
     }
 
-    private static void throwRedisUtilgjengeligException(Exception e) throws RedigCacheUtilgjengeligException {
-        throw new RedigCacheUtilgjengeligException("Redis utilgjengelig.");
+    private static void throwRedisUtilgjengeligException(Exception e) throws RedisCacheUtilgjengeligException {
+        throw new RedisCacheUtilgjengeligException("Redis utilgjengelig.");
     }
 }

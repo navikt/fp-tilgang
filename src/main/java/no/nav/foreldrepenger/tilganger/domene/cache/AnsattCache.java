@@ -6,7 +6,7 @@ import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedigCacheUtilgjengeligException;
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class AnsattCache {
         var cacheKey = hentCacheKey(key);
         try {
             redisCache.lagre(cacheKey, DefaultJsonMapper.toJson(value), CACHE_DURATION, REDIS_ANSATT_CACHE);
-        } catch (RedigCacheUtilgjengeligException e) {
+        } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
             lokalCache.put(cacheKey, value);
         }
@@ -58,10 +58,10 @@ public class AnsattCache {
             LOG.info("Feil ved deserialisering av ansatt. Fjerner key fra cache.");
             try {
                 redisCache.fjern(cacheKey, REDIS_ANSATT_CACHE);
-            } catch (RedigCacheUtilgjengeligException e) {
+            } catch (RedisCacheUtilgjengeligException e) {
                 logRedisUtilgjengelig();
             }
-        } catch (RedigCacheUtilgjengeligException e) {
+        } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
         }
         return Optional.ofNullable(lokalCache.get(cacheKey));
@@ -71,7 +71,7 @@ public class AnsattCache {
         LOG.info("Fjerner ansatt cache.");
         try {
             redisCache.slettCache(REDIS_ANSATT_CACHE);
-        } catch (RedigCacheUtilgjengeligException e) {
+        } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
         }
     }
