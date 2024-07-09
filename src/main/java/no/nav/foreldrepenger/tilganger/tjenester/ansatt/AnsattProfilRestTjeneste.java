@@ -4,6 +4,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,31 +19,35 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.tilganger.domene.ansatt.Ansatt;
 import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattProfil;
 import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattProfilTjeneste;
-import no.nav.vedtak.sikkerhet.jaxrs.UtenAutentisering;
+import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattTjeneste;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @ApplicationScoped
 @Consumes(APPLICATION_JSON)
-@Path("/bruker")
+@Path("/bruker/profil")
 public class AnsattProfilRestTjeneste {
 
     private AnsattProfilTjeneste ansattProfilTjeneste;
+    private AnsattTjeneste ansattTjeneste;
 
     AnsattProfilRestTjeneste() {
         // CDI proxy
     }
 
     @Inject
-    public AnsattProfilRestTjeneste(AnsattProfilTjeneste tjeneste) {
+    public AnsattProfilRestTjeneste(AnsattProfilTjeneste tjeneste,
+                                    AnsattTjeneste ansattTjeneste) {
         this.ansattProfilTjeneste = tjeneste;
+        this.ansattTjeneste = ansattTjeneste;
     }
 
     @GET
     @Produces(APPLICATION_JSON)
-    @Path("/informasjon")
+    @Path("/utvidet")
     public BrukerProfilUtvidetResponseDto brukerProfilUtvidet() {
         Objects.requireNonNull(KontekstHolder.getKontekst());
         if (!IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
@@ -53,17 +58,15 @@ public class AnsattProfilRestTjeneste {
 
     @POST
     @Produces(APPLICATION_JSON)
-    @Path("/profil")
     public BrukerProfilResponseDto finnUser(@NotNull @Valid AnsattProfilRestTjeneste.ProfilIdentRequest request) {
-        return mapTilProfilDto(ansattProfilTjeneste.hentProfil(request.ident()));
+        return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.ident()));
     }
 
     @POST
     @Produces(APPLICATION_JSON)
-    @Path("/profil/uid")
-    @UtenAutentisering
-    public BrukerProfilResponseDto finnUserV2(@NotNull @Valid AnsattProfilRestTjeneste.ProfilUidRequest request) {
-        return mapTilProfilDto(ansattProfilTjeneste.hentProfil(request.uid()));
+    @Path("/uid")
+    public BrukerProfilResponseDto hentUserUid(@NotNull @Valid AnsattProfilRestTjeneste.ProfilUidRequest request) {
+        return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.uid()));
     }
 
     public record ProfilUidRequest(@NotNull UUID uid) {
@@ -86,8 +89,9 @@ public class AnsattProfilRestTjeneste {
                                                  LocalDateTime funksjonellTid) {
     }
 
-    private BrukerProfilResponseDto mapTilProfilDto(AnsattProfil brukerProfil) {
-        return new BrukerProfilResponseDto(brukerProfil.brukernavn(), brukerProfil.navn(), brukerProfil.epost());
+    private BrukerProfilResponseDto mapTilProfilDto(Optional<Ansatt> ansatt) {
+        return ansatt.map(a -> new BrukerProfilResponseDto(a.ident(), a.navn(), a.epost()))
+            .orElseThrow(() -> new IllegalStateException("Bruker finnes ikke."));
     }
 
     private BrukerProfilUtvidetResponseDto mapTilUtvidetProfilDto(AnsattProfil brukerProfil) {
