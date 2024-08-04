@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 
 public record AnsattProfil(String brukernavn,
                            String navn,
+                           String fornavnEtternavn,
                            String epost,
+                           String ansattVedEnhetId,
                            boolean kanSaksbehandle,
                            boolean kanVeilede,
                            boolean kanBeslutte,
@@ -19,7 +21,9 @@ public record AnsattProfil(String brukernavn,
     private AnsattProfil(Builder builder) {
         this(builder.brukernavn,
             builder.navn,
+            builder.fornavnEtternavn,
             builder.epost,
+            builder.ansattVedEnhetId,
             builder.kanSaksbehandle,
             builder.kanVeilede,
             builder.kanBeslutte,
@@ -42,7 +46,9 @@ public record AnsattProfil(String brukernavn,
     public static class Builder {
         private final String brukernavn;
         private final String navn;
+        private final String fornavnEtternavn;
         private final String epost;
+        private final String ansattVedEnhetId;
         private boolean kanSaksbehandle;
         private boolean kanVeilede;
         private boolean kanBeslutte;
@@ -53,10 +59,12 @@ public record AnsattProfil(String brukernavn,
         private boolean kanBehandleKode7;
         private boolean kanDrifte;
 
-        public Builder(String brukernavn, String navn, String epost) {
+        public Builder(String brukernavn, String navn, String fornavnEtternavn, String epost, String ansattVedEnhetId) {
             this.brukernavn = brukernavn;
             this.navn = navn;
+            this.fornavnEtternavn = fornavnEtternavn;
             this.epost = epost;
+            this.ansattVedEnhetId = ansattVedEnhetId;
         }
 
         public Builder kanSaksbehandle(boolean kanSaksbehandle) {

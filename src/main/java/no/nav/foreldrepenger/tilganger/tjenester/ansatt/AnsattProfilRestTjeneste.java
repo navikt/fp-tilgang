@@ -75,11 +75,13 @@ public class AnsattProfilRestTjeneste {
     public record ProfilIdentRequest(@NotNull String ident) {
     }
 
-    public record BrukerProfilResponseDto(@NotNull String ident, @NotNull String navn, String epost) {
+    public record BrukerProfilResponseDto(@NotNull String ident, @NotNull String navn, String fornavnEtternavn, String epost, String ansattVedEnhetId) {
     }
 
     public record BrukerProfilUtvidetResponseDto(@NotNull String brukernavn,
                                                  @NotNull String navn,
+                                                 String fornavnEtternavn,
+                                                 String ansattVedEnhetId,
                                                  boolean kanSaksbehandle,
                                                  boolean kanVeilede,
                                                  boolean kanBeslutte,
@@ -90,13 +92,15 @@ public class AnsattProfilRestTjeneste {
     }
 
     private BrukerProfilResponseDto mapTilProfilDto(Optional<Ansatt> ansatt) {
-        return ansatt.map(a -> new BrukerProfilResponseDto(a.ident(), a.navn(), a.epost()))
+        return ansatt.map(a -> new BrukerProfilResponseDto(a.ident(), a.navn(), a.fornavnEtternavn(), a.epost(), a.ansattVedEnhetId()))
             .orElseThrow(() -> new IllegalStateException("Bruker finnes ikke."));
     }
 
     private BrukerProfilUtvidetResponseDto mapTilUtvidetProfilDto(AnsattProfil brukerProfil) {
         return new BrukerProfilUtvidetResponseDto(brukerProfil.brukernavn(),
             brukerProfil.navn(),
+            brukerProfilUtvidet().fornavnEtternavn(),
+            brukerProfil.ansattVedEnhetId(),
             brukerProfil.kanSaksbehandle(),
             brukerProfil.kanVeilede(),
             brukerProfil.kanBeslutte(),
