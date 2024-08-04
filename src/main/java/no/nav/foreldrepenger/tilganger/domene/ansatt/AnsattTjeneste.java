@@ -108,6 +108,9 @@ public class AnsattTjeneste {
     }
 
     private static Ansatt mapUser(User user) {
-        return new Ansatt(user.id(), user.onPremisesSamAccountName(), user.displayName(), user.mail());
+        var forEtternavn = Optional.ofNullable(user.givenName()).map(fn -> fn + Optional.ofNullable(user.surname()).orElse(""))
+            .or(() -> Optional.ofNullable(user.surname()))
+            .orElse("");
+        return new Ansatt(user.id(), user.onPremisesSamAccountName(), user.displayName(), forEtternavn, user.mail(), user.streetAddress());
     }
 }
