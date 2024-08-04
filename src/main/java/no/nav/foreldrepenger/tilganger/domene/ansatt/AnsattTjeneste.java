@@ -68,6 +68,10 @@ public class AnsattTjeneste {
         return hentGrupper(identifikator, () -> azureGraph.hentGrupper(ansatt.uid(), new HashSet<>(gruppeFilter)));
     }
 
+    public void tømAnsattCache() {
+        ansattCache.deleteCache();
+    }
+
     private Optional<Ansatt> hentAnsatt(String identifikator, Supplier<Optional<User>> ansattSupplier) {
         var før = System.nanoTime();
         var ansatt = ansattCache.read(identifikator);
