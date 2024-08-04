@@ -69,14 +69,6 @@ public class AnsattProfilRestTjeneste {
         return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.uid()));
     }
 
-    @POST
-    @Produces(APPLICATION_JSON)
-    @Path("/tom-ansatt-cache")
-    public Response tømAnsattCache() {
-        ansattTjeneste.tømAnsattCache();
-        return Response.ok().build();
-    }
-
     public record ProfilUidRequest(@NotNull UUID uid) {
     }
 
@@ -107,7 +99,7 @@ public class AnsattProfilRestTjeneste {
     private BrukerProfilUtvidetResponseDto mapTilUtvidetProfilDto(AnsattProfil brukerProfil) {
         return new BrukerProfilUtvidetResponseDto(brukerProfil.brukernavn(),
             brukerProfil.navn(),
-            brukerProfilUtvidet().fornavnEtternavn(),
+            brukerProfil.fornavnEtternavn(),
             brukerProfil.ansattVedEnhetId(),
             brukerProfil.kanSaksbehandle(),
             brukerProfil.kanVeilede(),

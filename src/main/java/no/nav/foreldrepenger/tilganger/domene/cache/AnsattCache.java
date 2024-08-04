@@ -23,7 +23,7 @@ public class AnsattCache {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnsattCache.class);
     private static final long CACHE_DURATION = Duration.ofDays(30).getSeconds();
-    static final String CACHE_KEY_PREFIX = "ansatt_";
+    static final String CACHE_KEY_PREFIX = "ansatte_"; // Endret ved utvidelse med enhet og fornavn
     static final RedisDatabase REDIS_ANSATT_CACHE = RedisDatabase.ZERO;
 
     private final RedisCacheKlient redisCache;
