@@ -54,7 +54,7 @@ class AzureGraphKlientTest {
     void testFinnUserByIdent() {
         // Prepare test data
         String userId = "123456";
-        var expectedUser = new User(UUID.randomUUID(), "sam", "display", "fornavn", "etternavn", "mail", "enhetId");
+        var expectedUser = new User(UUID.randomUUID(), "sam", "display", "fornavn", "etternavn", "mail", "ansattVedEnhetId");
         var response = new AzureGraphKlient.UsersResponse(List.of(expectedUser));
 
         // Mock REST call behavior
@@ -72,8 +72,8 @@ class AzureGraphKlientTest {
     void testFinnUserByIdentReturnsToUsers() {
         // Prepare test data
         String userId = "123456";
-        var user = new User(UUID.randomUUID(), "one", "display", "fornavn", "etternavn", "mail", "enhetId");
-        var expectedUser = new User(UUID.randomUUID(), userId, "user", "fornavn", "etternavn", "mail", "enhetId");
+        var user = new User(UUID.randomUUID(), "one", "display", "fornavn", "etternavn", "mail", "ansattVedEnhetId");
+        var expectedUser = new User(UUID.randomUUID(), userId, "user", "fornavn", "etternavn", "mail", "ansattVedEnhetId");
         var response = new AzureGraphKlient.UsersResponse(List.of(user, expectedUser));
 
         // Mock REST call behavior
@@ -92,8 +92,8 @@ class AzureGraphKlientTest {
     void testFinnUserByIdentReturnsNoMatchingUser() {
         // Prepare test data
         String userId = "123456";
-        var user = new User(UUID.randomUUID(), "one", "display", "fornavn", "etternavn", "mail", "enhetId");
-        var secondUser = new User(UUID.randomUUID(), "two", "user", "fornavn", "etternavn", "mail", "enhetId");
+        var user = new User(UUID.randomUUID(), "one", "display", "fornavn", "etternavn", "mail", "ansattVedEnhetId");
+        var secondUser = new User(UUID.randomUUID(), "two", "user", "fornavn", "etternavn", "mail", "ansattVedEnhetId");
         var response = new AzureGraphKlient.UsersResponse(List.of(user, secondUser));
 
         // Mock REST call behavior
@@ -126,7 +126,7 @@ class AzureGraphKlientTest {
     void testMe() {
         // Prepare test data
         UUID userId = UUID.randomUUID();
-        var expectedUser = new User(userId, "samAccountName", "displayName", "fornavn", "etternavn", "mail@example.com", "enhetId");
+        var expectedUser = new User(userId, "samAccountName", "displayName", "fornavn", "etternavn", "mail@example.com", "ansattVedEnhetId");
 
         // Mock REST call behavior
         when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(expectedUser);
@@ -196,7 +196,7 @@ class AzureGraphKlientTest {
     void testHentUserByUid() {
         // Prepare test data
         UUID userId = UUID.randomUUID();
-        var expectedUser = new User(userId, "samAccountName", "displayName", "fornavn", "etternavn", "mail@example.com", "enhetId");
+        var expectedUser = new User(userId, "samAccountName", "displayName", "fornavn", "etternavn", "mail@example.com", "ansattVedEnhetId");
 
         // Mock REST call behavior
         when(mockRestClient.send(any(RestRequest.class), any())).thenReturn(expectedUser);
