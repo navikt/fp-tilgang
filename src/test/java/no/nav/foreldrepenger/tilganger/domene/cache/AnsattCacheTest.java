@@ -1,7 +1,6 @@
 package no.nav.foreldrepenger.tilganger.domene.cache;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -17,9 +16,6 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 import java.util.UUID;
 
-import no.nav.vedtak.mapper.json.DefaultJsonMapper;
-import no.nav.vedtak.util.LRUCache;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,9 +24,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.tilganger.domene.ansatt.Ansatt;
-import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisDatabase;
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
+import no.nav.vedtak.util.LRUCache;
 
 @ExtendWith(MockitoExtension.class)
 class AnsattCacheTest {
@@ -175,6 +173,6 @@ class AnsattCacheTest {
     }
 
     private static Ansatt lagTestAnsatt(String key) {
-        return new Ansatt(UUID.randomUUID(), key, "Test Testersen", "test.testersen@test.no");
+        return new Ansatt(UUID.randomUUID(), key, "Testersen, Test", "Test Testersen", "test.testersen@test.no", "1234");
     }
 }
