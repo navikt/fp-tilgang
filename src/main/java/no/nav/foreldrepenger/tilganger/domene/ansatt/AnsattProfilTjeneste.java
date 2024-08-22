@@ -63,7 +63,7 @@ public class AnsattProfilTjeneste {
     }
 
     private AnsattProfil mapAnsattProfil(Ansatt ansatt, List<UUID> grupper) {
-        return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.fornavnEtternavn(), ansatt.epost(), ansatt.ansattVedEnhetId())
+        return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.fornavnEtternavn(), ansatt.ansattVedEnhetId())
             .kanSaksbehandle(grupper.contains(Gruppe.SAKSBEHNADLER.getId()))
             .kanVeilede(grupper.contains(Gruppe.VEILEDER.getId()))
             .kanBeslutte(grupper.contains(Gruppe.BESLUTTER.getId()))
