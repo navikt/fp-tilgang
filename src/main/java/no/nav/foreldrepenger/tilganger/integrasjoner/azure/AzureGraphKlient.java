@@ -40,7 +40,7 @@ class AzureGraphKlient implements AzureGraph {
     protected static final String PARAM_NAME_FILTER = "$filter";
     protected static final String PARAM_NAME_COUNT = "$count";
     protected static final String PARAM_NAME_TOP = "$top";
-    protected static final String PARAM_VALUE_SELECT_USER = "id,onPremisesSamAccountName,displayName,givenName,surname,mail,streetAddress";
+    protected static final String PARAM_VALUE_SELECT_USER = "id,onPremisesSamAccountName,displayName,givenName,surname,streetAddress";
     protected static final String PARAM_VALUE_SELECT_GROUPS = "id";
     protected static final String HEADER_CONSISTENCY_LEVEL = "ConsistencyLevel";
     protected static final String EVENTUAL = "eventual";

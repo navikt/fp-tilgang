@@ -112,6 +112,6 @@ public class AnsattTjeneste {
             .map(fornavn -> fornavn + Optional.ofNullable(user.surname()).map(etternavn -> " " + etternavn).orElse(""))
             .or(() -> Optional.ofNullable(user.surname())) // Bare etternavn
             .orElse("");
-        return new Ansatt(user.id(), user.onPremisesSamAccountName(), user.displayName(), forEtternavn, user.mail(), user.streetAddress());
+        return new Ansatt(user.id(), user.onPremisesSamAccountName(), user.displayName(), forEtternavn, user.streetAddress());
     }
 }
