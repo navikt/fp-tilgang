@@ -35,7 +35,7 @@ class AzureGraphKlientTest {
 
     @BeforeEach
     void setUp() {
-        KontekstHolder.setKontekst(RequestKontekst.forRequest("uid", "kompakt", IdentType.InternBruker, null, Set.of()));
+        KontekstHolder.setKontekst(RequestKontekst.forRequest("uid", "kompakt", IdentType.InternBruker, null, UUID.randomUUID(), Set.of()));
         mockRestClient = mock(ProxyRestClient.class);
         azureGraphKlient = new AzureGraphKlient(mockRestClient);
 
