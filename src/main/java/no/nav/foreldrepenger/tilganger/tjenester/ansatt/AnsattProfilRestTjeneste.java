@@ -64,6 +64,13 @@ public class AnsattProfilRestTjeneste {
 
     @POST
     @Produces(APPLICATION_JSON)
+    @Path("/navident")
+    public BrukerProfilResponseDto finnUserFraNavIdent(@NotNull @Valid AnsattProfilRestTjeneste.ProfilIdentRequest request) {
+        return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.ident()));
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
     @Path("/uid")
     public BrukerProfilResponseDto hentUserUid(@NotNull @Valid AnsattProfilRestTjeneste.ProfilUidRequest request) {
         return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.uid()));
