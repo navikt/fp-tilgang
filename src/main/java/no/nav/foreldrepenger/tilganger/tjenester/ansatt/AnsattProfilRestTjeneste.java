@@ -64,6 +64,13 @@ public class AnsattProfilRestTjeneste {
 
     @POST
     @Produces(APPLICATION_JSON)
+    @Path("/navident")
+    public BrukerProfilResponseDto finnUserFraNavIdent(@NotNull @Valid AnsattProfilRestTjeneste.ProfilIdentRequest request) {
+        return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.ident()));
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
     @Path("/uid")
     public BrukerProfilResponseDto hentUserUid(@NotNull @Valid AnsattProfilRestTjeneste.ProfilUidRequest request) {
         return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.uid()));
@@ -75,7 +82,7 @@ public class AnsattProfilRestTjeneste {
     public record ProfilIdentRequest(@NotNull String ident) {
     }
 
-    public record BrukerProfilResponseDto(@NotNull String ident, @NotNull String navn, String fornavnEtternavn, String ansattVedEnhetId) {
+    public record BrukerProfilResponseDto(@NotNull UUID uid, @NotNull String ident, @NotNull String navn, String fornavnEtternavn, String ansattVedEnhetId) {
     }
 
     public record BrukerProfilUtvidetResponseDto(@NotNull String brukernavn,
@@ -92,7 +99,7 @@ public class AnsattProfilRestTjeneste {
     }
 
     private BrukerProfilResponseDto mapTilProfilDto(Optional<Ansatt> ansatt) {
-        return ansatt.map(a -> new BrukerProfilResponseDto(a.ident(), a.navn(), a.fornavnEtternavn(), a.ansattVedEnhetId()))
+        return ansatt.map(a -> new BrukerProfilResponseDto(a.uid(), a.ident(), a.navn(), a.fornavnEtternavn(), a.ansattVedEnhetId()))
             .orElseThrow(() -> new IllegalStateException("Bruker finnes ikke."));
     }
 
