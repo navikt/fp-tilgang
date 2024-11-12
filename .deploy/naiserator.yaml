@@ -10,7 +10,7 @@ spec:
   port: 8080
   {{#if devOnly}}
   ingresses:
-    - "https://fptilgang.dev.intern.nav.no"
+    - "https://fptilgang.intern.dev.nav.no"
   {{/if}}
   liveness:
     path: /fptilgang/internal/health/isAlive
