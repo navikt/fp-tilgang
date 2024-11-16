@@ -1,6 +1,6 @@
 {
   "environment": "dev",
-  "minReplicas": "3",
+  "minReplicas": "1",
   "maxReplicas": "3",
   "limits": {
     "cpu": "2",

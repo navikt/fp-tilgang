@@ -62,7 +62,7 @@ spec:
           - id: "{{group}}"
           {{/each}}
   envFrom:
-    - secret: fp-cache-tilgang
+    - secret: fpcache
   accessPolicy:
     inbound:
       rules:
