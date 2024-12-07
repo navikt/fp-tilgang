@@ -1,6 +1,5 @@
 package no.nav.foreldrepenger.tilganger.domene.ansatt;
 
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +19,7 @@ import no.nav.foreldrepenger.tilganger.integrasjoner.azure.AzureGraph;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.Group;
 import no.nav.foreldrepenger.tilganger.integrasjoner.azure.User;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
+import no.nav.vedtak.sikkerhet.kontekst.RequestKontekst;
 
 @ApplicationScoped
 public class AnsattTjeneste {
@@ -41,15 +41,15 @@ public class AnsattTjeneste {
     }
 
     public Optional<Ansatt> hentAnsattFraKontekst() {
-        var uid = KontekstHolder.getKontekst().getUid();
-        LOG.debug("Henter antatt fra kontekts: {}", uid);
-        return hentAnsatt(uid, () -> Optional.of(azureGraph.me()));
+        var ansattref = getAnsattReferanseFraKontekst(); // OID eller ident
+        LOG.debug("Henter antatt fra kontekst: {}", ansattref);
+        return hentAnsatt(ansattref, () -> Optional.of(azureGraph.me()));
     }
 
-    public List<UUID> hentGrupperFraKontekst(List<UUID> gruppeFilter) {
-        var uid = KontekstHolder.getKontekst().getUid();
-        LOG.debug("Henter grupper fra kontekts: {}", uid);
-        return hentGrupper(uid, () -> azureGraph.memberOf(new HashSet<>(gruppeFilter)));
+    public List<UUID> hentGrupperFraKontekst(Set<UUID> gruppeFilter) {
+        var ansattref = getAnsattReferanseFraKontekst(); // OID eller ident
+        LOG.debug("Henter grupper fra kontekst: {}", ansattref);
+        return hentGrupper(ansattref, () -> azureGraph.memberOf(new HashSet<>(gruppeFilter)));
     }
 
     public Optional<Ansatt> hentAnsatt(String ident) {
@@ -62,22 +62,23 @@ public class AnsattTjeneste {
         return hentAnsatt(uid.toString(), () -> azureGraph.hentUser(uid));
     }
 
-    public List<UUID> hentGrupper(Ansatt ansatt, List<UUID> gruppeFilter) {
+    public List<UUID> hentGrupper(Ansatt ansatt, Set<UUID> gruppeFilter) {
         var identifikator = ansatt.uid().toString();
         LOG.debug("Henter ansatt grupper: {}", identifikator);
         return hentGrupper(identifikator, () -> azureGraph.hentGrupper(ansatt.uid(), new HashSet<>(gruppeFilter)));
     }
 
     private Optional<Ansatt> hentAnsatt(String identifikator, Supplier<Optional<User>> ansattSupplier) {
-        var før = System.nanoTime();
+        var før = System.currentTimeMillis();
         var ansatt = ansattCache.read(identifikator);
         if (ansatt.isEmpty()) {
             LOG.debug("Finner ikke ansatt eller grupper i cache {}", identifikator);
             var user = ansattSupplier.get();
             ansatt = user.map(AnsattTjeneste::mapUser);
             if (ansatt.isPresent()) {
+                var navIdent = ansatt.get().ident();
                 LOG.debug("Lagrer i cache {}", identifikator);
-                ansattCache.store(identifikator, ansatt.get());
+                ansattCache.store(navIdent, ansatt.get());
                 var uid = ansatt.get().uid();
                 LOG.debug("Lagrer i cache {}", uid);
                 ansattCache.store(uid.toString(), ansatt.get());
@@ -85,13 +86,13 @@ public class AnsattTjeneste {
         } else {
             LOG.debug("Fant ansatt i cache for {}", identifikator);
         }
-        LOG.info("[{} ms] Hent ansatt.", Duration.ofNanos(System.nanoTime() - før).toMillis());
+        LOG.info("[{} ms] Hent ansatt.", System.currentTimeMillis() - før);
         return ansatt;
     }
 
     private List<UUID> hentGrupper(String identifikator, Supplier<Set<Group>> grupperSupplier) {
         LOG.debug("Henter grupper for: {}", identifikator);
-        var før = System.nanoTime();
+        var før = System.currentTimeMillis();
         var grupper = grupperCache.read(identifikator);
         if (grupper.isEmpty()) {
             LOG.debug("Finner ikke grupper i cache for {}", identifikator);
@@ -103,7 +104,7 @@ public class AnsattTjeneste {
         } else {
             LOG.debug("Fant grupper i cache for {}", identifikator);
         }
-        LOG.info("[{} ms] Hent grupper.", Duration.ofNanos(System.nanoTime() - før).toMillis());
+        LOG.info("[{} ms] Hent grupper.", System.currentTimeMillis() - før);
         return grupper.get();
     }
 
@@ -111,7 +112,19 @@ public class AnsattTjeneste {
         var forEtternavn = Optional.ofNullable(user.givenName())
             .map(fornavn -> fornavn + Optional.ofNullable(user.surname()).map(etternavn -> " " + etternavn).orElse(""))
             .or(() -> Optional.ofNullable(user.surname())) // Bare etternavn
-            .orElse("");
-        return new Ansatt(user.id(), user.onPremisesSamAccountName(), user.displayName(), forEtternavn, user.streetAddress());
+            .orElseGet(user::displayName); // Vanligvis på format vi vil unngå - Etternavn, Fornavn
+        return new Ansatt(user.id(), user.onPremisesSamAccountName(), forEtternavn, user.streetAddress());
+    }
+
+    private static UUID getOidFraKontekst() {
+        return KontekstHolder.getKontekst() instanceof RequestKontekst rk ? rk.getOid() : null;
+    }
+
+    private static String getUidFraKontekst() {
+        return KontekstHolder.getKontekst().getUid();
+    }
+
+    private static String getAnsattReferanseFraKontekst() {
+        return Optional.ofNullable(getOidFraKontekst()).map(UUID::toString).orElseGet(AnsattTjeneste::getUidFraKontekst);
     }
 }

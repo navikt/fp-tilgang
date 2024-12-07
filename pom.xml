@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.nav.foreldrepenger.felles</groupId>
         <artifactId>fp-bom</artifactId>
-        <version>3.5.1</version>
+        <version>3.5.2</version>
     </parent>
 
     <groupId>no.nav.foreldrepenger.tilgang</groupId>
@@ -14,7 +14,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <felles.version>7.3.4</felles.version>
+        <felles.version>7.4.0</felles.version>
     </properties>
 
     <dependencyManagement>
@@ -22,7 +22,7 @@
             <dependency>
                 <groupId>no.nav.foreldrepenger.felles</groupId>
                 <artifactId>fp-bom</artifactId>
-                <version>3.5.1</version>
+                <version>3.5.2</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>

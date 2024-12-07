@@ -173,6 +173,6 @@ class AnsattCacheTest {
     }
 
     private static Ansatt lagTestAnsatt(String key) {
-        return new Ansatt(UUID.randomUUID(), key, "Testersen, Test", "Test Testersen", "1234");
+        return new Ansatt(UUID.randomUUID(), key, "Test Testersen", "1234");
     }
 }
