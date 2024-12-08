@@ -41,9 +41,10 @@ public class AnsattProfilTjeneste {
         return mapAnsattProfil(ansatt, grupper);
     }
 
-    public boolean medlemAvGruppe(AnsattGruppe ansattGruppe) {
-        var gruppeOid = PROVIDER.getAnsattGruppeOid(ansattGruppe);
-        return gruppeOid != null && ansattTjeneste.hentGrupperFraKontekst(ALLE_ANSATTGRUPPE_OIDS).stream().anyMatch(gruppeOid::equals);
+    public Set<AnsattGruppe> medlemAvGrupper(Set<AnsattGruppe> ansattGrupper) {
+        var gruppeOidsForAnsatt = ansattTjeneste.hentGrupperFraKontekst(ALLE_ANSATTGRUPPE_OIDS);
+        var grupperForAnsatt = PROVIDER.getAnsattGrupperFra(gruppeOidsForAnsatt);
+        return grupperForAnsatt.stream().filter(ansattGrupper::contains).collect(Collectors.toSet());
     }
 
     private AnsattProfil getAnsattProfil(Ansatt ansatt) {
@@ -56,18 +57,7 @@ public class AnsattProfilTjeneste {
 
     private AnsattProfil mapAnsattProfil(Ansatt ansatt, List<UUID> grupper) {
         var ansattGrupper = PROVIDER.getAnsattGrupperFra(grupper);
-        return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.ansattVedEnhetId())
-            .medAnsattGrupper(ansattGrupper)
-            .kanSaksbehandle(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.SAKSBEHANDLER)))
-            .kanVeilede(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.VEILEDER)))
-            .kanBeslutte(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.BESLUTTER)))
-            .kanOverstyre(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.OVERSTYRER)))
-            .kanOppgavestyre(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.OPPGAVESTYRER)))
-            .kanBehandleKodeEgenAnsatt(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.SKJERMET)))
-            .kanBehandleKode6(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.STRENGTFORTROLIG)))
-            .kanBehandleKode7(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.FORTROLIG)))
-            .kanDrifte(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.DRIFT)))
-            .build();
+        return new AnsattProfil(ansatt.ident(), ansatt.navn(), ansatt.ansattVedEnhetId(), ansattGrupper);
     }
 
 

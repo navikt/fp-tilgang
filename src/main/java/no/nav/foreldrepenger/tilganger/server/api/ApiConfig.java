@@ -11,7 +11,6 @@ import org.glassfish.jersey.server.ServerProperties;
 
 import no.nav.foreldrepenger.tilganger.server.exceptions.GeneralRestExceptionMapper;
 import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattBasisRestTjeneste;
-import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattProfilRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattUtvidetRestTjeneste;
 
 @ApplicationPath(ApiConfig.API_URI)
@@ -24,7 +23,6 @@ public class ApiConfig extends Application {
         // eksponert grensesnitt bak sikkerhet
         return Set.of(AuthorizationAbacFilter.class,
             AuthenticationFilter.class,
-            AnsattProfilRestTjeneste.class,
             AnsattBasisRestTjeneste.class,
             AnsattUtvidetRestTjeneste.class,
             GeneralRestExceptionMapper.class,
