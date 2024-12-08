@@ -1,21 +1,24 @@
 package no.nav.foreldrepenger.tilganger.domene.ansatt;
 
 
-import static no.nav.foreldrepenger.tilganger.utils.RegexUtils.NAVIDENT_PATTERN;
-
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.konfig.Environment;
-import no.nav.vedtak.exception.TekniskException;
+import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
+import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 
 @Dependent
 public class AnsattProfilTjeneste {
-    private static final Environment ENV = Environment.current();
+    private static final AnsattGruppeProvider PROVIDER = AnsattGruppeProvider.instance();
+    private static final Set<UUID> ALLE_ANSATTGRUPPE_OIDS = Arrays.stream(AnsattGruppe.values())
+        .map(PROVIDER::getAnsattGruppeOid)
+        .collect(Collectors.toSet());
 
     private AnsattTjeneste ansattTjeneste;
 
@@ -33,46 +36,39 @@ public class AnsattProfilTjeneste {
      * Trenger en gyldig OBO azure token.
      */
     public AnsattProfil hentProfil() {
-        var ansatt = ansattTjeneste.hentAnsattFraKontekst();
-        var grupper = ansattTjeneste.hentGrupperFraKontekst(Gruppe.getAlleGrupper());
-        return mapAnsattProfil(ansatt.orElseThrow(), grupper);
+        var ansatt = ansattTjeneste.hentAnsattFraKontekst().orElseThrow();
+        var grupper = ansattTjeneste.hentGrupperFraKontekst(ALLE_ANSATTGRUPPE_OIDS);
+        return mapAnsattProfil(ansatt, grupper);
     }
 
-    public AnsattProfil hentProfil(String ident) {
-        if (ident == null || ident.isEmpty()) {
-            throw new TekniskException("F-354885", "Kan ikke slå opp brukernavn uten å ha ident");
-        }
-        if (!ENV.isLocal() && !NAVIDENT_PATTERN.matcher(ident).matches()) {
-            throw new TekniskException("F-281934", String.format("Mulig injection forsøk. Søkte med ugyldig ident '%s'", ident));
-        }
-        var ansatt = ansattTjeneste.hentAnsatt(ident);
-        return getAnsattProfil(ansatt);
+    public boolean medlemAvGruppe(AnsattGruppe ansattGruppe) {
+        var gruppeOid = PROVIDER.getAnsattGruppeOid(ansattGruppe);
+        return gruppeOid != null && ansattTjeneste.hentGrupperFraKontekst(ALLE_ANSATTGRUPPE_OIDS).stream().anyMatch(gruppeOid::equals);
     }
 
-    public AnsattProfil hentProfil(UUID oid) {
-        if (oid == null) {
-            throw new TekniskException("F-364885", "Kan ikke slå opp brukernavn uten å ha uid");
+    private AnsattProfil getAnsattProfil(Ansatt ansatt) {
+        if (ansatt == null) {
+            throw new IllegalStateException("Ingen bruker oppgitt");
         }
-        var ansatt = ansattTjeneste.hentAnsatt(oid);
-        return getAnsattProfil(ansatt);
-    }
-
-    private AnsattProfil getAnsattProfil(Optional<Ansatt> ansatt) {
-        var grupper = ansatt.map(u -> ansattTjeneste.hentGrupper(u, Gruppe.getAlleGrupper())).orElseThrow(() -> new IllegalStateException("Fant ikke bruker"));
-        return mapAnsattProfil(ansatt.orElseThrow(), grupper);
+        var grupper = ansattTjeneste.hentGrupper(ansatt, ALLE_ANSATTGRUPPE_OIDS);
+        return mapAnsattProfil(ansatt, grupper);
     }
 
     private AnsattProfil mapAnsattProfil(Ansatt ansatt, List<UUID> grupper) {
-        return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.fornavnEtternavn(), ansatt.ansattVedEnhetId())
-            .kanSaksbehandle(grupper.contains(Gruppe.SAKSBEHNADLER.getId()))
-            .kanVeilede(grupper.contains(Gruppe.VEILEDER.getId()))
-            .kanBeslutte(grupper.contains(Gruppe.BESLUTTER.getId()))
-            .kanOverstyre(grupper.contains(Gruppe.OVERSTYRER.getId()))
-            .kanOppgavestyre(grupper.contains(Gruppe.OPPGAVESTYRER.getId()))
-            .kanBehandleKodeEgenAnsatt(grupper.contains(Gruppe.EGENANSATT.getId()))
-            .kanBehandleKode6(grupper.contains(Gruppe.KODE6.getId()))
-            .kanBehandleKode7(grupper.contains(Gruppe.KODE7.getId()))
-            .kanDrifte(grupper.contains(Gruppe.DRIFTER.getId()))
+        var ansattGrupper = PROVIDER.getAnsattGrupperFra(grupper);
+        return new AnsattProfil.Builder(ansatt.ident(), ansatt.navn(), ansatt.ansattVedEnhetId())
+            .medAnsattGrupper(ansattGrupper)
+            .kanSaksbehandle(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.SAKSBEHANDLER)))
+            .kanVeilede(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.VEILEDER)))
+            .kanBeslutte(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.BESLUTTER)))
+            .kanOverstyre(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.OVERSTYRER)))
+            .kanOppgavestyre(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.OPPGAVESTYRER)))
+            .kanBehandleKodeEgenAnsatt(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.SKJERMET)))
+            .kanBehandleKode6(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.STRENGTFORTROLIG)))
+            .kanBehandleKode7(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.FORTROLIG)))
+            .kanDrifte(grupper.contains(PROVIDER.getAnsattGruppeOid(AnsattGruppe.DRIFT)))
             .build();
     }
+
+
 }

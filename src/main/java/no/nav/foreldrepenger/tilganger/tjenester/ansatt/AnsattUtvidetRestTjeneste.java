@@ -4,7 +4,7 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,36 +19,31 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.foreldrepenger.tilganger.domene.ansatt.Ansatt;
 import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattProfil;
 import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattProfilTjeneste;
-import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattTjeneste;
+import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
-// TODO: Legge om los+sak til /ansatt/basis eller /ansatt/utvidet og fjerne denne saken
 @ApplicationScoped
 @Consumes(APPLICATION_JSON)
-@Path("/bruker/profil")
-public class AnsattProfilRestTjeneste {
+@Path("/ansatt/utvidet")
+public class AnsattUtvidetRestTjeneste {
 
     private AnsattProfilTjeneste ansattProfilTjeneste;
-    private AnsattTjeneste ansattTjeneste;
 
-    AnsattProfilRestTjeneste() {
+    AnsattUtvidetRestTjeneste() {
         // CDI proxy
     }
 
     @Inject
-    public AnsattProfilRestTjeneste(AnsattProfilTjeneste tjeneste,
-                                    AnsattTjeneste ansattTjeneste) {
+    public AnsattUtvidetRestTjeneste(AnsattProfilTjeneste tjeneste) {
         this.ansattProfilTjeneste = tjeneste;
-        this.ansattTjeneste = ansattTjeneste;
     }
 
     @GET
     @Produces(APPLICATION_JSON)
-    @Path("/utvidet")
+    @Path("/kontekst")
     public BrukerProfilUtvidetResponseDto brukerProfilUtvidet() {
         Objects.requireNonNull(KontekstHolder.getKontekst());
         if (!IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
@@ -59,37 +54,24 @@ public class AnsattProfilRestTjeneste {
 
     @POST
     @Produces(APPLICATION_JSON)
-    public BrukerProfilResponseDto finnUser(@NotNull @Valid AnsattProfilRestTjeneste.ProfilIdentRequest request) {
-        return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.ident()));
+    @Path("/medlem-gruppe-kontekst")
+    public SingleGruppeDto hentUserUid(@NotNull @Valid AnsattUtvidetRestTjeneste.SingleGruppeDto request) {
+        if (request.gruppe() == null) {
+            throw new WebApplicationException("Mangler ansattgruppe i request.", Response.Status.BAD_REQUEST);
+        }
+        return ansattProfilTjeneste.medlemAvGruppe(request.gruppe()) ? new SingleGruppeDto(request.gruppe()) : null;
     }
 
-    @POST
-    @Produces(APPLICATION_JSON)
-    @Path("/navident")
-    public BrukerProfilResponseDto finnUserFraNavIdent(@NotNull @Valid AnsattProfilRestTjeneste.ProfilIdentRequest request) {
-        return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.ident()));
-    }
+    public record SingleGruppeDto(@Valid AnsattGruppe gruppe) { }
 
-    @POST
-    @Produces(APPLICATION_JSON)
-    @Path("/uid")
-    public BrukerProfilResponseDto hentUserUid(@NotNull @Valid AnsattProfilRestTjeneste.ProfilUidRequest request) {
-        return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.uid()));
-    }
 
-    public record ProfilUidRequest(@NotNull UUID uid) {
-    }
+    public record GruppeUidRequest(@NotNull UUID uid, @Valid @NotNull AnsattGruppe gruppe) { }
 
-    public record ProfilIdentRequest(@NotNull String ident) {
-    }
-
-    public record BrukerProfilResponseDto(@NotNull UUID uid, @NotNull String ident, @NotNull String navn, String fornavnEtternavn, String ansattVedEnhetId) {
-    }
 
     public record BrukerProfilUtvidetResponseDto(@NotNull String brukernavn,
                                                  @NotNull String navn,
-                                                 String fornavnEtternavn,
                                                  String ansattVedEnhetId,
+                                                 Set<AnsattGruppe> ansattGrupper,
                                                  boolean kanSaksbehandle,
                                                  boolean kanVeilede,
                                                  boolean kanBeslutte,
@@ -99,16 +81,11 @@ public class AnsattProfilRestTjeneste {
                                                  LocalDateTime funksjonellTid) {
     }
 
-    private BrukerProfilResponseDto mapTilProfilDto(Optional<Ansatt> ansatt) {
-        return ansatt.map(a -> new BrukerProfilResponseDto(a.uid(), a.ident(), a.navn(), a.navn(), a.ansattVedEnhetId()))
-            .orElseThrow(() -> new IllegalStateException("Bruker finnes ikke."));
-    }
-
     private BrukerProfilUtvidetResponseDto mapTilUtvidetProfilDto(AnsattProfil brukerProfil) {
         return new BrukerProfilUtvidetResponseDto(brukerProfil.brukernavn(),
             brukerProfil.navn(),
-            brukerProfil.navn(),
             brukerProfil.ansattVedEnhetId(),
+            brukerProfil.ansattGrupper(),
             brukerProfil.kanSaksbehandle(),
             brukerProfil.kanVeilede(),
             brukerProfil.kanBeslutte(),

@@ -6,13 +6,12 @@ import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.tilganger.domene.ansatt.Ansatt;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisDatabase;
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
@@ -23,7 +22,7 @@ public class AnsattCache {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnsattCache.class);
     private static final long CACHE_DURATION = Duration.ofDays(30).getSeconds();
-    static final String CACHE_KEY_PREFIX = "ansatte_"; // Endret ved utvidelse med enhet og fornavn
+    static final String CACHE_KEY_PREFIX = "ansatt_"; // Trigger reinnheting pga forenkling av Ansatt.navn
     static final RedisDatabase REDIS_ANSATT_CACHE = RedisDatabase.ZERO;
 
     private final RedisCacheKlient redisCache;
