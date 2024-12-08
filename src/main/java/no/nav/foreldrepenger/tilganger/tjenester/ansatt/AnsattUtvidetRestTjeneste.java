@@ -2,7 +2,6 @@ package no.nav.foreldrepenger.tilganger.tjenester.ansatt;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -44,54 +43,36 @@ public class AnsattUtvidetRestTjeneste {
     @GET
     @Produces(APPLICATION_JSON)
     @Path("/kontekst")
-    public BrukerProfilUtvidetResponseDto brukerProfilUtvidet() {
-        Objects.requireNonNull(KontekstHolder.getKontekst());
-        if (!IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
-            throw new WebApplicationException("Trenger en gyldig OBO token.", Response.Status.FORBIDDEN);
-        }
+    public AnsattProfilUtvidetDto brukerProfilUtvidet() {
+        validerBrukerKontekst();
         return mapTilUtvidetProfilDto(ansattProfilTjeneste.hentProfil());
     }
 
     @POST
     @Produces(APPLICATION_JSON)
-    @Path("/medlem-gruppe-kontekst")
-    public SingleGruppeDto hentUserUid(@NotNull @Valid AnsattUtvidetRestTjeneste.SingleGruppeDto request) {
-        if (request.gruppe() == null) {
-            throw new WebApplicationException("Mangler ansattgruppe i request.", Response.Status.BAD_REQUEST);
+    @Path("/gruppemedlemskap-kontekst")
+    public GruppeDto erMedlemAvGrupper(@NotNull @Valid GruppeDto gruppeDto) {
+        validerBrukerKontekst();
+        return new GruppeDto(ansattProfilTjeneste.medlemAvGrupper(gruppeDto.grupper()));
+    }
+
+    public record GruppeDto(@NotNull @Valid Set<AnsattGruppe> grupper) { }
+
+
+    public record UidGruppeDto(@NotNull UUID uid, @Valid @NotNull Set<AnsattGruppe> grupper) { }
+
+
+    public record AnsattProfilUtvidetDto(@NotNull String brukernavn, @NotNull String navn, String ansattVedEnhetId, Set<AnsattGruppe> ansattGrupper) {
+    }
+
+    private AnsattProfilUtvidetDto mapTilUtvidetProfilDto(AnsattProfil brukerProfil) {
+        return new AnsattProfilUtvidetDto(brukerProfil.brukernavn(), brukerProfil.navn(), brukerProfil.ansattVedEnhetId(), brukerProfil.ansattGrupper());
+    }
+
+    private static void validerBrukerKontekst() {
+        Objects.requireNonNull(KontekstHolder.getKontekst());
+        if (!IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
+            throw new WebApplicationException("Trenger en gyldig OBO token.", Response.Status.FORBIDDEN);
         }
-        return ansattProfilTjeneste.medlemAvGruppe(request.gruppe()) ? new SingleGruppeDto(request.gruppe()) : null;
-    }
-
-    public record SingleGruppeDto(@Valid AnsattGruppe gruppe) { }
-
-
-    public record GruppeUidRequest(@NotNull UUID uid, @Valid @NotNull AnsattGruppe gruppe) { }
-
-
-    public record BrukerProfilUtvidetResponseDto(@NotNull String brukernavn,
-                                                 @NotNull String navn,
-                                                 String ansattVedEnhetId,
-                                                 Set<AnsattGruppe> ansattGrupper,
-                                                 boolean kanSaksbehandle,
-                                                 boolean kanVeilede,
-                                                 boolean kanBeslutte,
-                                                 boolean kanOverstyre,
-                                                 boolean kanOppgavestyre,
-                                                 boolean kanBehandleKode6,
-                                                 LocalDateTime funksjonellTid) {
-    }
-
-    private BrukerProfilUtvidetResponseDto mapTilUtvidetProfilDto(AnsattProfil brukerProfil) {
-        return new BrukerProfilUtvidetResponseDto(brukerProfil.brukernavn(),
-            brukerProfil.navn(),
-            brukerProfil.ansattVedEnhetId(),
-            brukerProfil.ansattGrupper(),
-            brukerProfil.kanSaksbehandle(),
-            brukerProfil.kanVeilede(),
-            brukerProfil.kanBeslutte(),
-            brukerProfil.kanOverstyre(),
-            brukerProfil.kanOppgavestyre(),
-            brukerProfil.kanBehandleKode6(),
-            brukerProfil.funksjonellTid());
     }
 }

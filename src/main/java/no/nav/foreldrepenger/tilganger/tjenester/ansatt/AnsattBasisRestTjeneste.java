@@ -46,10 +46,7 @@ public class AnsattBasisRestTjeneste {
     @Produces(APPLICATION_JSON)
     @Path("/kontekst")
     public BrukerProfilResponseDto brukerProfilUtvidet() {
-        Objects.requireNonNull(KontekstHolder.getKontekst());
-        if (!IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
-            throw new WebApplicationException("Trenger en gyldig OBO token.", Response.Status.FORBIDDEN);
-        }
+        validerBrukerKontekst();
         return mapTilProfilDto(ansattTjeneste.hentAnsattFraKontekst());
     }
 
@@ -57,6 +54,7 @@ public class AnsattBasisRestTjeneste {
     @Produces(APPLICATION_JSON)
     @Path("/navident")
     public BrukerProfilResponseDto finnUserFraNavIdent(@NotNull @Valid AnsattBasisRestTjeneste.ProfilIdentRequest request) {
+        validerSystemKontekst();
         return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.ident()));
     }
 
@@ -64,6 +62,7 @@ public class AnsattBasisRestTjeneste {
     @Produces(APPLICATION_JSON)
     @Path("/uid")
     public BrukerProfilResponseDto hentUserUid(@NotNull @Valid AnsattBasisRestTjeneste.ProfilUidRequest request) {
+        validerSystemKontekst();
         return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.uid()));
     }
 
@@ -77,6 +76,20 @@ public class AnsattBasisRestTjeneste {
     private BrukerProfilResponseDto mapTilProfilDto(Optional<Ansatt> ansatt) {
         return ansatt.map(a -> new BrukerProfilResponseDto(a.uid(), a.ident(), a.navn(), a.ansattVedEnhetId()))
             .orElseThrow(() -> new IllegalStateException("Bruker finnes ikke."));
+    }
+
+    private static void validerBrukerKontekst() {
+        Objects.requireNonNull(KontekstHolder.getKontekst());
+        if (!IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
+            throw new WebApplicationException("Trenger en gyldig OBO token.", Response.Status.FORBIDDEN);
+        }
+    }
+
+    private static void validerSystemKontekst() {
+        Objects.requireNonNull(KontekstHolder.getKontekst());
+        if (!KontekstHolder.getKontekst().getIdentType().erSystem()) {
+            throw new WebApplicationException("Trenger en gyldig CC token.", Response.Status.FORBIDDEN);
+        }
     }
 
 }
