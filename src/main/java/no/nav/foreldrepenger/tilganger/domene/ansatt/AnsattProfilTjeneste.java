@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.Dependent;
@@ -43,9 +42,9 @@ public class AnsattProfilTjeneste {
     }
 
     public Set<AnsattGruppe> medlemAvGrupper(Set<AnsattGruppe> ansattGrupper) {
-        var gruppeOids = ansattGrupper.stream().collect(Collectors.toMap(PROVIDER::getAnsattGruppeOid, Function.identity()));
-        var grupperForAnsatt = ansattTjeneste.hentGrupperFraKontekst(ALLE_ANSATTGRUPPE_OIDS);
-        return grupperForAnsatt.stream().filter(gruppeOids::containsKey).map(gruppeOids::get).collect(Collectors.toSet());
+        var gruppeOidsForAnsatt = ansattTjeneste.hentGrupperFraKontekst(ALLE_ANSATTGRUPPE_OIDS);
+        var grupperForAnsatt = PROVIDER.getAnsattGrupperFra(gruppeOidsForAnsatt);
+        return grupperForAnsatt.stream().filter(ansattGrupper::contains).collect(Collectors.toSet());
     }
 
     private AnsattProfil getAnsattProfil(Ansatt ansatt) {

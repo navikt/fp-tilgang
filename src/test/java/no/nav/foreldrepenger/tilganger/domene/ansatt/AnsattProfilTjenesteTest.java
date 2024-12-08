@@ -40,7 +40,9 @@ class AnsattProfilTjenesteTest {
 
     @Test
     void testAlleGrupper() {
-        assertThat(ansattProfilTjeneste.medlemAvGrupper(new HashSet<>(Arrays.stream(AnsattGruppe.values()).toList()))).hasSize(ALLE_ANSATTGRUPPE_OIDS.size());
+        var alle = new HashSet<>(Arrays.stream(AnsattGruppe.values()).toList());
+        assertThat(ansattProfilTjeneste.medlemAvGrupper(alle)).hasSize(ALLE_ANSATTGRUPPE_OIDS.size());
+        assertThat(ansattProfilTjeneste.medlemAvGrupper(alle)).containsAll(alle);
     }
 
     @Test
