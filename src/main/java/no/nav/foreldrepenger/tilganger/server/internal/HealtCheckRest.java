@@ -12,12 +12,15 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.vedtak.server.LivenessAware;
+
+import no.nav.vedtak.server.ReadinessAware;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.tilganger.server.ApplicationServiceStarter;
-import no.nav.vedtak.log.metrics.LivenessAware;
-import no.nav.vedtak.log.metrics.ReadinessAware;
+
 
 @Path("/health")
 @ApplicationScoped
