@@ -108,6 +108,12 @@ public class AnsattTjeneste {
         return grupper.get();
     }
 
+    // TODO: Fjern. Kun for debugging en kort periode
+    public void tømGruppeCache() {
+        var ansattref = getAnsattReferanseFraKontekst(); // OID eller ident
+        grupperCache.remove(ansattref);
+    }
+
     private static Ansatt mapUser(User user) {
         var forEtternavn = Optional.ofNullable(user.givenName())
             .map(fornavn -> fornavn + Optional.ofNullable(user.surname()).map(etternavn -> " " + etternavn).orElse(""))
