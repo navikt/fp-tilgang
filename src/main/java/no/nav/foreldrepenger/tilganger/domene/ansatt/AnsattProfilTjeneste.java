@@ -10,11 +10,18 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 
 @Dependent
 public class AnsattProfilTjeneste {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AnsattProfilTjeneste.class);
+    private static final Environment ENV = Environment.current();
     private static final AnsattGruppeProvider PROVIDER = AnsattGruppeProvider.instance();
     private static final Set<UUID> ALLE_ANSATTGRUPPE_OIDS = Arrays.stream(AnsattGruppe.values())
         .map(PROVIDER::getAnsattGruppeOid)
@@ -44,6 +51,11 @@ public class AnsattProfilTjeneste {
     public Set<AnsattGruppe> medlemAvGrupper(Set<AnsattGruppe> ansattGrupper) {
         var gruppeOidsForAnsatt = ansattTjeneste.hentGrupperFraKontekst(ALLE_ANSATTGRUPPE_OIDS);
         var grupperForAnsatt = PROVIDER.getAnsattGrupperFra(gruppeOidsForAnsatt);
+        if (ENV.isDev()) {
+            LOG.info("FPTILGRUPPE Request: {}", ansattGrupper);
+            LOG.info("FPTILGRUPPE Fant gruppe-oids: {}", gruppeOidsForAnsatt);
+            LOG.info("FPTILGRUPPE Fant gruppe-enums: {}", grupperForAnsatt);
+        }
         return grupperForAnsatt.stream().filter(ansattGrupper::contains).collect(Collectors.toSet());
     }
 
