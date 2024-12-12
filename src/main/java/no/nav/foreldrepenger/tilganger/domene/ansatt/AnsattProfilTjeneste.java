@@ -49,6 +49,9 @@ public class AnsattProfilTjeneste {
     }
 
     public Set<AnsattGruppe> medlemAvGrupper(Set<AnsattGruppe> ansattGrupper) {
+        if (ENV.isDev()) {
+            ansattTjeneste.tømGruppeCache();
+        }
         var gruppeOidsForAnsatt = ansattTjeneste.hentGrupperFraKontekst(ALLE_ANSATTGRUPPE_OIDS);
         var grupperForAnsatt = PROVIDER.getAnsattGrupperFra(gruppeOidsForAnsatt);
         if (ENV.isDev()) {

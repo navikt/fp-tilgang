@@ -11,8 +11,8 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisDatabase;
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
@@ -70,6 +70,19 @@ public class GrupperCache {
             logRedisUtilgjengelig();
         }
         return Optional.ofNullable(lokalCache.get(cacheKey));
+    }
+
+    public void remove(String key) {
+        var cacheKey = hentCacheKey(key);
+        try {
+            var verdi = redisCache.les(key, REDIS_GRUPPE_CACHE);
+            if (verdi.isPresent()) {
+                LOG.debug("Redis removing key '{}'", cacheKey);
+                redisCache.fjern(cacheKey, REDIS_GRUPPE_CACHE);
+            }
+        } catch (RedisCacheUtilgjengeligException e) {
+            logRedisUtilgjengelig();
+        }
     }
 
     public void deleteCache() {
