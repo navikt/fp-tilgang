@@ -14,7 +14,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <felles.version>7.4.3</felles.version>
+        <felles.version>7.4.4</felles.version>
     </properties>
 
     <dependencyManagement>
