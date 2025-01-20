@@ -13,6 +13,7 @@ ENV TZ="Europe/Oslo"
 ENV JAVA_OPTS="-XX:+PrintCommandLineFlags \
     -XX:ActiveProcessorCount=2 \
     -XX:MaxRAMPercentage=75 \
+    -XX:UseSVE=0 \
     -Duser.timezone=Europe/Oslo \
     -Djava.security.egd=file:/dev/urandom \
     -Dlogback.configurationFile=conf/logback.xml"
