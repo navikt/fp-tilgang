@@ -9,10 +9,9 @@ WORKDIR /app
 
 ENV LANG='nb_NO.UTF-8' LANGUAGE='nb_NO:nb' LC_ALL='nb:NO.UTF-8' TZ="Europe/Oslo"
 
-ENV JAVA_TOOL_OPTIONS="-XX:+PrintCommandLineFlags \
+ENV JDK_JAVA_OPTIONS="-XX:+PrintCommandLineFlags \
     -XX:ActiveProcessorCount=2 \
     -XX:MaxRAMPercentage=75 \
-    -XX:UseSVE=0 \
     -Duser.timezone=Europe/Oslo \
     -Djava.security.egd=file:/dev/urandom \
     -Dlogback.configurationFile=conf/logback.xml"
