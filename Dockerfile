@@ -1,4 +1,4 @@
-FROM gcr.io/distroless/java17-debian12:nonroot
+FROM gcr.io/distroless/java21-debian12:nonroot
 
 LABEL org.opencontainers.image.source=https://github.com/navikt/ft-tilgang
 # Healtcheck lokalt/test
@@ -9,7 +9,7 @@ WORKDIR /app
 
 ENV LANG='nb_NO.UTF-8' LANGUAGE='nb_NO:nb' LC_ALL='nb:NO.UTF-8' TZ="Europe/Oslo"
 
-ENV JDK_JAVA_OPTIONS="-XX:+PrintCommandLineFlags \
+ENV JAVA_TOOL_OPTIONS="-XX:+PrintCommandLineFlags \
     -XX:ActiveProcessorCount=2 \
     -XX:MaxRAMPercentage=75 \
     -XX:UseSVE=0 \
