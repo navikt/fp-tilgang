@@ -48,12 +48,10 @@ public class AnsattProfilTjeneste {
         return grupperForAnsatt.stream().filter(ansattGrupper::contains).collect(Collectors.toSet());
     }
 
-    private AnsattProfil getAnsattProfil(Ansatt ansatt) {
-        if (ansatt == null) {
-            throw new IllegalStateException("Ingen bruker oppgitt");
-        }
-        var grupper = ansattTjeneste.hentGrupper(ansatt.uid(), ALLE_ANSATTGRUPPE_OIDS);
-        return mapAnsattProfil(ansatt, grupper);
+    public Set<AnsattGruppe> medlemAvGrupper(UUID ansattUid, Set<AnsattGruppe> ansattGrupper) {
+        var gruppeOidsForAnsatt = ansattTjeneste.hentGrupper(ansattUid, ALLE_ANSATTGRUPPE_OIDS);
+        var grupperForAnsatt = PROVIDER.getAnsattGrupperFra(gruppeOidsForAnsatt);
+        return grupperForAnsatt.stream().filter(ansattGrupper::contains).collect(Collectors.toSet());
     }
 
     private AnsattProfil mapAnsattProfil(Ansatt ansatt, List<UUID> grupper) {

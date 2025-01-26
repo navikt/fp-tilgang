@@ -1,26 +1,20 @@
 package no.nav.foreldrepenger.tilganger.domene.populasjon;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattTjeneste;
 import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PdlPipKlient;
 import no.nav.foreldrepenger.tilganger.integrasjoner.pip.SkjermingPipKlient;
 import no.nav.vedtak.felles.integrasjon.pdlpip.PersondataPipDto;
-import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
-import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 import no.nav.vedtak.util.LRUCache;
 
 /**
@@ -31,18 +25,10 @@ public class PopulasjonCache {
 
     // TODO: Vurder Redis + CacheLifeTime - nå er den satt litt lang pga sammenlign/logg
     private static final long PERSON_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(2, TimeUnit.HOURS);
-    private static final long GRUPPE_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(8, TimeUnit.HOURS);
 
     private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(30000, PERSON_CACHE_LIVE_TIME_MS);
     private static final LRUCache<String, Boolean> PERSON_SKJERMING = new LRUCache<>(15000, PERSON_CACHE_LIVE_TIME_MS);
-    private static final LRUCache<UUID, Set<AnsattGruppe>> ANSATT_GRUPPER = new LRUCache<>(1500, GRUPPE_CACHE_LIVE_TIME_MS);
 
-    private static final AnsattGruppeProvider PROVIDER = AnsattGruppeProvider.instance();
-    private static final Set<UUID> ALLE_ANSATTGRUPPE_OIDS = Arrays.stream(AnsattGruppe.values())
-        .map(PROVIDER::getAnsattGruppeOid)
-        .collect(Collectors.toSet());
-
-    private AnsattTjeneste ansattTjeneste;
     private PdlPipKlient pdlPipKlient;
     private SkjermingPipKlient skjermingPipKlient;
 
@@ -51,8 +37,7 @@ public class PopulasjonCache {
     }
 
     @Inject
-    public PopulasjonCache(AnsattTjeneste ansattTjeneste, PdlPipKlient pdlPipKlient, SkjermingPipKlient skjermingPipKlient) {
-        this.ansattTjeneste = ansattTjeneste;
+    public PopulasjonCache(PdlPipKlient pdlPipKlient, SkjermingPipKlient skjermingPipKlient) {
         this.pdlPipKlient = pdlPipKlient;
         this.skjermingPipKlient = skjermingPipKlient;
     }
@@ -95,17 +80,6 @@ public class PopulasjonCache {
         // Sjekk med henting av evt mangler
         return skjermetForCachedIdenter // eller hent og sjekk de som ikke finnes i cache - om noen
             || hentSkjermingFor(sjekkPersonIdenter.stream().filter(i -> PERSON_SKJERMING.get(i) == null).toList());
-    }
-
-    public Set<AnsattGruppe> finnAnsattGrupperFor(UUID ansattOID) {
-        // TODO se CacheLifeTime i relasjon til den i ansatttjeneste og evt saner lokal cache her
-        return Optional.ofNullable(ANSATT_GRUPPER.get(ansattOID))
-            .orElseGet(() -> {
-                var gruppeOids = ansattTjeneste.hentGrupper(ansattOID, ALLE_ANSATTGRUPPE_OIDS);
-                var harAnsattGrupper = PROVIDER.getAnsattGrupperFra(gruppeOids);
-                ANSATT_GRUPPER.put(ansattOID, harAnsattGrupper);
-                return harAnsattGrupper;
-            });
     }
 
     private Collection<PersondataPipDto> hentPdlPipForIdenter(List<String> identer) {

@@ -21,7 +21,6 @@ import jakarta.ws.rs.core.Response;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.PopulasjonTjeneste;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.TilgangResultat;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.TilgangVurdering;
-import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 /**
@@ -49,7 +48,7 @@ public class PopulasjonRestTjeneste {
     @Path("/internbruker")
     public TilgangsvurderingDto sjekkInternBruker(@NotNull @Valid PopulasjonRestTjeneste.PopulasjonInternRequest request) {
         validerSystemKontekst();
-        var vurdering = populasjonTjeneste.vurderInternBruker(request.ansattOid(), Optional.ofNullable(request.kreverGrupper()).orElseGet(Set::of),
+        var vurdering = populasjonTjeneste.vurderInternBruker(request.ansattOid(),
             Optional.ofNullable(request.personIdenter()).orElseGet(Set::of), Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of));
         return mapTilVurderingDto(vurdering);
     }
@@ -69,7 +68,6 @@ public class PopulasjonRestTjeneste {
 
 
     public record PopulasjonInternRequest(@NotNull UUID ansattOid,
-                                          @Valid Set<AnsattGruppe> kreverGrupper,
                                           @Valid Set<String> personIdenter,
                                           @Valid  Set<String> aktørIdenter) {
 
