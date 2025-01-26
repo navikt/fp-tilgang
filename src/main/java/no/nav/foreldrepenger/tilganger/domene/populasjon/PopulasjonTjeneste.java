@@ -49,9 +49,10 @@ public class PopulasjonTjeneste {
     }
 
     @Inject
-    public PopulasjonTjeneste(AnsattTjeneste ansattTjeneste, PdlPipKlient pdlPipKlient) {
+    public PopulasjonTjeneste(AnsattTjeneste ansattTjeneste, PdlPipKlient pdlPipKlient, SkjermingPipKlient skjermingPipKlient) {
         this.ansattTjeneste = ansattTjeneste;
         this.pdlPipKlient = pdlPipKlient;
+        this.skjermingPipKlient = skjermingPipKlient;
     }
 
 
@@ -59,6 +60,7 @@ public class PopulasjonTjeneste {
                                                Set<String> personIdenter, Set<String> aktørIdenter) {
         var sjekkGrupper = new HashSet<>(kreverGrupper);
         if (!personIdenter.isEmpty() || !aktørIdenter.isEmpty()) {
+            // Finn behov for ekstra AD-grupper for tilfelle av adressebeskyttelse eller skjerming
             var allePersonPips = finnPdlPipFor(personIdenter, aktørIdenter);
             sjekkAdresseBeskyttelse(allePersonPips).ifPresent(sjekkGrupper::add);
             sjekkSkjerming(allePersonPips).ifPresent(sjekkGrupper::add);
@@ -66,8 +68,7 @@ public class PopulasjonTjeneste {
         if (sjekkGrupper.isEmpty()) {
             return TilgangVurdering.godkjenn();
         }
-        var ansatt = ansattTjeneste.hentAnsatt(ansattOID).orElseThrow();
-        var gruppeOids = ansattTjeneste.hentGrupper(ansatt, ALLE_ANSATTGRUPPE_OIDS);
+        var gruppeOids = ansattTjeneste.hentGrupper(ansattOID, ALLE_ANSATTGRUPPE_OIDS);
         var harAnsattGrupper = PROVIDER.getAnsattGrupperFra(gruppeOids);
         if (sjekkGrupper.contains(AnsattGruppe.STRENGTFORTROLIG) && !harAnsattGrupper.contains(AnsattGruppe.STRENGTFORTROLIG)) {
             return TilgangVurdering.avslå(TilgangResultat.AVSLÅTT_KODE_6);

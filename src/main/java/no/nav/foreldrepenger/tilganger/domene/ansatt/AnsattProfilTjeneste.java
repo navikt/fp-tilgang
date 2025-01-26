@@ -10,10 +10,6 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 
@@ -56,7 +52,7 @@ public class AnsattProfilTjeneste {
         if (ansatt == null) {
             throw new IllegalStateException("Ingen bruker oppgitt");
         }
-        var grupper = ansattTjeneste.hentGrupper(ansatt, ALLE_ANSATTGRUPPE_OIDS);
+        var grupper = ansattTjeneste.hentGrupper(ansatt.uid(), ALLE_ANSATTGRUPPE_OIDS);
         return mapAnsattProfil(ansatt, grupper);
     }
 

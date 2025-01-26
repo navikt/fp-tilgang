@@ -62,10 +62,10 @@ public class AnsattTjeneste {
         return hentAnsatt(uid.toString(), () -> azureGraph.hentUser(uid));
     }
 
-    public List<UUID> hentGrupper(Ansatt ansatt, Set<UUID> gruppeFilter) {
-        var identifikator = ansatt.uid().toString();
+    public List<UUID> hentGrupper(UUID uid, Set<UUID> gruppeFilter) {
+        var identifikator = uid.toString();
         LOG.debug("Henter ansatt grupper: {}", identifikator);
-        return hentGrupper(identifikator, () -> azureGraph.hentGrupper(ansatt.uid(), new HashSet<>(gruppeFilter)));
+        return hentGrupper(identifikator, () -> azureGraph.hentGrupper(uid, new HashSet<>(gruppeFilter)));
     }
 
     private Optional<Ansatt> hentAnsatt(String identifikator, Supplier<Optional<User>> ansattSupplier) {
