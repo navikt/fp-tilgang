@@ -13,6 +13,7 @@ import no.nav.foreldrepenger.tilganger.server.exceptions.GeneralRestExceptionMap
 import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattBasisRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattUtvidetRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.populasjon.PopulasjonRestTjeneste;
+import no.nav.foreldrepenger.tilganger.tjenester.ruting.RutingRestTjeneste;
 
 @ApplicationPath(ApiConfig.API_URI)
 public class ApiConfig extends Application {
@@ -24,9 +25,10 @@ public class ApiConfig extends Application {
         // eksponert grensesnitt bak sikkerhet
         return Set.of(AuthorizationAbacFilter.class,
             AuthenticationFilter.class,
-            PopulasjonRestTjeneste.class,
             AnsattBasisRestTjeneste.class,
             AnsattUtvidetRestTjeneste.class,
+            PopulasjonRestTjeneste.class,
+            RutingRestTjeneste.class,
             GeneralRestExceptionMapper.class,
             JacksonJsonConfig.class);
     }
