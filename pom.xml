@@ -38,6 +38,11 @@
                 <artifactId>person-klient</artifactId>
                 <version>${felles.version}</version>
             </dependency>
+            <dependency>
+                <groupId>no.nav.foreldrepenger.felles.integrasjon</groupId>
+                <artifactId>pip-klient</artifactId>
+                <version>${felles.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -65,6 +70,10 @@
         <dependency>
             <groupId>no.nav.foreldrepenger.felles.integrasjon</groupId>
             <artifactId>person-klient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.foreldrepenger.felles.integrasjon</groupId>
+            <artifactId>pip-klient</artifactId>
         </dependency>
 
         <!-- CDI -->

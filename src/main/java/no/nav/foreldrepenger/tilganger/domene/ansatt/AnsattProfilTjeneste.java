@@ -10,10 +10,6 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 
@@ -52,12 +48,10 @@ public class AnsattProfilTjeneste {
         return grupperForAnsatt.stream().filter(ansattGrupper::contains).collect(Collectors.toSet());
     }
 
-    private AnsattProfil getAnsattProfil(Ansatt ansatt) {
-        if (ansatt == null) {
-            throw new IllegalStateException("Ingen bruker oppgitt");
-        }
-        var grupper = ansattTjeneste.hentGrupper(ansatt, ALLE_ANSATTGRUPPE_OIDS);
-        return mapAnsattProfil(ansatt, grupper);
+    public Set<AnsattGruppe> medlemAvGrupper(UUID ansattUid, Set<AnsattGruppe> ansattGrupper) {
+        var gruppeOidsForAnsatt = ansattTjeneste.hentGrupper(ansattUid, ALLE_ANSATTGRUPPE_OIDS);
+        var grupperForAnsatt = PROVIDER.getAnsattGrupperFra(gruppeOidsForAnsatt);
+        return grupperForAnsatt.stream().filter(ansattGrupper::contains).collect(Collectors.toSet());
     }
 
     private AnsattProfil mapAnsattProfil(Ansatt ansatt, List<UUID> grupper) {

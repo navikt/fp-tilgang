@@ -68,6 +68,14 @@ spec:
       rules:
         - application: fpsak
         - application: fplos
+        - application: fptilbake
+        - application: fpfordel
+        - application: fpformidling
+        - application: fpabakus
+        - application: fpabonnent
+        - application: fpkalkulus
+        - application: fprisk
+        - application: fpoppdrag
         {{#if devOnly}}
         - application: azure-token-generator
           namespace: aura

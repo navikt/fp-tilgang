@@ -56,6 +56,14 @@ public class AnsattUtvidetRestTjeneste {
         return new GruppeDto(ansattProfilTjeneste.medlemAvGrupper(gruppeDto.grupper()));
     }
 
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Path("/gruppemedlemskap-uid")
+    public GruppeDto erAnsattMedlemAvGrupper(@NotNull @Valid UidGruppeDto gruppeDto) {
+        validerBrukerKontekst();
+        return new GruppeDto(ansattProfilTjeneste.medlemAvGrupper(gruppeDto.uid(), gruppeDto.grupper()));
+    }
+
     public record GruppeDto(@NotNull @Valid Set<AnsattGruppe> grupper) { }
 
 

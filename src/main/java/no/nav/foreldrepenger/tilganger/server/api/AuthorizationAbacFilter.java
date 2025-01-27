@@ -25,6 +25,8 @@ public class AuthorizationAbacFilter implements ContainerRequestFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(AuthorizationAbacFilter.class);
 
+    private static final Set<IdentType> LOVLIGE_IDENT_TYPER = Set.of(IdentType.InternBruker, IdentType.Systemressurs);
+
     @Context
     private ResourceInfo resourceinfo;
 
@@ -40,9 +42,7 @@ public class AuthorizationAbacFilter implements ContainerRequestFilter {
             LOG.debug("{} er whitelistet.", method.getName());
             return;
         }
-        if (!KontekstHolder.harKontekst() || Set.of(IdentType.InternBruker, IdentType.Systemressurs)
-            .stream()
-            .noneMatch(it -> it.equals(KontekstHolder.getKontekst().getIdentType()))) {
+        if (!KontekstHolder.harKontekst() || !LOVLIGE_IDENT_TYPER.contains(KontekstHolder.getKontekst().getIdentType())) {
             throw new ManglerTilgangException("MANGLER-TILGANG", "Kun gyldige bruker kall er tillatt.");
         }
     }
