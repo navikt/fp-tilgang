@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -60,15 +61,6 @@ public class PopulasjonCache {
         }
     }
 
-    public PersondataPipDto finnPdlPipFor(String ident) {
-        return Optional.ofNullable(PERSON_PIP.get(ident))
-            .orElseGet(() -> {
-                var pip = pdlPipKlient.hentTilgangPersondata(ident);
-                cachePersonPip(ident, pip);
-                return pip;
-            });
-    }
-
     public boolean finnSkjermingFor(Collection<PersondataPipDto> persondataPipDtos) {
         // Map til PersonIdent
         var sjekkPersonIdenter = persondataPipDtos.stream()
@@ -84,20 +76,31 @@ public class PopulasjonCache {
 
     private Collection<PersondataPipDto> hentPdlPipForIdenter(List<String> identer) {
         if (identer.isEmpty()) {
-            return List.of();
+            return Set.of();
+        } else if (identer.size() == 1) {
+            var ident = identer.getFirst();
+            var pip = pdlPipKlient.hentTilgangPersondata(ident);
+            cachePersonPip(ident, pip);
+            return Set.of(pip);
+        } else {
+            var pips = pdlPipKlient.hentTilgangPersondataBolk(identer);
+            pips.forEach(this::cachePersonPip);
+            return pips.values();
         }
-        var pips = pdlPipKlient.hentTilgangPersondataBolk(identer);
-        pips.forEach(this::cachePersonPip);
-        return pips.values();
     }
 
     private boolean hentSkjermingFor(List<String> personIdenter) {
         if (personIdenter.isEmpty()) {
             return false;
-        } else { // Todo bruk kommende ny tjeneste erSkjermet(List) fra denne klienten
-            var erNoenSkjermet = skjermingPipKlient.erNoenSkjermet(personIdenter);
-            personIdenter.forEach(pi -> PERSON_SKJERMING.put(pi, erNoenSkjermet));
-            return erNoenSkjermet;
+        } else if (personIdenter.size() == 1) {
+            var personIdent = personIdenter.getFirst();
+            var erSkjermet = skjermingPipKlient.erSkjermet(personIdent);
+            PERSON_SKJERMING.put(personIdent, erSkjermet);
+            return erSkjermet;
+        } else {
+            var erSkjermet = skjermingPipKlient.erSkjermet(personIdenter);
+            erSkjermet.forEach(PERSON_SKJERMING::put);
+            return erSkjermet.values().stream().filter(Objects::nonNull).anyMatch(s -> s);
         }
     }
 
@@ -111,9 +114,11 @@ public class PopulasjonCache {
     }
 
     private void cachePersonPip(String ident, PersondataPipDto pip) {
-        PERSON_PIP.put(ident, pip);
-        PERSON_PIP.put(pip.aktoerId(), pip);
-        pip.identer().identer().stream().filter(i -> !i.historisk()).forEach(i -> PERSON_PIP.put(i.ident(), pip));
+        Set<String> identer = new LinkedHashSet<>();
+        identer.add(ident);
+        identer.add(pip.aktoerId());
+        pip.identer().identer().stream().filter(i -> !i.historisk()).map(PersondataPipDto.Ident::ident).forEach(identer::add);
+        identer.forEach(i -> PERSON_PIP.put(i, pip));
     }
 
 }

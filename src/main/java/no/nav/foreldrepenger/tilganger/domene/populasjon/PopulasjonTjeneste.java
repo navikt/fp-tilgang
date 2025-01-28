@@ -75,7 +75,11 @@ public class PopulasjonTjeneste {
     }
 
     public TilgangVurdering vurderEksternBruker(String subjectPersonIdent, Set<String> personIdenter, Set<String> aktørIdenter) {
-        var subjectPip = populasjonCache.finnPdlPipFor(subjectPersonIdent);
+        var subjectPipOpt = populasjonCache.finnPdlPipFor(Set.of(subjectPersonIdent), Set.of()).stream().findFirst();
+        if (subjectPipOpt.isEmpty()) {
+            return TilgangVurdering.avslåGenerell("Finner ikke innlogget bruker");
+        }
+        var subjectPip = subjectPipOpt.get();
         if (subjectPip.erIkkeMyndig()) {
             return TilgangVurdering.avslåGenerell("Ikke gammel nok");
         }
