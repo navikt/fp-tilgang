@@ -79,9 +79,9 @@ public class PopulasjonCache {
             return Set.of();
         } else if (identer.size() == 1) {
             var ident = identer.getFirst();
-            var pip = Optional.ofNullable(pdlPipKlient.hentTilgangPersondata(ident));
-            pip.ifPresent(p -> cachePersonPip(ident, p));
-            return pip.map(Set::of).orElseGet(Set::of);
+            var pip = pdlPipKlient.hentTilgangPersondata(ident);
+            cachePersonPip(ident, pip);
+            return pip != null ? Set.of(pip) : Set.of();
         } else {
             var pips = pdlPipKlient.hentTilgangPersondataBolk(identer);
             pips.forEach(this::cachePersonPip);
@@ -114,6 +114,9 @@ public class PopulasjonCache {
     }
 
     private void cachePersonPip(String ident, PersondataPipDto pip) {
+        if (pip == null) {
+            return;
+        }
         Set<String> identer = new LinkedHashSet<>();
         identer.add(ident);
         identer.add(pip.aktoerId());
