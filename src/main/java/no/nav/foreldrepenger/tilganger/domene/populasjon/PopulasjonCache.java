@@ -27,7 +27,7 @@ public class PopulasjonCache {
     // TODO: Vurder Redis + CacheLifeTime - nå er den satt litt lang pga sammenlign/logg
     private static final long PERSON_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(2, TimeUnit.HOURS);
 
-    private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(30000, PERSON_CACHE_LIVE_TIME_MS);
+    private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(40000, PERSON_CACHE_LIVE_TIME_MS);
     private static final LRUCache<String, Boolean> PERSON_SKJERMING = new LRUCache<>(15000, PERSON_CACHE_LIVE_TIME_MS);
 
     private PdlPipKlient pdlPipKlient;
@@ -76,16 +76,16 @@ public class PopulasjonCache {
 
     private Collection<PersondataPipDto> hentPdlPipForIdenter(List<String> identer) {
         if (identer.isEmpty()) {
-            return Set.of();
+            return List.of();
         } else if (identer.size() == 1) {
             var ident = identer.getFirst();
             var pip = pdlPipKlient.hentTilgangPersondata(ident);
             cachePersonPip(ident, pip);
-            return Set.of(pip);
+            return pip != null ? List.of(pip) : List.of();
         } else {
             var pips = pdlPipKlient.hentTilgangPersondataBolk(identer);
             pips.forEach(this::cachePersonPip);
-            return pips.values();
+            return pips.values().stream().filter(Objects::nonNull).toList();
         }
     }
 
@@ -99,8 +99,8 @@ public class PopulasjonCache {
             return erSkjermet;
         } else {
             var erSkjermet = skjermingPipKlient.erSkjermet(personIdenter);
-            erSkjermet.forEach(PERSON_SKJERMING::put);
-            return erSkjermet.values().stream().filter(Objects::nonNull).anyMatch(s -> s);
+            erSkjermet.forEach((k, v) -> PERSON_SKJERMING.put(k, Objects.equals(Boolean.TRUE, v)));
+            return erSkjermet.values().stream().anyMatch(s -> Objects.equals(Boolean.TRUE, s));
         }
     }
 
@@ -114,11 +114,13 @@ public class PopulasjonCache {
     }
 
     private void cachePersonPip(String ident, PersondataPipDto pip) {
-        Set<String> identer = new LinkedHashSet<>();
-        identer.add(ident);
-        identer.add(pip.aktoerId());
-        pip.identer().identer().stream().filter(i -> !i.historisk()).map(PersondataPipDto.Ident::ident).forEach(identer::add);
-        identer.forEach(i -> PERSON_PIP.put(i, pip));
+        if (pip != null) {
+            Set<String> identer = new LinkedHashSet<>();
+            identer.add(ident);
+            identer.add(pip.aktoerId());
+            identer.addAll(pip.identer().identer().stream().map(PersondataPipDto.Ident::ident).toList());
+            identer.forEach(i -> PERSON_PIP.put(i, pip));
+        }
     }
 
 }
