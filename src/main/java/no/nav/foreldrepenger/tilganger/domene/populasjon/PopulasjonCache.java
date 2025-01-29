@@ -76,16 +76,16 @@ public class PopulasjonCache {
 
     private Collection<PersondataPipDto> hentPdlPipForIdenter(List<String> identer) {
         if (identer.isEmpty()) {
-            return Set.of();
+            return List.of();
         } else if (identer.size() == 1) {
             var ident = identer.getFirst();
             var pip = pdlPipKlient.hentTilgangPersondata(ident);
             cachePersonPip(ident, pip);
-            return pip != null ? Set.of(pip) : Set.of();
+            return pip != null ? List.of(pip) : List.of();
         } else {
             var pips = pdlPipKlient.hentTilgangPersondataBolk(identer);
             pips.forEach(this::cachePersonPip);
-            return pips.values();
+            return pips.values().stream().filter(Objects::nonNull).toList();
         }
     }
 
@@ -100,7 +100,7 @@ public class PopulasjonCache {
         } else {
             var erSkjermet = skjermingPipKlient.erSkjermet(personIdenter);
             erSkjermet.forEach((k, v) -> PERSON_SKJERMING.put(k, Objects.equals(Boolean.TRUE, v)));
-            return erSkjermet.values().stream().filter(Objects::nonNull).anyMatch(s -> s);
+            return erSkjermet.values().stream().anyMatch(s -> Objects.equals(Boolean.TRUE, s));
         }
     }
 
@@ -114,14 +114,13 @@ public class PopulasjonCache {
     }
 
     private void cachePersonPip(String ident, PersondataPipDto pip) {
-        if (pip == null) {
-            return;
+        if (pip != null) {
+            Set<String> identer = new LinkedHashSet<>();
+            identer.add(ident);
+            identer.add(pip.aktoerId());
+            identer.addAll(pip.identer().identer().stream().filter(i -> !i.historisk()).map(PersondataPipDto.Ident::ident).toList());
+            identer.forEach(i -> PERSON_PIP.put(i, pip));
         }
-        Set<String> identer = new LinkedHashSet<>();
-        identer.add(ident);
-        identer.add(pip.aktoerId());
-        pip.identer().identer().stream().filter(i -> !i.historisk()).map(PersondataPipDto.Ident::ident).forEach(identer::add);
-        identer.forEach(i -> PERSON_PIP.put(i, pip));
     }
 
 }
