@@ -60,7 +60,7 @@ public class AnsattUtvidetRestTjeneste {
     @Produces(APPLICATION_JSON)
     @Path("/gruppemedlemskap-uid")
     public GruppeDto erAnsattMedlemAvGrupper(@NotNull @Valid UidGruppeDto gruppeDto) {
-        validerBrukerKontekst();
+        validerSystemKontekst();
         return new GruppeDto(ansattProfilTjeneste.medlemAvGrupper(gruppeDto.uid(), gruppeDto.grupper()));
     }
 
@@ -81,6 +81,13 @@ public class AnsattUtvidetRestTjeneste {
         Objects.requireNonNull(KontekstHolder.getKontekst());
         if (!IdentType.InternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
             throw new WebApplicationException("Trenger en gyldig OBO token.", Response.Status.FORBIDDEN);
+        }
+    }
+
+    private static void validerSystemKontekst() {
+        Objects.requireNonNull(KontekstHolder.getKontekst());
+        if (!KontekstHolder.getKontekst().getIdentType().erSystem()) {
+            throw new WebApplicationException("Trenger en gyldig CC token.", Response.Status.FORBIDDEN);
         }
     }
 }
