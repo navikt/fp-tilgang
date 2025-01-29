@@ -79,9 +79,9 @@ public class PopulasjonCache {
             return Set.of();
         } else if (identer.size() == 1) {
             var ident = identer.getFirst();
-            var pip = pdlPipKlient.hentTilgangPersondata(ident);
-            cachePersonPip(ident, pip);
-            return Set.of(pip);
+            var pip = Optional.ofNullable(pdlPipKlient.hentTilgangPersondata(ident));
+            pip.ifPresent(p -> cachePersonPip(ident, p));
+            return pip.map(Set::of).orElseGet(Set::of);
         } else {
             var pips = pdlPipKlient.hentTilgangPersondataBolk(identer);
             pips.forEach(this::cachePersonPip);
@@ -99,7 +99,7 @@ public class PopulasjonCache {
             return erSkjermet;
         } else {
             var erSkjermet = skjermingPipKlient.erSkjermet(personIdenter);
-            erSkjermet.forEach(PERSON_SKJERMING::put);
+            erSkjermet.forEach((k, v) -> PERSON_SKJERMING.put(k, Objects.equals(Boolean.TRUE, v)));
             return erSkjermet.values().stream().filter(Objects::nonNull).anyMatch(s -> s);
         }
     }
