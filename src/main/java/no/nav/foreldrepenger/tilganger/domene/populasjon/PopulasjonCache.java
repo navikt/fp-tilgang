@@ -27,7 +27,7 @@ public class PopulasjonCache {
     // TODO: Vurder Redis + CacheLifeTime - nå er den satt litt lang pga sammenlign/logg
     private static final long PERSON_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(2, TimeUnit.HOURS);
 
-    private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(30000, PERSON_CACHE_LIVE_TIME_MS);
+    private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(40000, PERSON_CACHE_LIVE_TIME_MS);
     private static final LRUCache<String, Boolean> PERSON_SKJERMING = new LRUCache<>(15000, PERSON_CACHE_LIVE_TIME_MS);
 
     private PdlPipKlient pdlPipKlient;
@@ -118,7 +118,7 @@ public class PopulasjonCache {
             Set<String> identer = new LinkedHashSet<>();
             identer.add(ident);
             identer.add(pip.aktoerId());
-            identer.addAll(pip.identer().identer().stream().filter(i -> !i.historisk()).map(PersondataPipDto.Ident::ident).toList());
+            identer.addAll(pip.identer().identer().stream().map(PersondataPipDto.Ident::ident).toList());
             identer.forEach(i -> PERSON_PIP.put(i, pip));
         }
     }
