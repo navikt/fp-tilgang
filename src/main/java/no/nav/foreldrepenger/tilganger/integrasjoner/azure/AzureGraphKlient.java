@@ -16,6 +16,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.core.UriBuilder;
 
+import no.nav.vedtak.exception.IntegrasjonException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,7 +109,18 @@ class AzureGraphKlient implements AzureGraph {
         var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestUri);
-        var response = restKlient.send(request, UsersResponse.class);
+        UsersResponse response;
+        try {
+            response = restKlient.send(request, UsersResponse.class);
+        } catch (IntegrasjonException e) {
+            if (e.getFeilmelding() != null && e.getFeilmelding().startsWith("Uventet respons 404")) {
+                LOG.warn("Ansatt {} ikke funnet. Si fra i overvåkning", ident, e);
+                return Optional.empty();
+            } else {
+                LOG.warn("Feil ved henting av bruker {}", ident, e);
+                throw e;
+            }
+        }
         if (response == null || response.value() == null || response.value().isEmpty()) {
             LOG.info("Fant ikke bruker med ident: {}", ident);
             return Optional.empty();
