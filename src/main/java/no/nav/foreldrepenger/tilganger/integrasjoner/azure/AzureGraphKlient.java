@@ -16,12 +16,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.core.UriBuilder;
 
-import no.nav.vedtak.exception.IntegrasjonException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.konfig.Environment;
+import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.ProxyRestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
@@ -109,18 +108,7 @@ class AzureGraphKlient implements AzureGraph {
         var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestUri);
-        UsersResponse response;
-        try {
-            response = restKlient.send(request, UsersResponse.class);
-        } catch (IntegrasjonException e) {
-            if (e.getFeilmelding() != null && e.getFeilmelding().startsWith("Uventet respons 404")) {
-                LOG.warn("Ansatt {} ikke funnet. Si fra i overvåkning", ident, e);
-                return Optional.empty();
-            } else {
-                LOG.warn("Feil ved henting av bruker {}", ident, e);
-                throw e;
-            }
-        }
+        var response = kallAzureHåndterNotFound(ident, request, UsersResponse.class);
         if (response == null || response.value() == null || response.value().isEmpty()) {
             LOG.info("Fant ikke bruker med ident: {}", ident);
             return Optional.empty();
@@ -153,7 +141,7 @@ class AzureGraphKlient implements AzureGraph {
         var request = RestRequest.newGET(requestUri, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
         logDebugMelding(requestUri);
 
-        var response = restKlient.send(request, User.class);
+        var response = kallAzureHåndterNotFound(id.toString(), request, User.class);
         if (response != null) {
             LOG.info("Fant bruker: {}", id.equals(response.id()));
             if (LOG.isDebugEnabled()) {
@@ -182,12 +170,30 @@ class AzureGraphKlient implements AzureGraph {
         var request = RestRequest.newGET(requestTarget, restConfig).header(HEADER_CONSISTENCY_LEVEL, EVENTUAL);
 
         logDebugMelding(requestTarget);
-        var response = restKlient.send(request, GroupsResponse.class);
+        var response = kallAzureHåndterNotFound(userUid.toString(), request, GroupsResponse.class);
 
-        var grupper = response.value();
-        LOG.info("Fant grupper: {}", grupper.size());
-        loggGrupperIfDebug("Grupper: {}", grupper.stream().map(Objects::toString));
-        return new HashSet<>(grupper);
+        if (response != null) {
+            var grupper = response.value();
+            LOG.info("Fant grupper: {}", grupper.size());
+            loggGrupperIfDebug("Grupper: {}", grupper.stream().map(Objects::toString));
+            return new HashSet<>(grupper);
+        } else {
+            return Set.of();
+        }
+    }
+
+    private <T> T kallAzureHåndterNotFound(String ansatt, RestRequest request, Class<T> responseClass) {
+        try {
+            return restKlient.send(request, responseClass);
+        } catch (IntegrasjonException e) {
+            if (e.getFeilmelding() != null && e.getFeilmelding().startsWith("Uventet respons 404")) {
+                LOG.warn("Ansatt {} ikke funnet. Si fra i overvåkning", ansatt, e);
+                return null;
+            } else {
+                LOG.warn("Feil ved henting av ansatt {}", ansatt, e);
+                throw e;
+            }
+        }
     }
 
     private static void insertGroupFilter(Set<UUID> groupFilter, UriBuilder requestUri) {
