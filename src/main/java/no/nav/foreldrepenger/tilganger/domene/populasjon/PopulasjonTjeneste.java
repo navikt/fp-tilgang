@@ -1,8 +1,11 @@
 package no.nav.foreldrepenger.tilganger.domene.populasjon;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -20,6 +23,8 @@ import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
  */
 @ApplicationScoped
 public class PopulasjonTjeneste {
+
+    private static final Integer DEFAULT_ALDERSGRENSE = 18;
 
     private static final AnsattGruppeProvider PROVIDER = AnsattGruppeProvider.instance();
     private static final Set<UUID> ALLE_ANSATTGRUPPE_OIDS = Arrays.stream(AnsattGruppe.values())
@@ -41,11 +46,35 @@ public class PopulasjonTjeneste {
     }
 
 
-    public TilgangVurdering vurderInternBruker(UUID ansattOID, Set<String> personIdenter, Set<String> aktørIdenter) {
+    public TilgangVurdering vurderInternBruker(UUID ansattOID, Set<String> personIdenter, Set<String> aktørIdenter, String saksnummer) {
+        var alleIdenter = new LinkedHashSet<>(aktørIdenter);
+        alleIdenter.addAll(personIdenter);
+        return vurderInternBruker(ansattOID, alleIdenter, saksnummer);
+    }
+
+    public TilgangVurdering vurderInternBruker(UUID ansattOID, Set<String> identer, String saksnummer) {
+        if (saksnummer != null) {
+            var alleIdenter = new LinkedHashSet<>(identer);
+            alleIdenter.addAll(populasjonCache.identerForSak(saksnummer));
+            return vurderInternBruker(ansattOID, alleIdenter);
+        } else {
+            return vurderInternBruker(ansattOID, identer);
+        }
+    }
+
+    public void prefetchSaker(Collection<String> saksnummer) {
+        populasjonCache.preFetchSaker(saksnummer);
+    }
+
+    public void preFetchIdenter(Collection<String> identer) {
+        populasjonCache.preFetchIdenter(identer);
+    }
+
+    private TilgangVurdering vurderInternBruker(UUID ansattOID, Set<String> identer) {
         Set<AnsattGruppe> nødvendigeGrupper = new HashSet<>();
 
         // Finn behov for ekstra AD-grupper for tilfelle av adressebeskyttelse eller skjerming
-        var allePersonPips = populasjonCache.finnPdlPipFor(personIdenter, aktørIdenter);
+        var allePersonPips = populasjonCache.finnPdlPipFor(identer);
         if (allePersonPips.stream().anyMatch(PersondataPipDto::harStrengAdresseBeskyttelse)) {
             nødvendigeGrupper.add(AnsattGruppe.STRENGTFORTROLIG);
         } else if (allePersonPips.stream().anyMatch(PersondataPipDto::harAdresseBeskyttelse)) {
@@ -74,13 +103,14 @@ public class PopulasjonTjeneste {
         }
     }
 
-    public TilgangVurdering vurderEksternBruker(String subjectPersonIdent, Set<String> personIdenter, Set<String> aktørIdenter) {
-        var subjectPipOpt = populasjonCache.finnPdlPipFor(Set.of(subjectPersonIdent), Set.of()).stream().findFirst();
+    public TilgangVurdering vurderEksternBruker(String subjectPersonIdent, Integer aldersgrense,
+                                                Set<String> personIdenter, Set<String> aktørIdenter) {
+        var subjectPipOpt = populasjonCache.finnPdlPipFor(Set.of(subjectPersonIdent)).stream().findFirst();
         if (subjectPipOpt.isEmpty()) {
             return TilgangVurdering.avslåGenerell("Finner ikke innlogget bruker");
         }
         var subjectPip = subjectPipOpt.get();
-        if (subjectPip.erIkkeMyndig()) {
+        if (subjectPip.erUnderAlder(Optional.ofNullable(aldersgrense).orElse(DEFAULT_ALDERSGRENSE))) {
             return TilgangVurdering.avslåGenerell("Ikke gammel nok");
         }
         var subjectAktørId = subjectPip.aktørId();
@@ -91,5 +121,9 @@ public class PopulasjonTjeneste {
             return TilgangVurdering.godkjenn();
         }
         return TilgangVurdering.avslåGenerell("Har bare tilgang til seg selv");
+    }
+
+    public void invaliderSak(String saksnummer) {
+        populasjonCache.invaliderSak(saksnummer);
     }
 }

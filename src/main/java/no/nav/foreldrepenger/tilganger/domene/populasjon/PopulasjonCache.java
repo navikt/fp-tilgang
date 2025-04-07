@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.tilganger.domene.populasjon;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.tilganger.integrasjoner.pip.FpsakPipKlient;
 import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PdlPipKlient;
 import no.nav.foreldrepenger.tilganger.integrasjoner.pip.SkjermingPipKlient;
 import no.nav.vedtak.felles.integrasjon.pdlpip.PersondataPipDto;
@@ -24,35 +26,64 @@ import no.nav.vedtak.util.LRUCache;
 @ApplicationScoped
 public class PopulasjonCache {
 
-    // TODO: Vurder Redis + CacheLifeTime - nå er den satt litt lang pga sammenlign/logg
-    private static final long PERSON_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(2, TimeUnit.HOURS);
+    // Ta ned til 60 min etterhvert
+    private static final long PERSON_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(75, TimeUnit.MINUTES);
 
     private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(40000, PERSON_CACHE_LIVE_TIME_MS);
     private static final LRUCache<String, Boolean> PERSON_SKJERMING = new LRUCache<>(15000, PERSON_CACHE_LIVE_TIME_MS);
 
+    // Settes lav selv om persongalleriet er stabilt 1-4/5/6 personer pr sak over lang tid. Kandidat for Redis?
+    private static final long SAK_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(2, TimeUnit.HOURS);
+
+    private static final LRUCache<String, Set<String>> SAK_IDENTER = new LRUCache<>(20000, SAK_CACHE_LIVE_TIME_MS);
+
     private PdlPipKlient pdlPipKlient;
     private SkjermingPipKlient skjermingPipKlient;
+    private FpsakPipKlient fpsakPipKlient;
 
     PopulasjonCache() {
         // CDI proxy
     }
 
     @Inject
-    public PopulasjonCache(PdlPipKlient pdlPipKlient, SkjermingPipKlient skjermingPipKlient) {
+    public PopulasjonCache(PdlPipKlient pdlPipKlient, SkjermingPipKlient skjermingPipKlient, FpsakPipKlient fpsakPipKlient) {
         this.pdlPipKlient = pdlPipKlient;
         this.skjermingPipKlient = skjermingPipKlient;
+        this.fpsakPipKlient = fpsakPipKlient;
     }
 
-    public Collection<PersondataPipDto> finnPdlPipFor(Collection<String> personIdenter, Collection<String> aktørIdenter) {
-        var alleIdenter = new LinkedHashSet<>(aktørIdenter);
-        alleIdenter.addAll(personIdenter);
+    public Collection<String> identerForSak(String saksnummer) {
+        return Optional.ofNullable(SAK_IDENTER.get(saksnummer))
+            .orElseGet(() -> {
+                var identer = new HashSet<>(fpsakPipKlient.personerForSak(saksnummer));
+                SAK_IDENTER.put(saksnummer, identer);
+                return identer;
+            });
+    }
+
+    public void preFetchSaker(Collection<String> saksnummer) {
+        var manglende = saksnummer.stream().filter(s -> SAK_IDENTER.get(s) == null).collect(Collectors.toSet());
+        fpsakPipKlient.personerForSaker(manglende).forEach(s -> SAK_IDENTER.put(s.saksnummer(), s.identer()));
+        var identer = saksnummer.stream().map(SAK_IDENTER::get).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toSet());
+        preFetchIdenter(identer);
+    }
+
+    public void preFetchIdenter(Collection<String> identer) {
+        finnPdlPipFor(identer);
+    }
+
+    public void invaliderSak(String saksnummer) {
+        SAK_IDENTER.remove(saksnummer);
+    }
+
+    public Collection<PersondataPipDto> finnPdlPipFor(Collection<String> identer) {
         // Cached
-        var harPdlPipForIdenter = alleIdenter.stream().map(PERSON_PIP::get).filter(Objects::nonNull).toList();
-        if (harPdlPipForIdenter.size() == alleIdenter.size()) {
+        var harPdlPipForIdenter = identer.stream().map(PERSON_PIP::get).filter(Objects::nonNull).toList();
+        if (harPdlPipForIdenter.size() == identer.size()) {
             return harPdlPipForIdenter;
         } else {
             // Hent de manglende fra PDL-PIP
-            var hentetPdlPipForIdenter = alleIdenter.stream()
+            var hentetPdlPipForIdenter = identer.stream()
                 .filter(i -> PERSON_PIP.get(i) == null)
                 .collect(Collectors.collectingAndThen(Collectors.toList(), this::hentPdlPipForIdenter));
             var pdlPips = new ArrayList<>(harPdlPipForIdenter);
