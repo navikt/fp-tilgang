@@ -21,6 +21,7 @@ import jakarta.ws.rs.core.Response;
 
 import no.nav.foreldrepenger.tilganger.domene.populasjon.PopulasjonCache;
 import no.nav.vedtak.felles.integrasjon.pdlpip.PersondataPipDto;
+import no.nav.vedtak.felles.integrasjon.ruting.RutingResultat;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 /**
@@ -48,7 +49,7 @@ public class RutingRestTjeneste {
     @Path("/egenskaper")
     public RutingResponsDto finnRutingEgenskaper(@NotNull @Valid RutingRestTjeneste.RutingRequest request) {
         validerSystemKontekst();
-        var pdlPips = populasjonCache.finnPdlPipFor(Set.of(), Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of));
+        var pdlPips = populasjonCache.finnPdlPipFor(Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of));
         var erNoenSkjermet = populasjonCache.finnSkjermingFor(pdlPips);
         return mapTilRespons(pdlPips, erNoenSkjermet);
     }
@@ -56,14 +57,15 @@ public class RutingRestTjeneste {
 
     public record RutingRequest(@Valid Set<String> aktørIdenter) { }
 
-    public enum RutingResultat { STRENGTFORTROLIG, SKJERMING, UTLAND }
-
     public record RutingResponsDto(Set<RutingResultat> resultater) { }
 
     private RutingResponsDto mapTilRespons(Collection<PersondataPipDto> personPips, boolean skjerming) {
         Set<RutingResultat> resultat = new LinkedHashSet<>();
         if (personPips.stream().anyMatch(PersondataPipDto::harStrengAdresseBeskyttelse)) {
             resultat.add(RutingResultat.STRENGTFORTROLIG);
+        }
+        if (personPips.stream().anyMatch(PersondataPipDto::harFortroligAdresseBeskyttelse)) {
+            resultat.add(RutingResultat.FORTROLIG);
         }
         if (skjerming) {
             resultat.add(RutingResultat.SKJERMING);
