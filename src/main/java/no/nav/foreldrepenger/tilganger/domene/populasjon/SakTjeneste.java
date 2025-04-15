@@ -48,10 +48,11 @@ public class SakTjeneste {
 
     public Set<String> prefetchSaker(Collection<String> saksnummer) {
         var manglende = saksnummer.stream().filter(s -> sakCache.read(s).isEmpty()).collect(Collectors.toSet());
-        var før = System.currentTimeMillis();
-        fpsakPipKlient.personerForSaker(manglende).forEach(s -> sakCache.store(s.saksnummer(), s.identer()));
         if (!manglende.isEmpty()) {
-            LOG.info("[{} ms] Hent prefetch saker.", System.currentTimeMillis() - før);
+            var før = System.currentTimeMillis();
+            var hentet = fpsakPipKlient.personerForSaker(manglende);
+            hentet.forEach(s -> sakCache.store(s.saksnummer(), s.identer()));
+            LOG.info("[{} ms] Hent prefetch saker manglet {} hentet {}.", System.currentTimeMillis() - før, manglende.size(), hentet.size());
         }
         return saksnummer.stream().map(sakCache::read).flatMap(Collection::stream).collect(Collectors.toSet());
     }
