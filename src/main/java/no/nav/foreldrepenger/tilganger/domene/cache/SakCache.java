@@ -1,94 +1,90 @@
 package no.nav.foreldrepenger.tilganger.domene.cache;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisDatabase;
-import no.nav.vedtak.exception.TekniskException;
-import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 import no.nav.vedtak.util.LRUCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class GrupperCache {
+public class SakCache {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GrupperCache.class);
-    private static final long CACHE_DURATION = Duration.ofHours(1).getSeconds();
-    static final String CACHE_KEY_PREFIX = "grupper_";
-    static final RedisDatabase REDIS_GRUPPE_CACHE = RedisDatabase.ONE;
+    private static final Logger LOG = LoggerFactory.getLogger(SakCache.class);
+    private static final long CACHE_DURATION = Duration.ofDays(10).getSeconds(); // Persongalleri stabilt over tid, men saker behandles raskt
+    static final String CACHE_KEY_PREFIX = "sak_";
+    private static final String IDENT_INFIX = ":";
+    static final RedisDatabase REDIS_SAK_CACHE = RedisDatabase.TWO;
 
     private final RedisCacheKlient redisCache;
-    private final LRUCache<String, List<UUID>> lokalCache;
+    private final LRUCache<String, Set<String>> lokalCache;
 
     // Til testing
-    GrupperCache(RedisCacheKlient redisCache, LRUCache<String, List<UUID>> lokalCache) {
+    SakCache(RedisCacheKlient redisCache, LRUCache<String, Set<String>> lokalCache) {
         this.redisCache = redisCache;
         this.lokalCache = lokalCache;
     }
 
     @Inject
-    public GrupperCache() {
+    public SakCache() {
         this.redisCache = RedisCacheKlient.instance();
         this.lokalCache = new LRUCache<>(1500, CACHE_DURATION);
     }
 
-    public void store(String key, List<UUID> value) {
+    public void store(String key, Set<String> value) {
         var cacheKey = hentCacheKey(key);
         try {
             LOG.debug("Redis storing for key '{}'", cacheKey);
-            redisCache.lagre(cacheKey, DefaultJsonMapper.toJson(value), CACHE_DURATION, REDIS_GRUPPE_CACHE);
+            var joined = String.join(IDENT_INFIX, value).trim();
+            redisCache.lagre(cacheKey, joined, CACHE_DURATION, REDIS_SAK_CACHE);
         } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
             lokalCache.put(cacheKey, value);
         }
     }
 
-    public Optional<List<UUID>> read(String key) {
+    public Set<String> read(String key) {
         var cacheKey = hentCacheKey(key);
         try {
             LOG.debug("Redis reading for key: {}", cacheKey);
-            var fromCache = redisCache.les(cacheKey, REDIS_GRUPPE_CACHE);
-            LOG.trace("Redis read for key: {}, value {}", cacheKey, fromCache);
-            return fromCache.map(value -> DefaultJsonMapper.listFromJson(value, UUID.class));
-        } catch (TekniskException tex) {
-            LOG.info("Feil ved deserialisering av grupper. Fjerner key fra cache.");
-            try {
-                redisCache.fjern(cacheKey, REDIS_GRUPPE_CACHE);
-            } catch (RedisCacheUtilgjengeligException e) {
-                logRedisUtilgjengelig();
-            }
+            var fromCache = redisCache.les(cacheKey, REDIS_SAK_CACHE);
+
+            return fromCache.stream()
+                .flatMap(c -> Arrays.stream(c.split(IDENT_INFIX)))
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toSet());
         } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
         }
-        return Optional.ofNullable(lokalCache.get(cacheKey));
+        return Optional.ofNullable(lokalCache.get(cacheKey)).orElseGet(Set::of);
     }
 
     public void remove(String key) {
         var cacheKey = hentCacheKey(key);
         try {
-            var verdi = redisCache.les(cacheKey, REDIS_GRUPPE_CACHE);
+            var verdi = redisCache.les(cacheKey, REDIS_SAK_CACHE);
             if (verdi.isPresent()) {
                 LOG.debug("Redis removing key '{}'", cacheKey);
-                redisCache.fjern(cacheKey, REDIS_GRUPPE_CACHE);
+                redisCache.fjern(cacheKey, REDIS_SAK_CACHE);
             }
         } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
+            lokalCache.remove(cacheKey);
         }
     }
 
     public void deleteCache() {
-        LOG.info("Fjerner group cache.");
+        LOG.info("Fjerner sak cache.");
         try {
-            redisCache.slettCache(REDIS_GRUPPE_CACHE);
+            redisCache.slettCache(REDIS_SAK_CACHE);
         } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
         }

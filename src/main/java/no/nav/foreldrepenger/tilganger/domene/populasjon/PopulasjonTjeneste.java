@@ -13,6 +13,9 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattTjeneste;
 import no.nav.vedtak.felles.integrasjon.pdlpip.PersondataPipDto;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
@@ -24,6 +27,8 @@ import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 @ApplicationScoped
 public class PopulasjonTjeneste {
 
+    private static final Logger LOG = LoggerFactory.getLogger(PopulasjonTjeneste.class);
+
     private static final Integer DEFAULT_ALDERSGRENSE = 18;
 
     private static final AnsattGruppeProvider PROVIDER = AnsattGruppeProvider.instance();
@@ -33,6 +38,7 @@ public class PopulasjonTjeneste {
 
 
     private PopulasjonCache populasjonCache;
+    private SakTjeneste sakTjeneste;
     private AnsattTjeneste ansattTjeneste;
 
     PopulasjonTjeneste() {
@@ -40,8 +46,9 @@ public class PopulasjonTjeneste {
     }
 
     @Inject
-    public PopulasjonTjeneste(PopulasjonCache populasjonCache, AnsattTjeneste ansattTjeneste) {
+    public PopulasjonTjeneste(PopulasjonCache populasjonCache, SakTjeneste sakTjeneste, AnsattTjeneste ansattTjeneste) {
         this.populasjonCache = populasjonCache;
+        this.sakTjeneste = sakTjeneste;
         this.ansattTjeneste = ansattTjeneste;
     }
 
@@ -54,20 +61,12 @@ public class PopulasjonTjeneste {
 
     public TilgangVurdering vurderInternBruker(UUID ansattOID, Set<String> identer, String saksnummer) {
         if (saksnummer != null) {
-            var alleIdenter = new LinkedHashSet<>(identer);
-            alleIdenter.addAll(populasjonCache.identerForSak(saksnummer));
+            var alleIdenter = new LinkedHashSet<>(sakTjeneste.identerForSak(saksnummer));
+            alleIdenter.addAll(identer);
             return vurderInternBruker(ansattOID, alleIdenter);
         } else {
             return vurderInternBruker(ansattOID, identer);
         }
-    }
-
-    public void prefetchSaker(Collection<String> saksnummer) {
-        populasjonCache.preFetchSaker(saksnummer);
-    }
-
-    public void preFetchIdenter(Collection<String> identer) {
-        populasjonCache.preFetchIdenter(identer);
     }
 
     private TilgangVurdering vurderInternBruker(UUID ansattOID, Set<String> identer) {
@@ -123,7 +122,24 @@ public class PopulasjonTjeneste {
         return TilgangVurdering.avslåGenerell("Har bare tilgang til seg selv");
     }
 
+
+    /**
+     * Tjenester for utgående filtrering av resultater
+     */
+    public void preFetchIdenter(Collection<String> identer) {
+        populasjonCache.finnPdlPipFor(identer);
+    }
+
+    public void prefetchSaker(Collection<String> saksnummer) {
+        var identer = sakTjeneste.prefetchSaker(saksnummer);
+        preFetchIdenter(identer);
+    }
+
+    /**
+     * Sak er endret med tanke på persongalleri
+     */
     public void invaliderSak(String saksnummer) {
-        populasjonCache.invaliderSak(saksnummer);
+        LOG.info("Invalider sak {}", saksnummer);
+        sakTjeneste.invaliderSak(saksnummer);
     }
 }

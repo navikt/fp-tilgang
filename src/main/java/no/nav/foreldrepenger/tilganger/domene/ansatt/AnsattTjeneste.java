@@ -69,9 +69,9 @@ public class AnsattTjeneste {
     }
 
     private Optional<Ansatt> hentAnsatt(String identifikator, Supplier<Optional<User>> ansattSupplier) {
-        var før = System.currentTimeMillis();
         var ansatt = ansattCache.read(identifikator);
         if (ansatt.isEmpty()) {
+            var før = System.currentTimeMillis();
             LOG.debug("Finner ikke ansatt eller grupper i cache {}", identifikator);
             var user = ansattSupplier.get();
             ansatt = user.map(AnsattTjeneste::mapUser);
@@ -83,28 +83,28 @@ public class AnsattTjeneste {
                 LOG.debug("Lagrer i cache {}", uid);
                 ansattCache.store(uid.toString(), ansatt.get());
             }
+            LOG.info("[{} ms] Hent ansatt.", System.currentTimeMillis() - før);
         } else {
             LOG.debug("Fant ansatt i cache for {}", identifikator);
         }
-        LOG.info("[{} ms] Hent ansatt.", System.currentTimeMillis() - før);
         return ansatt;
     }
 
     private List<UUID> hentGrupper(String identifikator, Supplier<Set<Group>> grupperSupplier) {
         LOG.debug("Henter grupper for: {}", identifikator);
-        var før = System.currentTimeMillis();
         var grupper = grupperCache.read(identifikator);
         if (grupper.isEmpty()) {
+            var før = System.currentTimeMillis();
             LOG.debug("Finner ikke grupper i cache for {}", identifikator);
             grupper = Optional.of(grupperSupplier.get().stream().map(Group::id).toList());
             if (!grupper.get().isEmpty()) {
                 LOG.debug("Lagrer grupper i cache for {}", identifikator);
                 grupperCache.store(identifikator, grupper.get());
             }
+            LOG.info("[{} ms] Hent grupper.", System.currentTimeMillis() - før);
         } else {
             LOG.debug("Fant grupper i cache for {}", identifikator);
         }
-        LOG.info("[{} ms] Hent grupper.", System.currentTimeMillis() - før);
         return grupper.get();
     }
 

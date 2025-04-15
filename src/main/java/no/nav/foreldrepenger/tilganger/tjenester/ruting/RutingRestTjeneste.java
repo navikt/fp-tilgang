@@ -20,6 +20,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
 import no.nav.foreldrepenger.tilganger.domene.populasjon.PopulasjonCache;
+import no.nav.foreldrepenger.tilganger.domene.populasjon.SakTjeneste;
 import no.nav.vedtak.felles.integrasjon.pdlpip.PersondataPipDto;
 import no.nav.vedtak.felles.integrasjon.ruting.RutingResultat;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
@@ -33,14 +34,16 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 public class RutingRestTjeneste {
 
     private PopulasjonCache populasjonCache;
+    private SakTjeneste sakTjeneste;
 
     RutingRestTjeneste() {
         // CDI proxy
     }
 
     @Inject
-    public RutingRestTjeneste(PopulasjonCache populasjonCache) {
+    public RutingRestTjeneste(PopulasjonCache populasjonCache, SakTjeneste sakTjeneste) {
         this.populasjonCache = populasjonCache;
+        this.sakTjeneste = sakTjeneste;
     }
 
 
@@ -54,8 +57,33 @@ public class RutingRestTjeneste {
         return mapTilRespons(pdlPips, erNoenSkjermet);
     }
 
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Path("/identer")
+    public RutingResponsDto finnRutingEgenskaperIdenter(@NotNull @Valid RutingRestTjeneste.RutingIdenterRequest request) {
+        validerSystemKontekst();
+        var pdlPips = populasjonCache.finnPdlPipFor(Optional.ofNullable(request.identer()).orElseGet(Set::of));
+        var erNoenSkjermet = populasjonCache.finnSkjermingFor(pdlPips);
+        return mapTilRespons(pdlPips, erNoenSkjermet);
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Path("/sak")
+    public RutingResponsDto finnRutingEgenskaperSak(@NotNull @Valid RutingRestTjeneste.RutingSakRequest request) {
+        validerSystemKontekst();
+        var identer = sakTjeneste.identerForSak(request.saksnummer());
+        var pdlPips = populasjonCache.finnPdlPipFor(identer);
+        var erNoenSkjermet = populasjonCache.finnSkjermingFor(pdlPips);
+        return mapTilRespons(pdlPips, erNoenSkjermet);
+    }
+
 
     public record RutingRequest(@Valid Set<String> aktørIdenter) { }
+
+    public record RutingIdenterRequest(@Valid Set<String> identer) { }
+
+    public record RutingSakRequest(@Valid @NotNull String saksnummer) { }
 
     public record RutingResponsDto(Set<RutingResultat> resultater) { }
 
