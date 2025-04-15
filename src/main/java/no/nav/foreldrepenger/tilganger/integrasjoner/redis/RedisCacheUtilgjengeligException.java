@@ -4,4 +4,8 @@ public class RedisCacheUtilgjengeligException extends Exception {
     public RedisCacheUtilgjengeligException(String message) {
         super(message);
     }
+
+    public RedisCacheUtilgjengeligException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

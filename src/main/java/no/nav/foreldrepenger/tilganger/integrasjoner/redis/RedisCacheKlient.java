@@ -121,6 +121,6 @@ public class RedisCacheKlient {
     }
 
     private static void throwRedisUtilgjengeligException(Exception e) throws RedisCacheUtilgjengeligException {
-        throw new RedisCacheUtilgjengeligException("Redis utilgjengelig.");
+        throw new RedisCacheUtilgjengeligException("Redis utilgjengelig.", e);
     }
 }
