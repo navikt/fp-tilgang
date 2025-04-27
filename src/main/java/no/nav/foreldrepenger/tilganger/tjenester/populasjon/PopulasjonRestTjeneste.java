@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.tilganger.tjenester.populasjon;
 
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -49,9 +50,18 @@ public class PopulasjonRestTjeneste {
     @Path("/internbruker")
     public TilgangsvurderingDto sjekkInternBruker(@NotNull @Valid PopulasjonRestTjeneste.PopulasjonInternRequest request) {
         validerSystemKontekst();
-        var vurdering = populasjonTjeneste.vurderInternBruker(request.ansattOid(), Optional.ofNullable(request.personIdenter()).orElseGet(Set::of),
-            Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of), request.saksnummer());
-        return mapTilVurderingDto(vurdering);
+        var alleIdenter = new LinkedHashSet<>(Optional.ofNullable(request.identer()).orElseGet(Set::of));
+        alleIdenter.addAll(Optional.ofNullable(request.personIdenter()).orElseGet(Set::of));
+        alleIdenter.addAll(Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of));
+        var saksnummer = request.saksnummer();
+        try {
+            saksnummer = populasjonTjeneste.validerBehandling(request.behandling(), request.saksnummer());
+        } catch (Exception e) {
+            return mapTilVurderingDto(TilgangVurdering.avslåGenerell("behandling matcher ikke sak"), null);
+        }
+        var vurdering = populasjonTjeneste.vurderInternBruker(request.ansattOid(), alleIdenter, saksnummer);
+        var auditIdent = populasjonTjeneste.utledInternAuditIdent(alleIdenter, saksnummer);
+        return mapTilVurderingDto(vurdering, auditIdent);
     }
 
     @POST
@@ -59,9 +69,12 @@ public class PopulasjonRestTjeneste {
     @Path("/eksternbruker")
     public TilgangsvurderingDto sjekkEksternBruker(@NotNull @Valid PopulasjonRestTjeneste.PopulasjonEksternRequest request) {
         validerSystemKontekst();
-        var vurdering = populasjonTjeneste.vurderEksternBruker(request.subjectPersonIdent(), request.aldersgrense(),
-            Optional.ofNullable(request.personIdenter()).orElseGet(Set::of), Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of));
-        return mapTilVurderingDto(vurdering);
+        var alleIdenter = new LinkedHashSet<>(Optional.ofNullable(request.identer()).orElseGet(Set::of));
+        alleIdenter.addAll(Optional.ofNullable(request.personIdenter()).orElseGet(Set::of));
+        alleIdenter.addAll(Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of));
+        var vurdering = populasjonTjeneste.vurderEksternBruker(request.subjectPersonIdent(), request.aldersgrense(), alleIdenter);
+        var auditIdent = populasjonTjeneste.utledEksternAuditIdent(alleIdenter, request.subjectPersonIdent());
+        return mapTilVurderingDto(vurdering, auditIdent);
     }
 
     @POST
@@ -90,7 +103,6 @@ public class PopulasjonRestTjeneste {
         return new FilterResponse(filtrertIdenter);
     }
 
-    // Kun behov dersom man tar i bruk Redis og langvarig sakscache (mer enn 24 timer). Nå er det flere noder og Rest/Kafka når bare en av dem
     @POST
     @Produces(APPLICATION_JSON)
     @Path("/invalidersak")
@@ -103,18 +115,21 @@ public class PopulasjonRestTjeneste {
     public record PopulasjonEksternRequest(@NotNull String subjectPersonIdent,
                                            @Valid Set<String> personIdenter,
                                            @Valid Set<String> aktørIdenter,
+                                           @Valid Set<String> identer,
                                            @Valid Integer aldersgrense) { }
 
 
     public record PopulasjonInternRequest(@NotNull UUID ansattOid,
                                           @Valid Set<String> personIdenter,
-                                          @Valid  Set<String> aktørIdenter,
-                                          @Valid String saksnummer) { }
+                                          @Valid Set<String> aktørIdenter,
+                                          @Valid Set<String> identer,
+                                          @Valid String saksnummer,
+                                          @Valid UUID behandling) { }
 
     public record SakRequest(@NotNull @Valid String saksnummer) { }
 
 
-    public record TilgangsvurderingDto(TilgangResultat tilgangResultat, @NotNull String årsak) {
+    public record TilgangsvurderingDto(TilgangResultat tilgangResultat, @NotNull String årsak, String auditIdent) {
     }
 
     // For å sjekke hvilke saker den ansatte har tilgang til basert på saksnummer
@@ -127,11 +142,11 @@ public class PopulasjonRestTjeneste {
     public record FilterResponse(Set<String> harTilgang) {}
 
 
-    private TilgangsvurderingDto mapTilVurderingDto(TilgangVurdering tilgangVurdering) {
-        return new TilgangsvurderingDto(tilgangVurdering.tilgangResultat(), tilgangVurdering.årsak());
+    private TilgangsvurderingDto mapTilVurderingDto(TilgangVurdering tilgangVurdering, String auditIdent) {
+        return new TilgangsvurderingDto(tilgangVurdering.tilgangResultat(), tilgangVurdering.årsak(), auditIdent);
     }
 
-    private static void validerSystemKontekst() {
+    protected void validerSystemKontekst() {
         Objects.requireNonNull(KontekstHolder.getKontekst());
         if (!KontekstHolder.getKontekst().getIdentType().erSystem()) {
             throw new WebApplicationException("Trenger et gyldig CC token.", Response.Status.FORBIDDEN);

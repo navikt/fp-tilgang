@@ -53,12 +53,6 @@ public class PopulasjonTjeneste {
     }
 
 
-    public TilgangVurdering vurderInternBruker(UUID ansattOID, Set<String> personIdenter, Set<String> aktørIdenter, String saksnummer) {
-        var alleIdenter = new LinkedHashSet<>(aktørIdenter);
-        alleIdenter.addAll(personIdenter);
-        return vurderInternBruker(ansattOID, alleIdenter, saksnummer);
-    }
-
     public TilgangVurdering vurderInternBruker(UUID ansattOID, Set<String> identer, String saksnummer) {
         if (saksnummer != null) {
             var alleIdenter = new LinkedHashSet<>(sakTjeneste.identerForSak(saksnummer));
@@ -102,8 +96,7 @@ public class PopulasjonTjeneste {
         }
     }
 
-    public TilgangVurdering vurderEksternBruker(String subjectPersonIdent, Integer aldersgrense,
-                                                Set<String> personIdenter, Set<String> aktørIdenter) {
+    public TilgangVurdering vurderEksternBruker(String subjectPersonIdent, Integer aldersgrense, Set<String> identer) {
         var subjectPipOpt = populasjonCache.finnPdlPipFor(Set.of(subjectPersonIdent)).stream().findFirst();
         if (subjectPipOpt.isEmpty()) {
             return TilgangVurdering.avslåGenerell("Finner ikke innlogget bruker");
@@ -113,15 +106,41 @@ public class PopulasjonTjeneste {
             return TilgangVurdering.avslåGenerell("Ikke gammel nok");
         }
         var subjectAktørId = subjectPip.aktørId();
-        if (personIdenter.size() == 1 && personIdenter.stream().anyMatch(pi -> Objects.equals(pi, subjectPersonIdent))) {
+        if (identer.size() == 1 && identer.stream().anyMatch(pi -> Objects.equals(pi, subjectPersonIdent))) {
             return TilgangVurdering.godkjenn();
         }
-        if (aktørIdenter.size() == 1 && aktørIdenter.stream().anyMatch(ai -> Objects.equals(ai, subjectAktørId))) {
+        if (identer.size() == 1 && identer.stream().anyMatch(ai -> Objects.equals(ai, subjectAktørId))) {
             return TilgangVurdering.godkjenn();
         }
         return TilgangVurdering.avslåGenerell("Har bare tilgang til seg selv");
     }
 
+    /**
+     * Validerer behandlingUuid
+     */
+    public String validerBehandling(UUID behandling, String saksnummer) {
+        if (behandling == null) {
+            return saksnummer;
+        }
+        var sakForBehandling = sakTjeneste.saksnummerForBehandling(behandling);
+        if (saksnummer != null && sakForBehandling.isPresent() && !saksnummer.equals(sakForBehandling.get())) {
+            throw new IllegalArgumentException("Behandling " + behandling + " tilhører ikke oppgitt sak " + saksnummer);
+        }
+        return sakForBehandling.orElse(saksnummer);
+    }
+
+    /**
+     * Ident til audit-logging
+     */
+    public String utledInternAuditIdent(Set<String> identer, String saksnummer) {
+        return Optional.ofNullable(saksnummer).flatMap(sakTjeneste::saksidentForSak)
+            .or(() -> identer.stream().findFirst())
+            .flatMap(populasjonCache::finnPersonIdentFor).orElse(null);
+    }
+
+    public String utledEksternAuditIdent(Set<String> identer, String subjectPersonIdent) {
+        return identer.stream().findFirst().flatMap(populasjonCache::finnPersonIdentFor).orElse(subjectPersonIdent);
+    }
 
     /**
      * Tjenester for utgående filtrering av resultater

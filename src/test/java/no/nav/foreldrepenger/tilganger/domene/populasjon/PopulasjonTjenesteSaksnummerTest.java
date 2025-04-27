@@ -52,7 +52,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(sakTjeneste.identerForSak(any())).thenReturn(Set.of(AKTØR_ID));
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isTrue();
     }
@@ -67,7 +67,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper());
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isFalse();
     }
@@ -82,7 +82,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.SKJERMET));
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isTrue();
     }
@@ -98,7 +98,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper());
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isFalse();
     }
@@ -115,7 +115,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.FORTROLIG));
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isTrue();
     }
@@ -132,7 +132,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper());
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isFalse();
     }
@@ -149,7 +149,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.FORTROLIG));
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isFalse();
     }
@@ -166,7 +166,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.STRENGTFORTROLIG));
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isTrue();
     }
@@ -184,7 +184,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.FORTROLIG));
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isFalse();
     }
@@ -201,7 +201,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.SKJERMET));
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isFalse();
     }
@@ -218,7 +218,7 @@ class PopulasjonTjenesteSaksnummerTest {
         Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.STRENGTFORTROLIG, AnsattGruppe.SKJERMET));
         var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
 
-        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), Set.of(), SAKSNUMMER);
+        var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(), SAKSNUMMER);
 
         assertThat(vurdering.fikkTilgang()).isTrue();
     }

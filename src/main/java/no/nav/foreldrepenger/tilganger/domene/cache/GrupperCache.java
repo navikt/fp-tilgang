@@ -38,7 +38,7 @@ public class GrupperCache {
     @Inject
     public GrupperCache() {
         this.redisCache = RedisCacheKlient.instance();
-        this.lokalCache = new LRUCache<>(1500, CACHE_DURATION);
+        this.lokalCache = new LRUCache<>(1500, CACHE_DURATION * 1000); // LRUCache tar millisekunder
     }
 
     public void store(String key, List<UUID> value) {

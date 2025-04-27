@@ -22,7 +22,7 @@ public class AnsattCache {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnsattCache.class);
     private static final long CACHE_DURATION = Duration.ofDays(30).getSeconds();
-    static final String CACHE_KEY_PREFIX = "ansatt_"; // Trigger reinnheting pga forenkling av Ansatt.navn
+    static final String CACHE_KEY_PREFIX = "ansatt_";
     static final RedisDatabase REDIS_ANSATT_CACHE = RedisDatabase.ZERO;
 
     private final RedisCacheKlient redisCache;
@@ -36,7 +36,7 @@ public class AnsattCache {
     @Inject
     public AnsattCache() {
         this.redisCache = RedisCacheKlient.instance();
-        this.lokalCache = new LRUCache<>(1500, CACHE_DURATION);
+        this.lokalCache = new LRUCache<>(1500, CACHE_DURATION * 100); // LRUCache tar millisekunder, så blir 3 dager
     }
 
     public void store(String key, Ansatt value) {
