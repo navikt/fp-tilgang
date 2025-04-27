@@ -72,6 +72,10 @@ public class PopulasjonCache {
             || hentSkjermingFor(sjekkPersonIdenter.stream().filter(i -> PERSON_SKJERMING.get(i) == null).toList());
     }
 
+    public Optional<String> finnPersonIdentFor(String ident) {
+        return Optional.ofNullable(PERSON_PIP.get(ident)).flatMap(p -> finnPersonIdenter(p).stream().findFirst());
+    }
+
     private Collection<PersondataPipDto> hentPdlPipForIdenter(List<String> identer) {
         if (identer.isEmpty()) {
             return List.of();
