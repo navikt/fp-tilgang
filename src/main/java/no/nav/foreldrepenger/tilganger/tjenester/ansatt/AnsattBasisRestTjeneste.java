@@ -55,7 +55,7 @@ public class AnsattBasisRestTjeneste {
     @Path("/navident")
     public BrukerProfilResponseDto finnUserFraNavIdent(@NotNull @Valid AnsattBasisRestTjeneste.ProfilIdentRequest request) {
         validerSystemKontekst();
-        return mapTilProfilDto(ansattTjeneste.hentAnsatt(request.ident()));
+        return mapTilProfilDto(ansattTjeneste.finnAnsatt(request.ident()));
     }
 
     @POST

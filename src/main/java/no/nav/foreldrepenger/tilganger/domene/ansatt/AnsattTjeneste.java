@@ -52,7 +52,7 @@ public class AnsattTjeneste {
         return hentGrupper(ansattref, () -> azureGraph.memberOf(new HashSet<>(gruppeFilter)));
     }
 
-    public Optional<Ansatt> hentAnsatt(String ident) {
+    public Optional<Ansatt> finnAnsatt(String ident) {
         LOG.debug("Henter antatt: {}", ident);
         return hentAnsatt(ident, () -> azureGraph.finnUser(ident));
     }

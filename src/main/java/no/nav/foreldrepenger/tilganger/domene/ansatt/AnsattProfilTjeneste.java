@@ -54,6 +54,11 @@ public class AnsattProfilTjeneste {
         return grupperForAnsatt.stream().filter(ansattGrupper::contains).collect(Collectors.toSet());
     }
 
+    public Set<AnsattGruppe> medlemAvGrupper(UUID ansattUid) {
+        var gruppeOidsForAnsatt = ansattTjeneste.hentGrupper(ansattUid, ALLE_ANSATTGRUPPE_OIDS);
+        return PROVIDER.getAnsattGrupperFra(gruppeOidsForAnsatt);
+    }
+
     private AnsattProfil mapAnsattProfil(Ansatt ansatt, List<UUID> grupper) {
         var ansattGrupper = PROVIDER.getAnsattGrupperFra(grupper);
         return new AnsattProfil(ansatt.ident(), ansatt.navn(), ansatt.ansattVedEnhetId(), ansattGrupper);
