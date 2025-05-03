@@ -25,7 +25,7 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @ApplicationScoped
 @Consumes(APPLICATION_JSON)
-@Path("/ansatt")
+@Path("/ansattinfo")
 public class AnsattInfoRestTjeneste {
 
     private AnsattProfilTjeneste ansattProfilTjeneste;

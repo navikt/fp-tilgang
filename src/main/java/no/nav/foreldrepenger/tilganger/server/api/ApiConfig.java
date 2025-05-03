@@ -11,6 +11,7 @@ import org.glassfish.jersey.server.ServerProperties;
 
 import no.nav.foreldrepenger.tilganger.server.exceptions.GeneralRestExceptionMapper;
 import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattBasisRestTjeneste;
+import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattInfoRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattUtvidetRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.populasjon.PopulasjonRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.ruting.RutingRestTjeneste;
@@ -27,6 +28,7 @@ public class ApiConfig extends Application {
             AuthenticationFilter.class,
             AnsattBasisRestTjeneste.class,
             AnsattUtvidetRestTjeneste.class,
+            AnsattInfoRestTjeneste.class,
             PopulasjonRestTjeneste.class,
             RutingRestTjeneste.class,
             GeneralRestExceptionMapper.class,
