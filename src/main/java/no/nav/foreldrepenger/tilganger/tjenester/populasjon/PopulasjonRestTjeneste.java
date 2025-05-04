@@ -51,13 +51,12 @@ public class PopulasjonRestTjeneste {
     public TilgangsvurderingDto sjekkInternBruker(@NotNull @Valid PopulasjonRestTjeneste.PopulasjonInternRequest request) {
         validerSystemKontekst();
         var alleIdenter = new LinkedHashSet<>(Optional.ofNullable(request.identer()).orElseGet(Set::of));
-        alleIdenter.addAll(Optional.ofNullable(request.personIdenter()).orElseGet(Set::of));
-        alleIdenter.addAll(Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of));
         var saksnummer = request.saksnummer();
         try {
             saksnummer = populasjonTjeneste.validerBehandling(request.behandling(), request.saksnummer());
         } catch (Exception e) {
-            return mapTilVurderingDto(TilgangVurdering.avslåGenerell("behandling matcher ikke sak"), null);
+            var auditIdent = populasjonTjeneste.utledInternAuditIdent(alleIdenter, saksnummer);
+            return mapTilVurderingDto(TilgangVurdering.avslåGenerell("behandling matcher ikke sak"), auditIdent);
         }
         var vurdering = populasjonTjeneste.vurderInternBruker(request.ansattOid(), alleIdenter, saksnummer);
         var auditIdent = populasjonTjeneste.utledInternAuditIdent(alleIdenter, saksnummer);
@@ -70,8 +69,6 @@ public class PopulasjonRestTjeneste {
     public TilgangsvurderingDto sjekkEksternBruker(@NotNull @Valid PopulasjonRestTjeneste.PopulasjonEksternRequest request) {
         validerSystemKontekst();
         var alleIdenter = new LinkedHashSet<>(Optional.ofNullable(request.identer()).orElseGet(Set::of));
-        alleIdenter.addAll(Optional.ofNullable(request.personIdenter()).orElseGet(Set::of));
-        alleIdenter.addAll(Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of));
         var vurdering = populasjonTjeneste.vurderEksternBruker(request.subjectPersonIdent(), request.aldersgrense(), alleIdenter);
         var auditIdent = populasjonTjeneste.utledEksternAuditIdent(alleIdenter, request.subjectPersonIdent());
         return mapTilVurderingDto(vurdering, auditIdent);
@@ -113,15 +110,11 @@ public class PopulasjonRestTjeneste {
     }
 
     public record PopulasjonEksternRequest(@NotNull String subjectPersonIdent,
-                                           @Valid Set<String> personIdenter,
-                                           @Valid Set<String> aktørIdenter,
                                            @Valid Set<String> identer,
                                            @Valid Integer aldersgrense) { }
 
 
     public record PopulasjonInternRequest(@NotNull UUID ansattOid,
-                                          @Valid Set<String> personIdenter,
-                                          @Valid Set<String> aktørIdenter,
                                           @Valid Set<String> identer,
                                           @Valid String saksnummer,
                                           @Valid UUID behandling) { }

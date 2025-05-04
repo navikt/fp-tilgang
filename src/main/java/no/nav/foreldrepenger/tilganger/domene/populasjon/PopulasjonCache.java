@@ -14,8 +14,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PdlPipKlient;
+import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
 import no.nav.foreldrepenger.tilganger.integrasjoner.pip.SkjermingPipKlient;
-import no.nav.vedtak.felles.integrasjon.pdlpip.PersondataPipDto;
 import no.nav.vedtak.util.LRUCache;
 
 /**
