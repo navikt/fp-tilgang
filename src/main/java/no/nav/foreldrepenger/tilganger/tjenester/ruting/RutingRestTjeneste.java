@@ -21,7 +21,7 @@ import jakarta.ws.rs.core.Response;
 
 import no.nav.foreldrepenger.tilganger.domene.populasjon.PopulasjonCache;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.SakTjeneste;
-import no.nav.vedtak.felles.integrasjon.pdlpip.PersondataPipDto;
+import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
 import no.nav.vedtak.felles.integrasjon.ruting.RutingResultat;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
@@ -46,17 +46,6 @@ public class RutingRestTjeneste {
         this.sakTjeneste = sakTjeneste;
     }
 
-
-    @POST
-    @Produces(APPLICATION_JSON)
-    @Path("/egenskaper")
-    public RutingResponsDto finnRutingEgenskaper(@NotNull @Valid RutingRestTjeneste.RutingRequest request) {
-        validerSystemKontekst();
-        var pdlPips = populasjonCache.finnPdlPipFor(Optional.ofNullable(request.aktørIdenter()).orElseGet(Set::of));
-        var erNoenSkjermet = populasjonCache.finnSkjermingFor(pdlPips);
-        return mapTilRespons(pdlPips, erNoenSkjermet);
-    }
-
     @POST
     @Produces(APPLICATION_JSON)
     @Path("/identer")
@@ -78,8 +67,6 @@ public class RutingRestTjeneste {
         return mapTilRespons(pdlPips, erNoenSkjermet);
     }
 
-
-    public record RutingRequest(@Valid Set<String> aktørIdenter) { }
 
     public record RutingIdenterRequest(@Valid Set<String> identer) { }
 

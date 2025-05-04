@@ -13,6 +13,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -22,7 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.PopulasjonTjeneste;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.TilgangResultat;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.TilgangVurdering;
-import no.nav.vedtak.felles.integrasjon.pdlpip.PersondataPipDto;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 
@@ -179,11 +180,11 @@ class PopulasjonRestTjenesteTest {
     }
 
     private PopulasjonRestTjeneste.PopulasjonInternRequest lagInternRequest(Set<String> identer, String saksnummer, UUID behandling) {
-        return new PopulasjonRestTjeneste.PopulasjonInternRequest(UUID.randomUUID(), Set.of(), Set.of(), identer, saksnummer, behandling);
+        return new PopulasjonRestTjeneste.PopulasjonInternRequest(UUID.randomUUID(), identer, saksnummer, behandling);
     }
 
     private PopulasjonRestTjeneste.PopulasjonEksternRequest lagEksternRequest(Set<String> identer) {
-        return new PopulasjonRestTjeneste.PopulasjonEksternRequest(PERSON_ID, Set.of(), Set.of(), identer, 18);
+        return new PopulasjonRestTjeneste.PopulasjonEksternRequest(PERSON_ID, identer, 18);
     }
 
     private PersondataPipDto lagPip(String personIdent, String aktørIdent, PersondataPipDto.Gradering gradering) {

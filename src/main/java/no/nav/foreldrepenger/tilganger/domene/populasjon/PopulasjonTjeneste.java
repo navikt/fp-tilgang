@@ -13,11 +13,12 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattTjeneste;
-import no.nav.vedtak.felles.integrasjon.pdlpip.PersondataPipDto;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 

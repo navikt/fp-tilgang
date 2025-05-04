@@ -14,7 +14,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <felles.version>7.4.15</felles.version>
+        <felles.version>7.5.3</felles.version>
     </properties>
 
     <dependencyManagement>
@@ -35,7 +35,7 @@
             </dependency>
             <dependency>
                 <groupId>no.nav.foreldrepenger.felles.integrasjon</groupId>
-                <artifactId>pip-klient</artifactId>
+                <artifactId>tilgang-klient</artifactId>
                 <version>${felles.version}</version>
             </dependency>
         </dependencies>
@@ -64,7 +64,7 @@
         </dependency>
         <dependency>
             <groupId>no.nav.foreldrepenger.felles.integrasjon</groupId>
-            <artifactId>pip-klient</artifactId>
+            <artifactId>tilgang-klient</artifactId>
         </dependency>
 
         <!-- CDI -->
