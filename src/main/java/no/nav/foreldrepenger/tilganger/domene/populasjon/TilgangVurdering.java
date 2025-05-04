@@ -1,20 +1,22 @@
 package no.nav.foreldrepenger.tilganger.domene.populasjon;
 
-public record TilgangVurdering(TilgangResultat tilgangResultat, String årsak) {
+import no.nav.vedtak.felles.integrasjon.populasjon.PopulasjonTilgangResultat;
+
+public record TilgangVurdering(PopulasjonTilgangResultat tilgangResultat, String årsak) {
 
     public boolean fikkTilgang() {
-        return tilgangResultat == TilgangResultat.GODKJENT;
+        return tilgangResultat == PopulasjonTilgangResultat.GODKJENT;
     }
 
     public static TilgangVurdering godkjenn() {
-        return new TilgangVurdering(TilgangResultat.GODKJENT, "");
+        return new TilgangVurdering(PopulasjonTilgangResultat.GODKJENT, "");
     }
 
-    public static TilgangVurdering avslå(TilgangResultat tilgangResultat) {
+    public static TilgangVurdering avslå(PopulasjonTilgangResultat tilgangResultat) {
         return new TilgangVurdering(tilgangResultat, "");
     }
 
     public static TilgangVurdering avslåGenerell(String årsak) {
-        return new TilgangVurdering(TilgangResultat.AVSLÅTT_ANNEN_ÅRSAK, årsak);
+        return new TilgangVurdering(PopulasjonTilgangResultat.AVSLÅTT_ANNEN_ÅRSAK, årsak);
     }
 }

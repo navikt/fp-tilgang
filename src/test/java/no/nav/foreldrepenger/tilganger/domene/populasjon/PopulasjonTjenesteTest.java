@@ -4,14 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
-import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,9 +15,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattTjeneste;
+import no.nav.foreldrepenger.tilganger.domene.ansatt.GrupperTjeneste;
+import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
-import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 
 @ExtendWith(MockitoExtension.class)
 class PopulasjonTjenesteTest {
@@ -34,10 +30,8 @@ class PopulasjonTjenesteTest {
     private static final String PERSON_ID_2 = "12345678902";
     private static final String PERSON_ID_3 = "12345678903";
 
-    private static final AnsattGruppeProvider PROVIDER = AnsattGruppeProvider.instance();
-
     @Mock
-    private AnsattTjeneste ansattTjeneste;
+    private GrupperTjeneste grupperTjeneste;
     @Mock
     private PopulasjonCache populasjonCache;
     @Mock
@@ -50,7 +44,7 @@ class PopulasjonTjenesteTest {
         var pip = lagPip(PERSON_ID, AKTØR_ID, PersondataPipDto.Gradering.UDEFINERT);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(false);
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID), null);
 
@@ -63,8 +57,8 @@ class PopulasjonTjenesteTest {
         var pip = lagPip(PERSON_ID, AKTØR_ID, PersondataPipDto.Gradering.UDEFINERT);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(true);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper());
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of());
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID), null);
 
@@ -77,8 +71,8 @@ class PopulasjonTjenesteTest {
         var pip = lagPip(PERSON_ID_2, AKTØR_ID_2, PersondataPipDto.Gradering.UDEFINERT);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(true);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.SKJERMET));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of(AnsattGruppe.SKJERMET));
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID), null);
 
@@ -92,8 +86,8 @@ class PopulasjonTjenesteTest {
         var pip3 = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.FORTROLIG);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip1, pip3));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(false);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper());
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of());
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID, AKTØR_ID_3), null);
 
@@ -108,8 +102,8 @@ class PopulasjonTjenesteTest {
         var pip3 = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.FORTROLIG);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip1, pip2, pip3));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(false);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.FORTROLIG));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of(AnsattGruppe.FORTROLIG));
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID, AKTØR_ID_3, AKTØR_ID_2), null);
 
@@ -124,8 +118,8 @@ class PopulasjonTjenesteTest {
         var pip3 = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.STRENGT_FORTROLIG);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip1, pip3));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(false);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper());
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of());
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID, AKTØR_ID_3), null);
 
@@ -140,8 +134,8 @@ class PopulasjonTjenesteTest {
         var pip3 = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.FORTROLIG);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip1, pip2, pip3));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(false);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.FORTROLIG));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of(AnsattGruppe.FORTROLIG));
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID, AKTØR_ID_3), null);
 
@@ -156,8 +150,8 @@ class PopulasjonTjenesteTest {
         var pip3 = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.FORTROLIG);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip1, pip2, pip3));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(false);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.STRENGTFORTROLIG));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of(AnsattGruppe.STRENGTFORTROLIG));
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID, AKTØR_ID_3, AKTØR_ID_2), null);
 
@@ -173,8 +167,8 @@ class PopulasjonTjenesteTest {
         var pip3 = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.FORTROLIG);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip1, pip2, pip3));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(true);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.FORTROLIG));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of(AnsattGruppe.FORTROLIG));
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID, AKTØR_ID_3), null);
 
@@ -189,8 +183,8 @@ class PopulasjonTjenesteTest {
         var pip3 = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.FORTROLIG);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip1, pip2, pip3));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(true);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.SKJERMET));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of(AnsattGruppe.SKJERMET));
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID, AKTØR_ID_3), null);
 
@@ -205,8 +199,8 @@ class PopulasjonTjenesteTest {
         var pip3 = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.FORTROLIG);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip1, pip2, pip3));
         Mockito.when(populasjonCache.finnSkjermingFor(any())).thenReturn(true);
-        Mockito.when(ansattTjeneste.hentGrupper(any(), any())).thenReturn(getGrupper(AnsattGruppe.STRENGTFORTROLIG, AnsattGruppe.SKJERMET));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        Mockito.when(grupperTjeneste.alleGrupperForAnsatt(any())).thenReturn(Set.of(AnsattGruppe.STRENGTFORTROLIG, AnsattGruppe.SKJERMET));
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderInternBruker(saksbehandler, Set.of(AKTØR_ID, AKTØR_ID_3, AKTØR_ID_2), null);
 
@@ -217,7 +211,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_selv_aktør() {
         var pip = lagPip(PERSON_ID, AKTØR_ID, PersondataPipDto.Gradering.UDEFINERT);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID, null, Set.of(AKTØR_ID));
 
@@ -228,7 +222,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_selv_fnr() {
         var pip = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.UDEFINERT);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID_3, null, Set.of(PERSON_ID_3));
 
@@ -239,7 +233,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_selv_begge() {
         var pip = lagPip(PERSON_ID_2, AKTØR_ID_2, PersondataPipDto.Gradering.UDEFINERT);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID_2, null, Set.of(PERSON_ID_2, AKTØR_ID_2));
 
@@ -250,7 +244,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_annen_aktør() {
         var pip = lagPip(PERSON_ID, AKTØR_ID, PersondataPipDto.Gradering.UDEFINERT);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID, null, Set.of(AKTØR_ID_2));
 
@@ -261,7 +255,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_annen_fnr() {
         var pip = lagPip(PERSON_ID_3, AKTØR_ID_3, PersondataPipDto.Gradering.UDEFINERT);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID_3, null, Set.of(PERSON_ID_2));
 
@@ -272,7 +266,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_selv_flere() {
         var pip = lagPip(PERSON_ID_2, AKTØR_ID_2, PersondataPipDto.Gradering.UDEFINERT);
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID_2, null, Set.of(AKTØR_ID_2, AKTØR_ID_3));
 
@@ -283,7 +277,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_selv_25() {
         var pip = lagPip(PERSON_ID, AKTØR_ID, PersondataPipDto.Gradering.UDEFINERT, LocalDate.now().minusYears(25));
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID, null, Set.of(AKTØR_ID));
 
@@ -294,7 +288,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_selv_25_skriv() {
         var pip = lagPip(PERSON_ID, AKTØR_ID, PersondataPipDto.Gradering.UDEFINERT, LocalDate.now().minusYears(25));
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID, 18, Set.of(AKTØR_ID));
 
@@ -305,7 +299,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_selv_17_skriv() {
         var pip = lagPip(PERSON_ID, AKTØR_ID, PersondataPipDto.Gradering.UDEFINERT, LocalDate.now().minusYears(17));
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID, 18, Set.of(AKTØR_ID));
 
@@ -316,7 +310,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_selv_17_les() {
         var pip = lagPip(PERSON_ID, AKTØR_ID, PersondataPipDto.Gradering.UDEFINERT, LocalDate.now().minusYears(17));
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID, 15, Set.of(AKTØR_ID));
 
@@ -327,7 +321,7 @@ class PopulasjonTjenesteTest {
     void ekstern_seg_selv_14_les() {
         var pip = lagPip(PERSON_ID, AKTØR_ID, PersondataPipDto.Gradering.UDEFINERT, LocalDate.now().minusYears(14));
         Mockito.when(populasjonCache.finnPdlPipFor(any())).thenReturn(Set.of(pip));
-        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, ansattTjeneste);
+        var populasjonTjeneste = new PopulasjonTjeneste(populasjonCache, sakTjeneste, grupperTjeneste);
 
         var vurdering = populasjonTjeneste.vurderEksternBruker(PERSON_ID, 15, Set.of(AKTØR_ID));
 
@@ -349,13 +343,5 @@ class PopulasjonTjenesteTest {
                 new PersondataPipDto.Ident(aktørIdent, false, PersondataPipDto.IdentGruppe.AKTORID))),
             new PersondataPipDto.GeografiskTilknytning(PersondataPipDto.GtType.KOMMUNE, "a", "b", "c", "d"));
     }
-
-    private List<UUID> getGrupper(AnsattGruppe... ansattGruppe) {
-        List<UUID> resultat = new ArrayList<>();
-        resultat.add(PROVIDER.getAnsattGruppeOid(AnsattGruppe.SAKSBEHANDLER));
-        Arrays.stream(ansattGruppe).forEach(a -> resultat.add(PROVIDER.getAnsattGruppeOid(a)));
-        return resultat;
-    }
-
 
 }

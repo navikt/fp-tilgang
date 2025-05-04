@@ -1,6 +1,5 @@
 package no.nav.foreldrepenger.tilganger.domene.populasjon;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -8,19 +7,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.tilganger.domene.ansatt.AnsattTjeneste;
+import no.nav.foreldrepenger.tilganger.domene.ansatt.GrupperTjeneste;
+import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
+import no.nav.vedtak.felles.integrasjon.populasjon.PopulasjonTilgangResultat;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
-import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
 
 /**
  * Brukes av applikasjoner som skal gjøre tilgangskontroll for internbruker eller eksternbruker
@@ -32,25 +29,21 @@ public class PopulasjonTjeneste {
 
     private static final Integer DEFAULT_ALDERSGRENSE = 18;
 
-    private static final AnsattGruppeProvider PROVIDER = AnsattGruppeProvider.instance();
-    private static final Set<UUID> ALLE_ANSATTGRUPPE_OIDS = Arrays.stream(AnsattGruppe.values())
-        .map(PROVIDER::getAnsattGruppeOid)
-        .collect(Collectors.toSet());
-
-
     private PopulasjonCache populasjonCache;
     private SakTjeneste sakTjeneste;
-    private AnsattTjeneste ansattTjeneste;
+    private GrupperTjeneste grupperTjeneste;
 
     PopulasjonTjeneste() {
         // CDI proxy
     }
 
     @Inject
-    public PopulasjonTjeneste(PopulasjonCache populasjonCache, SakTjeneste sakTjeneste, AnsattTjeneste ansattTjeneste) {
+    public PopulasjonTjeneste(PopulasjonCache populasjonCache,
+                              SakTjeneste sakTjeneste,
+                              GrupperTjeneste grupperTjeneste) {
         this.populasjonCache = populasjonCache;
         this.sakTjeneste = sakTjeneste;
-        this.ansattTjeneste = ansattTjeneste;
+        this.grupperTjeneste = grupperTjeneste;
     }
 
 
@@ -82,16 +75,15 @@ public class PopulasjonTjeneste {
         if (nødvendigeGrupper.isEmpty()) {
             return TilgangVurdering.godkjenn();
         }
-        var gruppeOids = ansattTjeneste.hentGrupper(ansattOID, ALLE_ANSATTGRUPPE_OIDS);
-        var harAnsattGrupper = PROVIDER.getAnsattGrupperFra(gruppeOids);
+        var harAnsattGrupper = grupperTjeneste.alleGrupperForAnsatt(ansattOID);
 
         // Sjekk om den ansatte er med i nødvendige grupper
         if (nødvendigeGrupper.contains(AnsattGruppe.STRENGTFORTROLIG) && !harAnsattGrupper.contains(AnsattGruppe.STRENGTFORTROLIG)) {
-            return TilgangVurdering.avslå(TilgangResultat.AVSLÅTT_KODE_6);
+            return TilgangVurdering.avslå(PopulasjonTilgangResultat.AVSLÅTT_KODE_6);
         } else if (nødvendigeGrupper.contains(AnsattGruppe.FORTROLIG) && !harAnsattGrupper.contains(AnsattGruppe.FORTROLIG)) {
-            return TilgangVurdering.avslå(TilgangResultat.AVSLÅTT_KODE_7);
+            return TilgangVurdering.avslå(PopulasjonTilgangResultat.AVSLÅTT_KODE_7);
         } else if (nødvendigeGrupper.contains(AnsattGruppe.SKJERMET) && !harAnsattGrupper.contains(AnsattGruppe.SKJERMET)) {
-            return TilgangVurdering.avslå(TilgangResultat.AVSLÅTT_EGEN_ANSATT);
+            return TilgangVurdering.avslå(PopulasjonTilgangResultat.AVSLÅTT_EGEN_ANSATT);
         } else {
             return TilgangVurdering.godkjenn();
         }

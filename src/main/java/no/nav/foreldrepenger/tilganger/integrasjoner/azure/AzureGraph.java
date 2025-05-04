@@ -7,30 +7,32 @@ import java.util.UUID;
 public interface AzureGraph {
 
     /**
-     * @return bruker som er logget inn i konteksten.
+     * @return informasjon om bruker som er satt i konteksten (oid fra OBO-token).
      */
     User me();
 
     /**
-     * Returns the groups for the given user.
-     * If the groupFilter is used the only the groups from the filter are returned - if user if a member there.
-     *
-     * @param groupFilter the IDs of groups you want to get returned. If empty then all groups are returned.
-     * @return bruker som er logget inn i konteksten.
+     * @param groupFilter grupper som skal hentes, dersom tom liste så hentes alle grupper (kan være mange).
+     * @return            grupper (filtrert) for bruker som er satt i konteksten (oid fra OBO-token).
      */
     Set<Group> memberOf(Set<UUID> groupFilter);
 
+    /**
+     * @param  ident  søk etter bruker med denne identen i onPremisesSamAccountName
+     * @return        informasjon om bruker dersom finnes
+     */
     Optional<User> finnUser(String ident);
 
+    /**
+     * @param id     - hent bruker med denne Entra-OID'en
+     * @return       - informasjon om bruker
+     */
     Optional<User> hentUser(UUID id);
 
     /**
-     * Returns the groups for the given user.
-     * If the groupFilter is used the only the groups from the filter are returned - if user if a member there.
-     *
-     * @param userUid     - the UID of the user
-     * @param groupFilter the IDs of groups you want to get returned. If empty then all groups are returned.
-     * @return Set with groups.
+     * @param userUid     Entra-OID for bruker som man skal hente grupper for
+     * @param groupFilter grupper som skal hentes, dersom tom liste så hentes alle grupper (kan være mange).
+     * @return            grupper (filtrert) for angitt bruker
      */
     Set<Group> hentGrupper(UUID userUid, Set<UUID> groupFilter);
 }

@@ -22,11 +22,13 @@ import jakarta.ws.rs.core.Response;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.PopulasjonCache;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.SakTjeneste;
 import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
+import no.nav.vedtak.felles.integrasjon.ruting.RutingDto;
 import no.nav.vedtak.felles.integrasjon.ruting.RutingResultat;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 /**
  * Brukes av applikasjoner som skal gjøre tilgangskontroll for internbruker eller eksternbruker
+ * Kontrakter i fp-felles / tilgang-klient
  */
 @ApplicationScoped
 @Consumes(APPLICATION_JSON)
@@ -49,7 +51,7 @@ public class RutingRestTjeneste {
     @POST
     @Produces(APPLICATION_JSON)
     @Path("/identer")
-    public RutingResponsDto finnRutingEgenskaperIdenter(@NotNull @Valid RutingRestTjeneste.RutingIdenterRequest request) {
+    public RutingDto.Respons finnRutingEgenskaperIdenter(@NotNull @Valid RutingDto.IdenterRequest request) {
         validerSystemKontekst();
         var pdlPips = populasjonCache.finnPdlPipFor(Optional.ofNullable(request.identer()).orElseGet(Set::of));
         var erNoenSkjermet = populasjonCache.finnSkjermingFor(pdlPips);
@@ -59,7 +61,7 @@ public class RutingRestTjeneste {
     @POST
     @Produces(APPLICATION_JSON)
     @Path("/sak")
-    public RutingResponsDto finnRutingEgenskaperSak(@NotNull @Valid RutingRestTjeneste.RutingSakRequest request) {
+    public RutingDto.Respons finnRutingEgenskaperSak(@NotNull @Valid RutingDto.SakRequest request) {
         validerSystemKontekst();
         var identer = sakTjeneste.identerForSak(request.saksnummer());
         var pdlPips = populasjonCache.finnPdlPipFor(identer);
@@ -67,14 +69,7 @@ public class RutingRestTjeneste {
         return mapTilRespons(pdlPips, erNoenSkjermet);
     }
 
-
-    public record RutingIdenterRequest(@Valid Set<String> identer) { }
-
-    public record RutingSakRequest(@Valid @NotNull String saksnummer) { }
-
-    public record RutingResponsDto(Set<RutingResultat> resultater) { }
-
-    private RutingResponsDto mapTilRespons(Collection<PersondataPipDto> personPips, boolean skjerming) {
+    private RutingDto.Respons mapTilRespons(Collection<PersondataPipDto> personPips, boolean skjerming) {
         Set<RutingResultat> resultat = new LinkedHashSet<>();
         if (personPips.stream().anyMatch(PersondataPipDto::harStrengAdresseBeskyttelse)) {
             resultat.add(RutingResultat.STRENGTFORTROLIG);
@@ -88,7 +83,7 @@ public class RutingRestTjeneste {
         if (personPips.size() == 1 && personPips.stream().anyMatch(PersondataPipDto::harIkkeNasjonalTilknytning)) {
             resultat.add(RutingResultat.UTLAND);
         }
-        return new RutingResponsDto(resultat);
+        return new RutingDto.Respons(resultat);
     }
 
     private static void validerSystemKontekst() {
