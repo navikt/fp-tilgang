@@ -5,15 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
-import no.nav.foreldrepenger.tilganger.integrasjoner.pip.PersondataPipDto;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,10 +15,11 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.tilganger.domene.populasjon.PopulasjonTjeneste;
-import no.nav.foreldrepenger.tilganger.domene.populasjon.TilgangResultat;
 import no.nav.foreldrepenger.tilganger.domene.populasjon.TilgangVurdering;
-import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
-import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppeProvider;
+import no.nav.vedtak.felles.integrasjon.populasjon.PopulasjonDto;
+import no.nav.vedtak.felles.integrasjon.populasjon.PopulasjonTilgangResultat;
+import no.nav.vedtak.felles.integrasjon.sak.InvaliderSakRequest;
+import no.nav.vedtak.felles.integrasjon.tilgangfilter.FilterDto;
 
 @ExtendWith(MockitoExtension.class)
 class PopulasjonRestTjenesteTest {
@@ -44,8 +38,6 @@ class PopulasjonRestTjenesteTest {
 
     private static final UUID BEHANDLING = UUID.randomUUID();
 
-    private static final AnsattGruppeProvider PROVIDER = AnsattGruppeProvider.instance();
-
     @Mock
     private PopulasjonTjeneste populasjonTjeneste;
 
@@ -58,7 +50,7 @@ class PopulasjonRestTjenesteTest {
         var tjeneste = new MockRest(populasjonTjeneste);
         var response = tjeneste.sjekkInternBruker(request);
         assertThat(response).isNotNull();
-        assertThat(response.tilgangResultat()).isEqualTo(TilgangResultat.GODKJENT);
+        assertThat(response.tilgangResultat()).isEqualTo(PopulasjonTilgangResultat.GODKJENT);
         assertThat(response.auditIdent()).isEqualTo(PERSON_ID);
     }
 
@@ -71,7 +63,7 @@ class PopulasjonRestTjenesteTest {
         var tjeneste = new MockRest(populasjonTjeneste);
         var response = tjeneste.sjekkInternBruker(request);
         assertThat(response).isNotNull();
-        assertThat(response.tilgangResultat()).isEqualTo(TilgangResultat.GODKJENT);
+        assertThat(response.tilgangResultat()).isEqualTo(PopulasjonTilgangResultat.GODKJENT);
         assertThat(response.auditIdent()).isEqualTo(PERSON_ID);
     }
 
@@ -84,7 +76,7 @@ class PopulasjonRestTjenesteTest {
         var tjeneste = new MockRest(populasjonTjeneste);
         var response = tjeneste.sjekkInternBruker(request);
         assertThat(response).isNotNull();
-        assertThat(response.tilgangResultat()).isEqualTo(TilgangResultat.GODKJENT);
+        assertThat(response.tilgangResultat()).isEqualTo(PopulasjonTilgangResultat.GODKJENT);
         assertThat(response.auditIdent()).isEqualTo(PERSON_ID);
     }
 
@@ -95,7 +87,7 @@ class PopulasjonRestTjenesteTest {
         var tjeneste = new MockRest(populasjonTjeneste);
         var response = tjeneste.sjekkInternBruker(request);
         assertThat(response).isNotNull();
-        assertThat(response.tilgangResultat()).isEqualTo(TilgangResultat.AVSLÅTT_ANNEN_ÅRSAK);
+        assertThat(response.tilgangResultat()).isEqualTo(PopulasjonTilgangResultat.AVSLÅTT_ANNEN_ÅRSAK);
         assertThat(response.auditIdent()).isNull();
     }
 
@@ -107,7 +99,7 @@ class PopulasjonRestTjenesteTest {
         var tjeneste = new MockRest(populasjonTjeneste);
         var response = tjeneste.sjekkEksternBruker(request);
         assertThat(response).isNotNull();
-        assertThat(response.tilgangResultat()).isEqualTo(TilgangResultat.GODKJENT);
+        assertThat(response.tilgangResultat()).isEqualTo(PopulasjonTilgangResultat.GODKJENT);
         assertThat(response.auditIdent()).isEqualTo(PERSON_ID);
     }
 
@@ -119,7 +111,7 @@ class PopulasjonRestTjenesteTest {
         var tjeneste = new MockRest(populasjonTjeneste);
         var response = tjeneste.sjekkEksternBruker(request);
         assertThat(response).isNotNull();
-        assertThat(response.tilgangResultat()).isEqualTo(TilgangResultat.GODKJENT);
+        assertThat(response.tilgangResultat()).isEqualTo(PopulasjonTilgangResultat.GODKJENT);
         assertThat(response.auditIdent()).isEqualTo(PERSON_ID);
     }
 
@@ -131,15 +123,15 @@ class PopulasjonRestTjenesteTest {
         var tjeneste = new MockRest(populasjonTjeneste);
         var response = tjeneste.sjekkEksternBruker(request);
         assertThat(response).isNotNull();
-        assertThat(response.tilgangResultat()).isEqualTo(TilgangResultat.AVSLÅTT_ANNEN_ÅRSAK);
+        assertThat(response.tilgangResultat()).isEqualTo(PopulasjonTilgangResultat.AVSLÅTT_ANNEN_ÅRSAK);
         assertThat(response.auditIdent()).isEqualTo(PERSON_ID_2);
     }
 
     @Test
     void filterIdent() {
-        var request = new PopulasjonRestTjeneste.FilterIdenterRequest(UUID.randomUUID(), Set.of(AKTØR_ID, AKTØR_ID_2, AKTØR_ID_3));
+        var request = new FilterDto.IdenterRequest(UUID.randomUUID(), Set.of(AKTØR_ID, AKTØR_ID_2, AKTØR_ID_3));
         when(populasjonTjeneste.vurderInternBruker(any(), any(), any())).thenReturn(TilgangVurdering.godkjenn());
-        when(populasjonTjeneste.vurderInternBruker(any(), eq(Set.of(AKTØR_ID_2)), any())).thenReturn(TilgangVurdering.avslå(TilgangResultat.AVSLÅTT_EGEN_ANSATT));
+        when(populasjonTjeneste.vurderInternBruker(any(), eq(Set.of(AKTØR_ID_2)), any())).thenReturn(TilgangVurdering.avslå(PopulasjonTilgangResultat.AVSLÅTT_EGEN_ANSATT));
         var tjeneste = new MockRest(populasjonTjeneste);
         var response = tjeneste.filterIdenter(request);
         assertThat(response).isNotNull();
@@ -148,9 +140,9 @@ class PopulasjonRestTjenesteTest {
 
     @Test
     void filterMedSak() {
-        var request = new PopulasjonRestTjeneste.FilterSaksnummerRequest(UUID.randomUUID(), Set.of(SAK, SAK_2, SAK_3));
+        var request = new FilterDto.SaksnummerRequest(UUID.randomUUID(), Set.of(SAK, SAK_2, SAK_3));
         when(populasjonTjeneste.vurderInternBruker(any(), any(), any())).thenReturn(TilgangVurdering.godkjenn());
-        when(populasjonTjeneste.vurderInternBruker(any(), any(), eq(SAK))).thenReturn(TilgangVurdering.avslå(TilgangResultat.AVSLÅTT_KODE_7));
+        when(populasjonTjeneste.vurderInternBruker(any(), any(), eq(SAK))).thenReturn(TilgangVurdering.avslå(PopulasjonTilgangResultat.AVSLÅTT_KODE_7));
         var tjeneste = new MockRest(populasjonTjeneste);
         var response = tjeneste.filterSaksnummer(request);
         assertThat(response).isNotNull();
@@ -159,7 +151,7 @@ class PopulasjonRestTjenesteTest {
 
     @Test
     void invaliderKallerTjeneste() {
-        var request = new PopulasjonRestTjeneste.SakRequest(SAK);
+        var request = new InvaliderSakRequest(SAK);
         var tjeneste = new MockRest(populasjonTjeneste);
         try (var response = tjeneste.invaliderSak(request)) {
             assertThat(response.getStatus()).isEqualTo(200);
@@ -179,35 +171,12 @@ class PopulasjonRestTjenesteTest {
         }
     }
 
-    private PopulasjonRestTjeneste.PopulasjonInternRequest lagInternRequest(Set<String> identer, String saksnummer, UUID behandling) {
-        return new PopulasjonRestTjeneste.PopulasjonInternRequest(UUID.randomUUID(), identer, saksnummer, behandling);
+    private PopulasjonDto.InternRequest lagInternRequest(Set<String> identer, String saksnummer, UUID behandling) {
+        return new PopulasjonDto.InternRequest(UUID.randomUUID(), identer, saksnummer, behandling);
     }
 
-    private PopulasjonRestTjeneste.PopulasjonEksternRequest lagEksternRequest(Set<String> identer) {
-        return new PopulasjonRestTjeneste.PopulasjonEksternRequest(PERSON_ID, identer, 18);
+    private PopulasjonDto.EksternRequest lagEksternRequest(Set<String> identer) {
+        return new PopulasjonDto.EksternRequest(PERSON_ID, identer, 18);
     }
-
-    private PersondataPipDto lagPip(String personIdent, String aktørIdent, PersondataPipDto.Gradering gradering) {
-        return lagPip(personIdent, aktørIdent, gradering, null);
-    }
-
-
-    private PersondataPipDto lagPip(String personIdent, String aktørIdent, PersondataPipDto.Gradering gradering, LocalDate fødselsdato) {
-        var fødsel = Optional.ofNullable(fødselsdato).map(PersondataPipDto.Fødsel::new).map(List::of).orElseGet(List::of);
-        return new PersondataPipDto(aktørIdent,
-            new PersondataPipDto.Person(List.of(new PersondataPipDto.Adressebeskyttelse(gradering)), fødsel, List.of(), List.of()),
-            new PersondataPipDto.Identer(List.of(
-                new PersondataPipDto.Ident(personIdent, false, PersondataPipDto.IdentGruppe.FOLKEREGISTERIDENT),
-                new PersondataPipDto.Ident(aktørIdent, false, PersondataPipDto.IdentGruppe.AKTORID))),
-            new PersondataPipDto.GeografiskTilknytning(PersondataPipDto.GtType.KOMMUNE, "a", "b", "c", "d"));
-    }
-
-    private List<UUID> getGrupper(AnsattGruppe... ansattGruppe) {
-        List<UUID> resultat = new ArrayList<>();
-        resultat.add(PROVIDER.getAnsattGruppeOid(AnsattGruppe.SAKSBEHANDLER));
-        Arrays.stream(ansattGruppe).forEach(a -> resultat.add(PROVIDER.getAnsattGruppeOid(a)));
-        return resultat;
-    }
-
 
 }

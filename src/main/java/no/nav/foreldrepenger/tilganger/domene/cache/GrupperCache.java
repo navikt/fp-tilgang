@@ -52,13 +52,13 @@ public class GrupperCache {
         }
     }
 
-    public Optional<List<UUID>> read(String key) {
+    public List<UUID> read(String key) {
         var cacheKey = hentCacheKey(key);
         try {
             LOG.debug("Redis reading for key: {}", cacheKey);
             var fromCache = redisCache.les(cacheKey, REDIS_GRUPPE_CACHE);
             LOG.trace("Redis read for key: {}, value {}", cacheKey, fromCache);
-            return fromCache.map(value -> DefaultJsonMapper.listFromJson(value, UUID.class));
+            return fromCache.map(value -> DefaultJsonMapper.listFromJson(value, UUID.class)).orElseGet(List::of);
         } catch (TekniskException tex) {
             LOG.info("Feil ved deserialisering av grupper. Fjerner key fra cache.");
             try {
@@ -69,7 +69,7 @@ public class GrupperCache {
         } catch (RedisCacheUtilgjengeligException e) {
             logRedisUtilgjengelig();
         }
-        return Optional.ofNullable(lokalCache.get(cacheKey));
+        return Optional.ofNullable(lokalCache.get(cacheKey)).orElseGet(List::of);
     }
 
     public void remove(String key) {

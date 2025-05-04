@@ -22,14 +22,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheKlient;
+import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisCacheUtilgjengeligException;
 import no.nav.foreldrepenger.tilganger.integrasjoner.redis.RedisDatabase;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 import no.nav.vedtak.util.LRUCache;
-
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class GrupperCacheTest {
@@ -79,8 +78,7 @@ class GrupperCacheTest {
         when(redisKlient.les(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE)).thenReturn(Optional.of(DefaultJsonMapper.toJson(grupper)));
         var cacheResult = cache.read(key);
 
-        assertThat(cacheResult).isPresent();
-        assertThat(cacheResult.get()).isEqualTo(grupper);
+        assertThat(cacheResult).containsExactlyInAnyOrderElementsOf(grupper);
 
         verify(redisKlient, times(1)).les(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
         verify(lokalCache, never()).get(cacheKey);
@@ -98,8 +96,7 @@ class GrupperCacheTest {
 
         var cacheResult = cache.read(key);
 
-        assertThat(cacheResult).isPresent();
-        assertThat(cacheResult.get()).isEqualTo(grupper);
+        assertThat(cacheResult).containsExactlyInAnyOrderElementsOf(grupper);
 
         verify(redisKlient, times(1)).les(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
         verify(lokalCache, times(1)).get(cacheKey);
@@ -119,8 +116,7 @@ class GrupperCacheTest {
 
         var cacheResult = cache.read(key);
 
-        assertThat(cacheResult).isPresent();
-        assertThat(cacheResult.get()).isEqualTo(grupper);
+        assertThat(cacheResult).containsExactlyInAnyOrderElementsOf(grupper);
 
         verify(redisKlient, times(1)).les(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
         verify(redisKlient, times(1)).fjern(cacheKey, GrupperCache.REDIS_GRUPPE_CACHE);
