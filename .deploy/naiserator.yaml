@@ -8,10 +8,6 @@ metadata:
 spec:
   image: {{image}}
   port: 8080
-  {{#if devOnly}}
-  ingresses:
-    - "https://fptilgang.intern.dev.nav.no"
-  {{/if}}
   liveness:
     path: /fptilgang/internal/health/isAlive
     initialDelay: 2
@@ -59,12 +55,7 @@ spec:
       enabled: true
       claims:
         extra:
-          - "NAVident"
           - "azp_name"
-        groups:
-          {{#each groups as |group|}}
-          - id: "{{group}}"
-          {{/each}}
   envFrom:
     - secret: fpcache
   accessPolicy:
@@ -80,8 +71,3 @@ spec:
         - application: fpkalkulus
         - application: fprisk
         - application: fpoppdrag
-        {{#if devOnly}}
-        - application: azure-token-generator
-          namespace: aura
-          cluster: dev-gcp
-        {{/if}}
