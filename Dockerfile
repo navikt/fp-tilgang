@@ -1,4 +1,4 @@
-FROM ghcr.io/navikt/fp-baseimages/distroless:21
+FROM ghcr.io/navikt/fp-baseimages/distroless:25
 LABEL org.opencontainers.image.source=https://github.com/navikt/ft-tilgang
 
 COPY target/classes/logback*.xml conf/
