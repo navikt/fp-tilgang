@@ -8,5 +8,7 @@
   "requests": {
     "cpu": "100m",
     "mem": "512Mi"
-  }
+  },
+  "tilgangingress": "https://fptilgang.dev-fss-pub.nais.io",
+  "gcp-cluster": "dev-gcp"
 }
