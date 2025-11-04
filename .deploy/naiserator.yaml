@@ -8,6 +8,8 @@ metadata:
 spec:
   image: {{image}}
   port: 8080
+  ingresses:
+    - {{tilgangingress}}
   liveness:
     path: /fptilgang/internal/health/isAlive
     initialDelay: 2
@@ -71,3 +73,6 @@ spec:
         - application: fpkalkulus
         - application: fprisk
         - application: fpoppdrag
+        - application: fpsoknad
+          namespace: teamforeldrepenger
+          cluster: {{gcp-cluster}}
