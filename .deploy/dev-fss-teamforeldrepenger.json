@@ -9,6 +9,6 @@
     "cpu": "100m",
     "mem": "512Mi"
   },
-  "tilgangingress": "https://fpsak-api.dev-fss-pub.nais.io",
+  "tilgangingress": "https://fptilgang.dev-fss-pub.nais.io",
   "gcp-cluster": "dev-gcp"
 }
