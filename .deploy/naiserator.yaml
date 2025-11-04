@@ -76,3 +76,9 @@ spec:
         - application: fpsoknad
           namespace: teamforeldrepenger
           cluster: {{gcp-cluster}}
+        - application: fpoversikt
+          namespace: teamforeldrepenger
+          cluster: {{gcp-cluster}}
+        - application: fpinntektsmelding
+          namespace: teamforeldrepenger
+          cluster: {{gcp-cluster}}
