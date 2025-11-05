@@ -1,6 +1,10 @@
 {
+  "gcp-cluster": "dev-gcp",
   "minReplicas": "1",
   "maxReplicas": "3",
+  "ingresses": [
+    "https://fptilgang.dev-fss-pub.nais.io"
+  ],
   "limits": {
     "cpu": "2",
     "mem": "2048Mi"
@@ -8,7 +12,5 @@
   "requests": {
     "cpu": "100m",
     "mem": "512Mi"
-  },
-  "tilgangingress": "https://fptilgang.dev-fss-pub.nais.io",
-  "gcp-cluster": "dev-gcp"
+  }
 }
