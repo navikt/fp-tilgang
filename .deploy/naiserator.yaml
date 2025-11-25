@@ -84,3 +84,6 @@ spec:
         - application: fpinntektsmelding
           namespace: teamforeldrepenger
           cluster: {{gcp-cluster}}
+        - application: fpmottak
+          namespace: teamforeldrepenger
+          cluster: {{gcp-cluster}}
