@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.nav.foreldrepenger.felles</groupId>
         <artifactId>fp-parent-app</artifactId>
-        <version>5.0.3</version>
+        <version>5.1.1</version>
     </parent>
 
     <groupId>no.nav.foreldrepenger.tilgang</groupId>
@@ -14,7 +14,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <felles.version>7.6.10</felles.version>
+        <felles.version>7.6.11</felles.version>
     </properties>
 
     <dependencyManagement>
