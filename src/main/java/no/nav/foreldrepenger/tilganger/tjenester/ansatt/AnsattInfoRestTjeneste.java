@@ -62,6 +62,22 @@ public class AnsattInfoRestTjeneste {
 
     @POST
     @Produces(APPLICATION_JSON)
+    @Path("/refresh-ansatt-ident")
+    public AnsattInfoDto.Respons refreshAnsattIdent(@NotNull @Valid AnsattInfoDto.IdentRequest request) {
+        validerSystemKontekst();
+        return ansattTjeneste.refreshAnsatt(request.ansattIdent()).map(AnsattInfoRestTjeneste::mapTilProfilDto).orElse(null);
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
+    @Path("/refresh-ansatt-oid")
+    public AnsattInfoDto.Respons refreshAnsattOid(@NotNull @Valid AnsattInfoDto.OidRequest request) {
+        validerSystemKontekst();
+        return ansattTjeneste.refreshAnsatt(request.ansattOid()).map(AnsattInfoRestTjeneste::mapTilProfilDto).orElse(null);
+    }
+
+    @POST
+    @Produces(APPLICATION_JSON)
     @Path("/grupper-medlem")
     public GrupperDto.Respons grupperAlle(@NotNull @Valid GrupperDto.MedlemRequest gruppeDto) {
         validerSystemKontekst();

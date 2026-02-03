@@ -44,6 +44,17 @@ public class AnsattTjeneste {
         return hentAnsatt(uid.toString(), () -> azureGraph.hentUser(uid));
     }
 
+    public Optional<Ansatt> refreshAnsatt(String ident) {
+        LOG.debug("Henter antatt: {}", ident);
+        return refreshAnsatt(ident, () -> azureGraph.finnUser(ident));
+    }
+
+    // Dersom man gjeninnfører OBO til fptilgang, så bruk azureGraph.me() i stedet for azureGraph.hentUser. Hent OID fra RequestKontekst
+    public Optional<Ansatt> refreshAnsatt(UUID uid) {
+        LOG.debug("Henter antatt: {}", uid);
+        return refreshAnsatt(uid.toString(), () -> azureGraph.hentUser(uid));
+    }
+
     // Historisk metode for å hente ansattinformasjon basert på OBO / RequestKontekst. Pr brukes bare CC-tilgang, ikke OBO
     public Optional<Ansatt> hentAnsattFraKontekst() {
         var ansattref = getAnsattReferanseFraKontekst(); // OID eller ident
@@ -70,6 +81,22 @@ public class AnsattTjeneste {
         } else {
             LOG.debug("Fant ansatt i cache for {}", identifikator);
         }
+        return ansatt;
+    }
+
+    private Optional<Ansatt> refreshAnsatt(String identifikator, Supplier<Optional<User>> ansattSupplier) {
+        var før = System.currentTimeMillis();
+        var user = ansattSupplier.get();
+        var ansatt = user.map(AnsattTjeneste::mapUser);
+        if (ansatt.isPresent()) {
+            var navIdent = ansatt.get().ident();
+            LOG.debug("Lagrer i cache {}", identifikator);
+            ansattCache.store(navIdent, ansatt.get());
+            var uid = ansatt.get().uid();
+            LOG.debug("Lagrer i cache {}", uid);
+            ansattCache.store(uid.toString(), ansatt.get());
+        }
+        LOG.info("[{} ms] Hent ansatt.", System.currentTimeMillis() - før);
         return ansatt;
     }
 
