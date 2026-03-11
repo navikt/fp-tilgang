@@ -6,11 +6,10 @@
     "https://fptilgang.dev-fss-pub.nais.io"
   ],
   "limits": {
-    "cpu": "2",
-    "mem": "2048Mi"
+    "mem": "1024Mi"
   },
   "requests": {
-    "cpu": "100m",
+    "cpu": "75m",
     "mem": "512Mi"
   }
 }
