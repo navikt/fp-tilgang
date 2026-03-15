@@ -9,26 +9,29 @@ import jakarta.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.ServerProperties;
 
-import no.nav.foreldrepenger.tilganger.server.exceptions.GeneralRestExceptionMapper;
 import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattInfoRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.populasjon.PopulasjonRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.ruting.RutingRestTjeneste;
+import no.nav.vedtak.server.rest.FpRestJackson2Feature;
+import no.nav.vedtak.server.rest.GeneralRestExceptionMapper;
 
 @ApplicationPath(ApiConfig.API_URI)
 public class ApiConfig extends Application {
 
     public static final String API_URI = "/api";
 
+    public ApiConfig() {
+        GeneralRestExceptionMapper.setBrukerRettetApplikasjon(false);
+    }
+
     @Override
     public Set<Class<?>> getClasses() {
         // eksponert grensesnitt bak sikkerhet
         return Set.of(AuthorizationAbacFilter.class,
-            AuthenticationFilter.class,
+            FpRestJackson2Feature.class,
             AnsattInfoRestTjeneste.class,
             PopulasjonRestTjeneste.class,
-            RutingRestTjeneste.class,
-            GeneralRestExceptionMapper.class,
-            JacksonJsonConfig.class);
+            RutingRestTjeneste.class);
     }
 
     @Override
