@@ -85,3 +85,9 @@ spec:
         - application: fpmottak
           namespace: teamforeldrepenger
           cluster: {{gcp-cluster}}
+        - application: fpformidling
+          namespace: teamforeldrepenger
+          cluster: {{gcp-cluster}}
+        - application: fplos
+          namespace: teamforeldrepenger
+          cluster: {{gcp-cluster}}
