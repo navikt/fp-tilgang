@@ -67,8 +67,12 @@ spec:
       rules:
         - application: fpsak
         - application: fplos
+          namespace: teamforeldrepenger
+          cluster: {{fss-cluster}}
         - application: fptilbake
         - application: fpformidling
+          namespace: teamforeldrepenger
+          cluster: {{fss-cluster}}
         - application: fpabakus
         - application: fpkalkulus
         - application: fprisk
