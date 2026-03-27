@@ -7,10 +7,10 @@
     "https://fptilgang.dev-fss-pub.nais.io"
   ],
   "limits": {
-    "mem": "1024Mi"
+    "mem": "1000Mi"
   },
   "requests": {
-    "cpu": "75m",
-    "mem": "512Mi"
+    "cpu": "50m",
+    "mem": "800Mi"
   }
 }
