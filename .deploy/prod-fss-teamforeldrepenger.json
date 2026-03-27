@@ -1,5 +1,6 @@
 {
   "gcp-cluster": "prod-gcp",
+  "fss-cluster": "prod-fss",
   "minReplicas": "2",
   "maxReplicas": "3",
   "ingresses": [

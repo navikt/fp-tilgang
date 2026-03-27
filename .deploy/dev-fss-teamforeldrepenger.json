@@ -1,5 +1,6 @@
 {
   "gcp-cluster": "dev-gcp",
+  "fss-cluster": "dev-fss",
   "minReplicas": "1",
   "maxReplicas": "3",
   "ingresses": [
