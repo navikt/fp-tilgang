@@ -10,7 +10,7 @@
     "mem": "1250Mi"
   },
   "requests": {
-    "cpu": "100m",
+    "cpu": "50m",
     "mem": "1000Mi"
   }
 }
