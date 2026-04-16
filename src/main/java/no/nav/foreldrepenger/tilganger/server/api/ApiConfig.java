@@ -13,16 +13,11 @@ import no.nav.foreldrepenger.tilganger.tjenester.ansatt.AnsattInfoRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.populasjon.PopulasjonRestTjeneste;
 import no.nav.foreldrepenger.tilganger.tjenester.ruting.RutingRestTjeneste;
 import no.nav.vedtak.server.rest.FpRestJackson2Feature;
-import no.nav.vedtak.server.rest.GeneralRestExceptionMapper;
 
 @ApplicationPath(ApiConfig.API_URI)
 public class ApiConfig extends Application {
 
     public static final String API_URI = "/api";
-
-    public ApiConfig() {
-        GeneralRestExceptionMapper.setBrukerRettetApplikasjon(false);
-    }
 
     @Override
     public Set<Class<?>> getClasses() {
