@@ -139,7 +139,8 @@ public class PopulasjonTjeneste {
      * Tjenester for utgående filtrering av resultater
      */
     public void preFetchIdenter(Collection<String> identer) {
-        populasjonCache.finnPdlPipFor(identer);
+        var pips = populasjonCache.finnPdlPipFor(identer);
+        populasjonCache.finnSkjermingFor(pips);
     }
 
     public void prefetchSaker(Collection<String> saksnummer) {
