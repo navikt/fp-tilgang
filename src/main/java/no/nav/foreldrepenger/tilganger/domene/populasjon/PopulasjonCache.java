@@ -28,7 +28,7 @@ public class PopulasjonCache {
     private static final long PERSON_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(75, TimeUnit.MINUTES);
 
     private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(40000, PERSON_CACHE_LIVE_TIME_MS);
-    private static final LRUCache<String, Boolean> PERSON_SKJERMING = new LRUCache<>(15000, PERSON_CACHE_LIVE_TIME_MS);
+    private static final LRUCache<String, Boolean> PERSON_SKJERMING = new LRUCache<>(40000, PERSON_CACHE_LIVE_TIME_MS);
 
     private PdlPipKlient pdlPipKlient;
     private SkjermingPipKlient skjermingPipKlient;
