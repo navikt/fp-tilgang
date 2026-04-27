@@ -52,13 +52,13 @@ public class SkjermingPipKlient {
             return false;
         }
 
-        var request = RestRequest.newPOSTJson(new SkjermetRequestDto(fnr), skjermetEndpoint, restConfig);
-
         try {
+            var request = RestRequest.newPOSTJson(new SkjermetRequestDto(fnr), skjermetEndpoint, restConfig);
             return kallMedSjekk(request);
         } catch (Exception e) {
             LOG.info("SkjermetPerson fikk feil", e);
         }
+        var request = RestRequest.newPOSTJson(new SkjermetRequestDto(fnr), skjermetEndpoint, restConfig);
         return kallMedSjekk(request);
     }
 
@@ -72,13 +72,13 @@ public class SkjermingPipKlient {
             return Map.of();
         }
 
-        var request = RestRequest.newPOSTJson(new SkjermetBulkRequestDto(fnr), bulkEndpoint, restConfig);
-
         try {
+            var request = RestRequest.newPOSTJson(new SkjermetBulkRequestDto(fnr), bulkEndpoint, restConfig);
             return kallBulk(request);
         } catch (Exception e) {
             LOG.info("SkjermetPerson fikk feil", e);
         }
+        var request = RestRequest.newPOSTJson(new SkjermetBulkRequestDto(fnr), bulkEndpoint, restConfig);
         return kallBulk(request);
     }
 

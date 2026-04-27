@@ -56,13 +56,14 @@ public class FpsakPipKlient {
         var uri = UriBuilder.fromUri(sakFullEndpoint)
             .queryParam("saksnummer", saksnummer)
             .build();
-        var request = RestRequest.newGET(uri, restConfig);
 
         try {
+            var request = RestRequest.newGET(uri, restConfig);
             return restClient.sendReturnOptional(request, SakMedPersonerDto.class);
         } catch (Exception e) {
             LOG.info("ForeldrepengerPip personForSak fikk feil", e);
         }
+        var request = RestRequest.newGET(uri, restConfig);
         return restClient.sendReturnOptional(request, SakMedPersonerDto.class);
     }
 
@@ -74,13 +75,14 @@ public class FpsakPipKlient {
         var uri = UriBuilder.fromUri(sakIdentEndpoint)
             .queryParam("saksnummer", saksnummer)
             .build();
-        var request = RestRequest.newGET(uri, restConfig);
 
         try {
+            var request = RestRequest.newGET(uri, restConfig);
             return restClient.sendReturnOptional(request, String.class);
         } catch (Exception e) {
             LOG.info("ForeldrepengerPip personForSak fikk feil", e);
         }
+        var request = RestRequest.newGET(uri, restConfig);
         return restClient.sendReturnOptional(request, String.class);
     }
 
@@ -89,13 +91,13 @@ public class FpsakPipKlient {
             return List.of();
         }
 
-        var request = RestRequest.newPOSTJson(saksnummer, sakFullEndpoint, restConfig);
-
         try {
+            var request = RestRequest.newPOSTJson(saksnummer, sakFullEndpoint, restConfig);
             return restClient.sendReturnList(request, SakMedPersonerDto.class);
         } catch (Exception e) {
             LOG.info("ForeldrepengerPip personerForSaker fikk feil", e);
         }
+        var request = RestRequest.newPOSTJson(saksnummer, sakFullEndpoint, restConfig);
         return restClient.sendReturnList(request, SakMedPersonerDto.class);
     }
 
@@ -107,13 +109,14 @@ public class FpsakPipKlient {
         var uri = UriBuilder.fromUri(behSaksnummerEndpoint)
             .queryParam("behandlingUuid", behandlingUuid.toString())
             .build();
-        var request = RestRequest.newGET(uri, restConfig);
 
         try {
+            var request = RestRequest.newGET(uri, restConfig);
             return restClient.sendReturnOptional(request, String.class);
         } catch (Exception e) {
             LOG.info("ForeldrepengerPip sakForBehandling fikk feil", e);
         }
+        var request = RestRequest.newGET(uri, restConfig);
         return restClient.sendReturnOptional(request, String.class);
     }
 
