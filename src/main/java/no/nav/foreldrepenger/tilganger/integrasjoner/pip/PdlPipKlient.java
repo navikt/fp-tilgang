@@ -77,13 +77,13 @@ public class PdlPipKlient {
 
     public Map<String, PersondataPipDto> hentTilgangPersondataBolk(List<String> identer) {
         // Returnerer alltid 200 OK, men value vil være null dersom ident ikke finnes
-        var request = RestRequest.newPOSTJson(identer, pipPersonBolkEndpoint, restConfig)
-            .timeout(Duration.ofSeconds(5));
         try {
+            var request = RestRequest.newPOSTJson(identer, pipPersonBolkEndpoint, restConfig).timeout(Duration.ofSeconds(5));
             return client.sendReturnMap(request, PersondataPipDto.class);
         } catch (Exception e) {
             LOG.info("PdlPip fikk feil", e);
         }
+        var request = RestRequest.newPOSTJson(identer, pipPersonBolkEndpoint, restConfig).timeout(Duration.ofSeconds(5));
         return client.sendReturnMap(request, PersondataPipDto.class);
     }
 }
