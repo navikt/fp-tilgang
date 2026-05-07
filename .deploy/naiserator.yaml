@@ -24,6 +24,12 @@ spec:
     periodSeconds: 10
     failureThreshold: 20
     timeout: 3
+  startup:
+    path: /fptilgang/internal/health/isReady
+    initialDelay: 2
+    periodSeconds: 10
+    failureThreshold: 20
+    timeout: 3
   preStopHook:
     http:
       path: /fptilgang/internal/health/preStop
@@ -35,7 +41,7 @@ spec:
     max: {{maxReplicas}}
     scalingStrategy:
       cpu:
-        thresholdPercentage: 80
+        thresholdPercentage: 40
       scaleUpStabilizationWindowSeconds: 20
   resources:
     limits:
