@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.IntegrasjonException;
-import no.nav.vedtak.felles.integrasjon.rest.ProxyRestClient;
+import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
@@ -46,16 +46,16 @@ class AzureGraphKlient implements AzureGraph {
     protected static final String HEADER_CONSISTENCY_LEVEL = "ConsistencyLevel";
     protected static final String EVENTUAL = "eventual";
 
-    private final ProxyRestClient restKlient;
+    private final RestClient restKlient;
     private final RestConfig restConfig;
     private final URI meEndpoint;
     private final URI userEndpoint;
 
     AzureGraphKlient() {
-        this(ProxyRestClient.client());
+        this(RestClient.proxyclient());
     }
 
-    AzureGraphKlient(ProxyRestClient client) {
+    AzureGraphKlient(RestClient client) {
         this.restKlient = client;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.userEndpoint = UriBuilder.fromUri(this.restConfig.endpoint().toString()).path(USERS_PATH).build();
