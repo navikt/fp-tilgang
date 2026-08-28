@@ -18,4 +18,5 @@ jobs:
     uses: navikt/fp-gha-workflows/.github/workflows/codeql.yml@main
     with:
       sonar: false
-    secrets: inherit
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -18,14 +18,12 @@ jobs:
     name: Build
     permissions:
       contents: read
+      packages: read
       id-token: write
-      packages: write
-      pull-requests: read
     uses: navikt/fp-gha-workflows/.github/workflows/build-app-no-db.yml@main
     with:
       build-image: ${{ github.ref_name == 'master' }} # default: true
       push-image: ${{ github.ref_name == 'master' }} # default: false
-    secrets: inherit
 
   verdikjede:
     name: Verdikjedetester
@@ -38,23 +36,24 @@ jobs:
     with:
       build-version: ${{ needs.build-app.outputs.build-version }}
       test-suite: verdikjede
-    secrets: inherit
 
   notify:
     name: Notify
     if: github.ref_name == 'master' && (success() || failure()) && !contains(needs.*.result, 'skipped')
     needs: [build-app, verdikjede]
+    permissions:
+      contents: read
     uses: navikt/fp-autotest/.github/workflows/report-and-notify.yml@master
     with:
       verdikjede: ${{ needs.verdikjede.outputs.resultat }}
       build-version: ${{ needs.build-app.outputs.build-version }}
-    secrets: inherit
+    secrets:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
   deploy-dev:
     name: Deploy dev
     permissions:
       id-token: write
-      contents: read
     if: github.ref_name == 'master'
     needs: [build-app, verdikjede]
     uses: navikt/fp-gha-workflows/.github/workflows/deploy.yml@main
@@ -62,13 +61,11 @@ jobs:
       gar: true
       image: ${{ needs.build-app.outputs.build-version }}
       cluster: dev-fss
-    secrets: inherit
 
   deploy-prod:
     name: Deploy prod
     permissions:
       id-token: write
-      contents: read
     if: github.ref_name == 'master'
     needs: [build-app, verdikjede, deploy-dev]
     uses: navikt/fp-gha-workflows/.github/workflows/deploy.yml@main
@@ -76,7 +73,6 @@ jobs:
       gar: true
       image: ${{ needs.build-app.outputs.build-version }}
       cluster: prod-fss
-    secrets: inherit
 
 
 
