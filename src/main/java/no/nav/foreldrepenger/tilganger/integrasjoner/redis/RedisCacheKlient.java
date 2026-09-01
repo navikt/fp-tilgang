@@ -24,7 +24,10 @@ public class RedisCacheKlient {
     private final JedisPool jedisPool;
 
     private RedisCacheKlient(String host, int port, String pass) {
-        var jedisConfig = DefaultJedisClientConfig.builder().password(pass).build();
+        var jedisConfig = DefaultJedisClientConfig.builder()
+            .autoNegotiateProtocol(false)
+            .password(pass)
+            .build();
         var poolConfig = new JedisPoolConfig();
         poolConfig.setMinIdle(1);
         poolConfig.setMaxWait(Duration.ofSeconds(3));
