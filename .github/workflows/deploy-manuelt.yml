@@ -18,6 +18,7 @@ jobs:
   deploy:
     name: Deploy dev
     permissions:
+      contents: read
       id-token: write
     uses: navikt/fp-gha-workflows/.github/workflows/deploy.yml@main
     with:
