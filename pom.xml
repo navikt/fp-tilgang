@@ -14,7 +14,12 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <felles.version>7.9.1</felles.version>
+        <felles.version>7.9.3</felles.version>
+
+        <!-- sonar -->
+        <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
+        <sonar.projectName>fp-tilgang</sonar.projectName>
+        <sonar.projectKey>navikt_fp-tilgang</sonar.projectKey>
     </properties>
 
     <dependencyManagement>
