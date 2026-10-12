@@ -25,7 +25,7 @@ import no.nav.vedtak.util.LRUCache;
 public class PopulasjonCache {
 
     // Ta ned til 60 min etterhvert
-    private static final long PERSON_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(75, TimeUnit.MINUTES);
+    private static final long PERSON_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(12, TimeUnit.HOURS);
 
     private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(40000, PERSON_CACHE_LIVE_TIME_MS);
     private static final LRUCache<String, Boolean> PERSON_SKJERMING = new LRUCache<>(40000, PERSON_CACHE_LIVE_TIME_MS);
