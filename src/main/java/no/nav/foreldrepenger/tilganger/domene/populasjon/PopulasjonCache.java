@@ -24,11 +24,10 @@ import no.nav.vedtak.util.LRUCache;
 @ApplicationScoped
 public class PopulasjonCache {
 
-    // Ta ned til 60 min etterhvert
     private static final long PERSON_CACHE_LIVE_TIME_MS = TimeUnit.MILLISECONDS.convert(12, TimeUnit.HOURS);
 
-    private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(40000, PERSON_CACHE_LIVE_TIME_MS);
-    private static final LRUCache<String, Boolean> PERSON_SKJERMING = new LRUCache<>(40000, PERSON_CACHE_LIVE_TIME_MS);
+    private static final LRUCache<String, PersondataPipDto> PERSON_PIP = new LRUCache<>(50000, PERSON_CACHE_LIVE_TIME_MS);
+    private static final LRUCache<String, Boolean> PERSON_SKJERMING = new LRUCache<>(50000, PERSON_CACHE_LIVE_TIME_MS);
 
     private PdlPipKlient pdlPipKlient;
     private SkjermingPipKlient skjermingPipKlient;
