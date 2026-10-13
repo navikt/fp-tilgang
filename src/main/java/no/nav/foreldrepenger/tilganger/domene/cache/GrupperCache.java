@@ -22,7 +22,7 @@ import no.nav.vedtak.util.LRUCache;
 public class GrupperCache {
 
     private static final Logger LOG = LoggerFactory.getLogger(GrupperCache.class);
-    private static final long CACHE_DURATION = Duration.ofHours(1).getSeconds();
+    private static final long CACHE_DURATION = Duration.ofHours(3).getSeconds();
     static final String CACHE_KEY_PREFIX = "grupper_";
     static final RedisDatabase REDIS_GRUPPE_CACHE = RedisDatabase.ONE;
 
